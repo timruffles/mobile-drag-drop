@@ -1,7 +1,7 @@
 # iOS shim for HTML 5 drag'n'drop
 
 The HTML 5 drag'n'drop API allows you to implement drag'n'drop
-with the same code on all desktop browsers. Unfortunately, iOS doesn't
+with the same code on [most desktop browsers](http://caniuse.com/#search=drag). Unfortunately, you'll notice iOS doesn't
 support it, so no iPad action for you!
 
 Luckily, WebKit gives us enough tools to shim seamlessly. If you drop
