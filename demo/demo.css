@@ -13,7 +13,7 @@ section, header, footer {
 #wrapper {
   width: 600px;
   margin: 0 auto;
-  background: #fff url(../images/shade.jpg) repeat-x center bottom;
+  background: #fff url(shade.jpg) repeat-x center bottom;
   -moz-border-radius: 10px;
   -webkit-border-radius: 10px;
   border-radius: 10px;

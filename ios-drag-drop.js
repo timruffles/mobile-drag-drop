@@ -1,8 +1,9 @@
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 (function() {
-  var DragDrop, div, doc, dragDiv, dragstart, evts, getEls, needsPatch, onEvt, once, original;
+  var DragDrop, average, div, doc, dragDiv, dragstart, evts, getEls, log, needsPatch, onEvt, once, original;
   doc = document;
+  log = function() {};
   onEvt = function(el, event, handler) {
     el.addEventListener(event, handler);
     return {
@@ -18,15 +19,13 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return el.removeEventListener(event, listener);
     });
   };
+  average = function(arr) {
+    if (arr.length === 0) return 0;
+    return arr.reduce((function(s, v) {
+      return v + s;
+    }), 0) / arr.length;
+  };
   DragDrop = (function() {
-    var average;
-
-    average = function(arr) {
-      if (arr.length === 0) return 0;
-      return arr.reduce((function(s, v) {
-        return v + s;
-      }), 0) / arr.length;
-    };
 
     function DragDrop(event) {
       this.drop = __bind(this.drop, this);
@@ -35,7 +34,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         _this = this;
       el = event.currentTarget;
       event.preventDefault();
-      console.log("dragstart");
+      log("dragstart");
       this.dragData = {};
       evt = doc.createEvent("Event");
       evt.initEvent("dragstart", true, true);
@@ -47,7 +46,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       };
       el.dispatchEvent(evt);
       cleanup = function() {
-        console.log("cleanup");
+        log("cleanup");
         _this.touchPositions = {};
         return [move, end, cancel].forEach(function(handler) {
           return handler.off();
@@ -72,7 +71,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     DragDrop.prototype.move = function(event) {
       var deltas,
         _this = this;
-      console.log("dragmove");
+      log("dragmove");
       deltas = [].slice.call(event.changedTouches).reduce(function(deltas, touch, index) {
         var position;
         position = _this.touchPositions[index];
@@ -142,9 +141,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   dragDiv = 'draggable' in div;
   evts = 'ondragstart' in div && 'ondrop' in div;
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
-  console.log("" + (needsPatch ? "" : "not ") + "patching html5 drag drop");
+  log("" + (needsPatch ? "" : "not ") + "patching html5 drag drop");
   if (!needsPatch) return;
-  document.body.className += " patched-drag-drop";
   dragstart = function(evt) {
     evt.preventDefault();
     return new DragDrop(evt);
@@ -152,14 +150,13 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   original = Element.prototype.setAttribute;
   Element.prototype.setAttribute = function(attr, val) {
     if (attr === "draggable") {
-      console.log("touchstart handler " + val);
-      this.removeAttribute("href");
+      log("touchstart handler " + val);
       return this[val ? "addEventListener" : "removeEventListener"]("touchstart", dragstart, true);
     } else {
       return original.call(this, attr, val);
     }
   };
-  return doc.addEventListener("touchstart", function(evt) {
-    return console.log("heard touchstart on doc");
+  return getEls("[draggable]").forEach(function(el) {
+    return this.addEventListener("touchstart", dragstart, true);
   });
 })();

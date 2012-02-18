@@ -1,5 +1,7 @@
 (->
   doc = document
+  log = -> # noop, to debug, use console
+
   onEvt = (el, event, handler) ->
     el.addEventListener event, handler
     off: ->
@@ -8,17 +10,16 @@
     el.addEventListener event, listener = (evt) ->
       handler(evt)
       el.removeEventListener event, listener
+  average = (arr) ->
+    return 0 if arr.length == 0
+    arr.reduce(((s,v) -> v+s), 0) / arr.length
+
   class DragDrop
-
-    average = (arr) ->
-      return 0 if arr.length == 0
-      arr.reduce(((s,v) -> v+s), 0) / arr.length
-
     constructor: (event) ->
       el = event.currentTarget
       event.preventDefault()
 
-      console.log "dragstart"
+      log "dragstart"
       @dragData = {}
 
       evt = doc.createEvent("Event")
@@ -31,7 +32,7 @@
       el.dispatchEvent evt
 
       cleanup = =>
-        console.log "cleanup"
+        log "cleanup"
         @touchPositions = {}
         [ move, end, cancel ].forEach (handler) ->
           handler.off()
@@ -45,17 +46,17 @@
       cancel = onEvt(doc, "touchcancel", cleanup)
       @touchPositions = {}
       transform = @el.style["-webkit-transform"]
-      # console.log "transform is: " + transform
+      # log "transform is: " + transform
       [x, y] = if match = /translate\(\s*(\d+)[^,]*,\D*(\d+)/.exec(transform)
         [parseInt(match[1]), parseInt(match[2])]
       else
         [0,0]
-      # console.log "initial translate #{x} #{y}"
+      # log "initial translate #{x} #{y}"
       @elTranslation =
         x: x
         y: y
     move: (event) =>
-      console.log("dragmove")
+      log("dragmove")
       deltas = [].slice.call(event.changedTouches).reduce (deltas,touch,index) =>
         position = @touchPositions[index]
         if position
@@ -65,12 +66,12 @@
           @touchPositions[index] = position = {}
         position.x = touch.pageX
         position.y = touch.pageY
-        # console.log "position now " + JSON.stringify position
+        # log "position now " + JSON.stringify position
         deltas
       , {x:[],y:[]}
       @elTranslation.x += average deltas.x
       @elTranslation.y += average deltas.y
-      # console.log "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
+      # log "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
       @el.style["-webkit-transform"] = "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
     drop: (event) =>
       evt = doc.createEvent "Event"
@@ -110,9 +111,8 @@
   dragDiv = `'draggable' in div`
   evts = `'ondragstart' in div && 'ondrop' in div`
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent)
-  console.log("#{if needsPatch then "" else "not "}patching html5 drag drop")
+  log("#{if needsPatch then "" else "not "}patching html5 drag drop")
   return unless needsPatch
-  document.body.className += " patched-drag-drop"
 
   dragstart = (evt) ->
     evt.preventDefault()
@@ -121,14 +121,13 @@
   original = Element::setAttribute
   Element::setAttribute = (attr,val) ->
     if attr == "draggable"
-      console.log "touchstart handler #{val}"
-      this.removeAttribute "href"
+      log "touchstart handler #{val}"
       this[if val then "addEventListener" else "removeEventListener"]("touchstart",dragstart,true)
     else
       original.call(this,attr,val)
-  doc.addEventListener "touchstart", (evt) ->
-    # required to capture individual touchstart events, above in setAttr handler
-    console.log "heard touchstart on doc"
+
+  getEls("[draggable]").forEach (el) ->
+    this.addEventListener("touchstart",dragstart,true)
 
 )()
 
