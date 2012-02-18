@@ -9,7 +9,8 @@ this script in your page your existing HTML 5 drag'n'drop code should
 just work.
 
 Check out the demo to see it in action. It should work on Android, but I
-don't have an Android phone to test.
+don't have an Android phone to test. Let me know <a
+href="http://twitter.com/timruffles">@timruffles</a>.
 
 ## What doesn't work
 
