@@ -114,6 +114,7 @@
   evts = `'ondragstart' in div && 'ondrop' in div`
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent)
   log("#{if needsPatch then "" else "not "}patching html5 drag drop")
+  return unless needsPatch
 
   dragstart = (evt) ->
     evt.preventDefault()

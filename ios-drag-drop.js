@@ -144,6 +144,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   evts = 'ondragstart' in div && 'ondrop' in div;
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
   log("" + (needsPatch ? "" : "not ") + "patching html5 drag drop");
+  if (!needsPatch) return;
   dragstart = function(evt) {
     evt.preventDefault();
     return new DragDrop(evt);
