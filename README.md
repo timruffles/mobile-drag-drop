@@ -8,10 +8,16 @@ Luckily, WebKit gives us enough tools to shim seamlessly. If you drop
 this script in your page your existing HTML 5 drag'n'drop code should
 just work.
 
-Check out the demo to see it in action.
+Check out the demo to see it in action. It should work on Android, but I
+don't have an Android phone to test.
 
 ## What doesn't work
 
 * `touchenter` - [iOS doesn't fire it](https://developer.apple.com/library/ios/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW5), and I can't see a way to shim it
   * `mouseover` can't help as
 because [iOS only fires it on press](https://developer.apple.com/library/ios/#DOCUMENTATION/AppleApplications/Reference/SafariWebContent/CreatingContentforSafarioniPhone/CreatingContentforSafarioniPhone.html#//apple_ref/doc/uid/TP40006482-SW21).
+
+## Thanks
+
+@rem - who created the original demo used to demo this shim's
+drop-in nature.
