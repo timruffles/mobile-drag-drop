@@ -105,14 +105,15 @@
       target.dispatchEvent(evt) if target
 
   getEls = (el, selector) ->
-    [].slice.call el.querySelectorAll(selector)
+    unless selector
+      [el,selector] = [doc,el]
+    [].slice.call (el).querySelectorAll(selector)
 
   div = document.createElement('div')
   dragDiv = `'draggable' in div`
   evts = `'ondragstart' in div && 'ondrop' in div`
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent)
   log("#{if needsPatch then "" else "not "}patching html5 drag drop")
-  return unless needsPatch
 
   dragstart = (evt) ->
     evt.preventDefault()
@@ -128,7 +129,7 @@
 
   doc.addEventListener "DOMContentLoaded", ->
     getEls("[draggable]").forEach (el) ->
-      this.addEventListener("touchstart",dragstart,true)
+      el.addEventListener("touchstart",dragstart,true)
 
 )()
 

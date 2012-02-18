@@ -135,6 +135,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
 
   })();
   getEls = function(el, selector) {
+    var _ref;
+    if (!selector) _ref = [doc, el], el = _ref[0], selector = _ref[1];
     return [].slice.call(el.querySelectorAll(selector));
   };
   div = document.createElement('div');
@@ -142,7 +144,6 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   evts = 'ondragstart' in div && 'ondrop' in div;
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
   log("" + (needsPatch ? "" : "not ") + "patching html5 drag drop");
-  if (!needsPatch) return;
   dragstart = function(evt) {
     evt.preventDefault();
     return new DragDrop(evt);
@@ -158,7 +159,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   };
   return doc.addEventListener("DOMContentLoaded", function() {
     return getEls("[draggable]").forEach(function(el) {
-      return this.addEventListener("touchstart", dragstart, true);
+      return el.addEventListener("touchstart", dragstart, true);
     });
   });
 })();
