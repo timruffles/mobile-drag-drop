@@ -19,5 +19,5 @@ because [iOS only fires it on press](https://developer.apple.com/library/ios/#DO
 
 ## Thanks
 
-@rem - who created the original demo used to demo this shim's
+<a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's
 drop-in nature.
