@@ -126,8 +126,9 @@
     else
       original.call(this,attr,val)
 
-  getEls("[draggable]").forEach (el) ->
-    this.addEventListener("touchstart",dragstart,true)
+  doc.addEventListener "DOMContentLoaded", ->
+    getEls("[draggable]").forEach (el) ->
+      this.addEventListener("touchstart",dragstart,true)
 
 )()
 

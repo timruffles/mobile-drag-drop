@@ -156,7 +156,9 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return original.call(this, attr, val);
     }
   };
-  return getEls("[draggable]").forEach(function(el) {
-    return this.addEventListener("touchstart", dragstart, true);
+  return doc.addEventListener("DOMContentLoaded", function() {
+    return getEls("[draggable]").forEach(function(el) {
+      return this.addEventListener("touchstart", dragstart, true);
+    });
   });
 })();
