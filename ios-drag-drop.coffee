@@ -1,6 +1,14 @@
 (->
+  VERBOSE = 3
+  DEBUG = 2
+  INFO = 1
+  ERROR = 0
+  LOG_LEVEL = 1
   doc = document
-  log = -> # noop, to debug, use console
+  # default to a noop, remove it for debugging
+  noop = ->
+  log = noop || (msg,level=ERROR) ->
+    console.log msg if level <= LOG_LEVEL
 
   onEvt = (el, event, handler) ->
     el.addEventListener event, handler
@@ -16,7 +24,7 @@
 
   class DragDrop
     constructor: (event) ->
-      el = event.currentTarget
+      el = event.target
       event.preventDefault()
 
       log "dragstart"
@@ -39,11 +47,6 @@
 
       @el = el
 
-      move = onEvt(doc, "touchmove", @move)
-      end = onEvt doc, "touchend", (evt) =>
-        @drop(evt)
-        cleanup()
-      cancel = onEvt(doc, "touchcancel", cleanup)
       @touchPositions = {}
       transform = @el.style["-webkit-transform"]
       # log "transform is: " + transform
@@ -55,8 +58,15 @@
       @elTranslation =
         x: x
         y: y
+
+      move = onEvt(doc, "touchmove", @move)
+      end = onEvt doc, "touchend", (evt) =>
+        @drop(evt)
+        cleanup()
+      cancel = onEvt(doc, "touchcancel", cleanup)
+
     move: (event) =>
-      log("dragmove")
+      log("dragmove",VERBOSE)
       deltas = [].slice.call(event.changedTouches).reduce (deltas,touch,index) =>
         position = @touchPositions[index]
         if position
@@ -71,7 +81,6 @@
       , {x:[],y:[]}
       @elTranslation.x += average deltas.x
       @elTranslation.y += average deltas.y
-      # log "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
       @el.style["-webkit-transform"] = "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
     drop: (event) =>
       evt = doc.createEvent "Event"
@@ -129,8 +138,9 @@
       original.call(this,attr,val)
 
   doc.addEventListener "DOMContentLoaded", ->
-    getEls("[draggable]").forEach (el) ->
-      el.addEventListener("touchstart",dragstart,true)
+    doc.addEventListener "touchstart", (evt) ->
+      if evt.target.draggable
+        dragstart(evt)
 
 )()
 
