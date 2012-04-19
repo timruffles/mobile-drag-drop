@@ -1,7 +1,7 @@
 (function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   (function() {
-    var DEBUG, DragDrop, ERROR, INFO, LOG_LEVEL, VERBOSE, average, div, doc, dragDiv, dragstart, evts, getEls, log, needsPatch, noop, onEvt, once, original;
+    var DEBUG, DragDrop, ERROR, INFO, LOG_LEVEL, VERBOSE, average, div, doc, dragDiv, dragstart, evts, getEls, handler, log, needsPatch, noop, onEvt, once, parents;
     VERBOSE = 3;
     DEBUG = 2;
     INFO = 1;
@@ -41,10 +41,13 @@
       }), 0) / arr.length;
     };
     DragDrop = (function() {
-      function DragDrop(event) {
-        this.drop = __bind(this.drop, this);
-        this.move = __bind(this.move, this);        var cancel, cleanup, el, end, evt, match, move, transform, x, y, _ref;
-        el = event.target;
+      function DragDrop(event, el) {
+        var cancel, cleanup, end, evt, match, move, transform, x, y, _ref;
+        if (el == null) {
+          el = event.target;
+        }
+        this.dragend = __bind(this.dragend, this);
+        this.move = __bind(this.move, this);
         event.preventDefault();
         log("dragstart");
         this.dragData = {};
@@ -74,7 +77,7 @@
         };
         move = onEvt(doc, "touchmove", this.move);
         end = onEvt(doc, "touchend", __bind(function(evt) {
-          this.drop(evt);
+          this.dragend(evt, event.target);
           return cleanup();
         }, this));
         cancel = onEvt(doc, "touchcancel", cleanup);
@@ -102,43 +105,52 @@
         this.elTranslation.y += average(deltas.y);
         return this.el.style["-webkit-transform"] = "translate(" + this.elTranslation.x + "px," + this.elTranslation.y + "px)";
       };
-      DragDrop.prototype.drop = function(event) {
-        var evt, next, parent, replacementFn, snapBack, target;
-        evt = doc.createEvent("Event");
-        evt.initEvent("drop", true, true);
-        evt.dataTransfer = {
-          getData: __bind(function(type) {
-            return this.dragData[type];
-          }, this)
-        };
-        snapBack = true;
-        evt.preventDefault = __bind(function() {
-          snapBack = false;
-          return this.el.style["-webkit-transform"] = "translate(0,0)";
+      DragDrop.prototype.dragend = function(event) {
+        var doSnapBack, dragendEvt, dropEvt, next, parent, replacementFn, snapBack, target;
+        log("dragend");
+        doSnapBack = __bind(function() {
+          once(this.el, "webkitTransitionEnd", __bind(function() {
+            return this.el.style["-webkit-transition"] = "none";
+          }, this));
+          return setTimeout(__bind(function() {
+            this.el.style["-webkit-transition"] = "all 0.2s";
+            return this.el.style["-webkit-transform"] = "translate(0,0)";
+          }, this));
         }, this);
-        once(doc, "drop", __bind(function() {
-          if (snapBack) {
-            once(this.el, "webkitTransitionEnd", __bind(function() {
-              return this.el.style["-webkit-transition"] = "none";
-            }, this));
-            return setTimeout(__bind(function() {
-              this.el.style["-webkit-transition"] = "all 0.2s";
-              return this.el.style["-webkit-transform"] = "translate(0,0)";
-            }, this));
-          }
-        }, this));
-        parent = this.el.parentNode;
-        replacementFn = (next = this.el.nextSibling) ? __bind(function() {
-          return parent.insertBefore(this.el, next);
-        }, this) : __bind(function() {
-          return parent.appendChild(this.el);
-        }, this);
-        parent.removeChild(this.el);
-        target = document.elementFromPoint(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
-        replacementFn();
+        target = doc.elementFromPoint(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
         if (target) {
-          return target.dispatchEvent(evt);
+          dropEvt = doc.createEvent("Event");
+          dropEvt.initEvent("drop", true, true);
+          dropEvt.dataTransfer = {
+            getData: __bind(function(type) {
+              return this.dragData[type];
+            }, this)
+          };
+          snapBack = true;
+          dropEvt.preventDefault = __bind(function() {
+            snapBack = false;
+            return this.el.style["-webkit-transform"] = "translate(0,0)";
+          }, this);
+          once(doc, "drop", __bind(function() {
+            if (snapBack) {
+              return snapBack;
+            }
+          }, this));
+          parent = this.el.parentNode;
+          replacementFn = (next = this.el.nextSibling) ? __bind(function() {
+            return parent.insertBefore(this.el, next);
+          }, this) : __bind(function() {
+            return parent.appendChild(this.el);
+          }, this);
+          parent.removeChild(this.el);
+          replacementFn();
+          target.dispatchEvent(dropEvt);
+        } else {
+          once(doc, "dragend", snapBack);
         }
+        dragendEvt = doc.createEvent("Event");
+        dragendEvt.initEvent("dragend", true, true);
+        return this.el.dispatchEvent(dragendEvt);
       };
       return DragDrop;
     })();
@@ -149,7 +161,7 @@
       }
       return [].slice.call(el.querySelectorAll(selector));
     };
-    div = document.createElement('div');
+    div = doc.createElement('div');
     dragDiv = 'draggable' in div;
     evts = 'ondragstart' in div && 'ondrop' in div;
     needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -161,21 +173,26 @@
       evt.preventDefault();
       return new DragDrop(evt);
     };
-    original = Element.prototype.setAttribute;
-    Element.prototype.setAttribute = function(attr, val) {
-      if (attr === "draggable") {
-        log("touchstart handler " + val);
-        return this[val ? "addEventListener" : "removeEventListener"]("touchstart", dragstart, true);
-      } else {
-        return original.call(this, attr, val);
+    parents = function(el) {
+      var parent, _results;
+      _results = [];
+      while ((parent = el.parentNode) && parent !== doc.body) {
+        el = parent;
+        _results.push(parent);
       }
+      return _results;
     };
-    return doc.addEventListener("DOMContentLoaded", function() {
-      return doc.addEventListener("touchstart", function(evt) {
-        if (evt.target.draggable) {
-          return dragstart(evt);
+    return doc.addEventListener("touchstart", handler = function(evt) {
+      var el, _i, _len, _ref;
+      _ref = [evt.target].concat(parents(evt.target));
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        el = _ref[_i];
+        if (el.hasAttribute("draggable")) {
+          evt.preventDefault();
+          return dragstart(evt, el);
         }
-      });
+      }
+      return null;
     });
   })();
 }).call(this);

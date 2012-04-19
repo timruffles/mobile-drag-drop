@@ -23,8 +23,7 @@
     arr.reduce(((s,v) -> v+s), 0) / arr.length
 
   class DragDrop
-    constructor: (event) ->
-      el = event.target
+    constructor: (event,el = event.target) ->
       event.preventDefault()
 
       log "dragstart"
@@ -61,10 +60,11 @@
 
       move = onEvt(doc, "touchmove", @move)
       end = onEvt doc, "touchend", (evt) =>
-        @drop(evt)
+        @dragend(evt,event.target)
         cleanup()
       cancel = onEvt(doc, "touchcancel", cleanup)
 
+    # dragend - need to implement it
     move: (event) =>
       log("dragmove",VERBOSE)
       deltas = [].slice.call(event.changedTouches).reduce (deltas,touch,index) =>
@@ -82,43 +82,58 @@
       @elTranslation.x += average deltas.x
       @elTranslation.y += average deltas.y
       @el.style["-webkit-transform"] = "translate(#{@elTranslation.x}px,#{@elTranslation.y}px)"
-    drop: (event) =>
-      evt = doc.createEvent "Event"
-      evt.initEvent "drop", true, true
-      evt.dataTransfer =
-        getData: (type) =>
-          @dragData[type]
+    dragend: (event) =>
+      log "dragend"
 
-      snapBack = true
-      evt.preventDefault = =>
-        # https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we're snapping back
-        snapBack = false
-        @el.style["-webkit-transform"] = "translate(0,0)"
-      once doc, "drop", =>
-        if snapBack
-          once @el, "webkitTransitionEnd", =>
-            @el.style["-webkit-transition"] = "none"
-          setTimeout =>
-            @el.style["-webkit-transition"] = "all 0.2s"
-            @el.style["-webkit-transform"] = "translate(0,0)"
+      # we'll dispatch drop if there's a target, then dragEnd. If drop isn't fired
+      # or isn't cancelled, we'll snap back
+      # drop comes first http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
 
-      # dispatch event on drop target
-      parent = @el.parentNode
-      replacementFn = if next = @el.nextSibling
-          => parent.insertBefore @el, next
-        else
-          => parent.appendChild @el
-      parent.removeChild(@el)
-      target = document.elementFromPoint(event.changedTouches[0].pageX,event.changedTouches[0].pageY)
-      replacementFn()
-      target.dispatchEvent(evt) if target
+      doSnapBack = =>
+        once @el, "webkitTransitionEnd", =>
+          @el.style["-webkit-transition"] = "none"
+        setTimeout =>
+          @el.style["-webkit-transition"] = "all 0.2s"
+          @el.style["-webkit-transform"] = "translate(0,0)"
+
+      target = doc.elementFromPoint(event.changedTouches[0].pageX,event.changedTouches[0].pageY)
+      if target
+        dropEvt = doc.createEvent "Event"
+        dropEvt.initEvent "drop", true, true
+        dropEvt.dataTransfer =
+          getData: (type) =>
+            @dragData[type]
+        snapBack = true
+        dropEvt.preventDefault = =>
+          # https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we're snapping back
+          snapBack = false
+          @el.style["-webkit-transform"] = "translate(0,0)"
+        once doc, "drop", =>
+          snapBack if snapBack
+
+        # dispatch event on drop target
+        parent = @el.parentNode
+        replacementFn = if next = @el.nextSibling
+            => parent.insertBefore @el, next
+          else
+            => parent.appendChild @el
+        parent.removeChild(@el)
+        replacementFn()
+
+        target.dispatchEvent(dropEvt)
+      else
+        once doc, "dragend", snapBack
+
+      dragendEvt = doc.createEvent "Event"
+      dragendEvt.initEvent "dragend", true, true
+      @el.dispatchEvent dragendEvt
 
   getEls = (el, selector) ->
     unless selector
       [el,selector] = [doc,el]
     [].slice.call (el).querySelectorAll(selector)
 
-  div = document.createElement('div')
+  div = doc.createElement('div')
   dragDiv = `'draggable' in div`
   evts = `'ondragstart' in div && 'ondrop' in div`
   needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -129,19 +144,17 @@
     evt.preventDefault()
     new DragDrop(evt)
 
-  original = Element::setAttribute
-  Element::setAttribute = (attr,val) ->
-    if attr == "draggable"
-      log "touchstart handler #{val}"
-      this[if val then "addEventListener" else "removeEventListener"]("touchstart",dragstart,true)
-    else
-      original.call(this,attr,val)
+  parents = (el) ->
+    while (parent = el.parentNode) && parent != doc.body
+      el = parent
+      parent
 
-  doc.addEventListener "DOMContentLoaded", ->
-    doc.addEventListener "touchstart", (evt) ->
-      if evt.target.draggable
-        dragstart(evt)
-
+  doc.addEventListener "touchstart", handler = (evt) ->
+    for el in [evt.target].concat(parents(evt.target))
+      if el.hasAttribute("draggable")
+        evt.preventDefault()
+        return dragstart(evt,el)
+    null
 )()
 
 
