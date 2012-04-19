@@ -146,7 +146,7 @@
           replacementFn();
           target.dispatchEvent(dropEvt);
         } else {
-          once(doc, "dragend", snapBack);
+          once(doc, "dragend", doSnapBack);
         }
         dragendEvt = doc.createEvent("Event");
         dragendEvt.initEvent("dragend", true, true);
