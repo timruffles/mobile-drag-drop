@@ -133,7 +133,7 @@
           }, this);
           once(doc, "drop", __bind(function() {
             if (snapBack) {
-              return snapBack;
+              return doSnapBack();
             }
           }, this));
           parent = this.el.parentNode;
