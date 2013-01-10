@@ -109,7 +109,7 @@
           snapBack = false
           @el.style["-webkit-transform"] = "translate(0,0)"
         once doc, "drop", =>
-          snapBack if snapBack
+          doSnapBack() if snapBack
 
         # dispatch event on drop target
         parent = @el.parentNode
