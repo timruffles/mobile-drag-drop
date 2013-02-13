@@ -22,6 +22,11 @@
     return 0 if arr.length == 0
     arr.reduce(((s,v) -> v+s), 0) / arr.length
 
+	coordinateSystemForElementFromPoint = if navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) then "client" else "page"
+	elementFromTouchEvent = (event) ->
+		touch = event.changedTouches[0]
+		doc.elementFromPoint(touch[coordinateSystemForElementFromPoint + "X"],touch[coordinateSystemForElementFromPoint + "Y"])
+
   class DragDrop
     constructor: (event,el = event.target) ->
       event.preventDefault()
@@ -96,7 +101,7 @@
           @el.style["-webkit-transition"] = "all 0.2s"
           @el.style["-webkit-transform"] = "translate(0,0)"
 
-      target = doc.elementFromPoint(event.changedTouches[0].pageX,event.changedTouches[0].pageY)
+      target = elementFromTouchEvent(event)
       if target
         dropEvt = doc.createEvent "Event"
         dropEvt.initEvent "drop", true, true
