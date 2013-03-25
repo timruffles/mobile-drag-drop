@@ -22,3 +22,7 @@ because [iOS only fires it on press](https://developer.apple.com/library/ios/#DO
 
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's
 drop-in nature.
+
+## License
+
+[MIT License](LICENSE)
