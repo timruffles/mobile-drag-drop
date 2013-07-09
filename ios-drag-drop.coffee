@@ -5,10 +5,10 @@
   ERROR = 0
   LOG_LEVEL = DEBUG
   doc = document
-  # default to a noop, remove it for debugging
-  noop = ->
   log = (msg,level=ERROR) ->
     console.log msg if level <= LOG_LEVEL
+  # default to a noop, remove it for debugging
+  log = noop
 
   onEvt = (el, event, handler) ->
     el.addEventListener event, handler

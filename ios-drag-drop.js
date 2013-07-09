@@ -2,7 +2,7 @@
 (function() {
 
   (function() {
-    var DEBUG, DragDrop, ERROR, INFO, LOG_LEVEL, VERBOSE, average, coordinateSystemForElementFromPoint, div, doc, dragDiv, dragstart, elementFromTouchEvent, evts, getEls, handler, log, needsPatch, noop, onEvt, once, parents,
+    var DEBUG, DragDrop, ERROR, INFO, LOG_LEVEL, VERBOSE, average, coordinateSystemForElementFromPoint, div, doc, dragDiv, dragstart, elementFromTouchEvent, evts, getEls, handler, log, needsPatch, onEvt, once, parents,
       _this = this;
     VERBOSE = 3;
     DEBUG = 2;
@@ -10,7 +10,6 @@
     ERROR = 0;
     LOG_LEVEL = DEBUG;
     doc = document;
-    noop = function() {};
     log = function(msg, level) {
       if (level == null) {
         level = ERROR;
@@ -19,6 +18,7 @@
         return console.log(msg);
       }
     };
+    log = noop;
     onEvt = function(el, event, handler) {
       el.addEventListener(event, handler);
       return {
