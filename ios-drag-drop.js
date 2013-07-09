@@ -18,7 +18,7 @@
         return console.log(msg);
       }
     };
-    log = noop;
+    log = function() {};
     onEvt = function(el, event, handler) {
       el.addEventListener(event, handler);
       return {

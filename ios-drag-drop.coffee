@@ -8,7 +8,7 @@
   log = (msg,level=ERROR) ->
     console.log msg if level <= LOG_LEVEL
   # default to a noop, remove it for debugging
-  log = noop
+  log = ->
 
   onEvt = (el, event, handler) ->
     el.addEventListener event, handler
