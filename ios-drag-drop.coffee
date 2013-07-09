@@ -3,11 +3,11 @@
   DEBUG = 2
   INFO = 1
   ERROR = 0
-  LOG_LEVEL = 1
+  LOG_LEVEL = DEBUG
   doc = document
   # default to a noop, remove it for debugging
   noop = ->
-  log = noop || (msg,level=ERROR) ->
+  log = (msg,level=ERROR) ->
     console.log msg if level <= LOG_LEVEL
 
   onEvt = (el, event, handler) ->
@@ -22,10 +22,11 @@
     return 0 if arr.length == 0
     arr.reduce(((s,v) -> v+s), 0) / arr.length
 
-	coordinateSystemForElementFromPoint = if navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) then "client" else "page"
-	elementFromTouchEvent = (event) ->
-		touch = event.changedTouches[0]
-		doc.elementFromPoint(touch[coordinateSystemForElementFromPoint + "X"],touch[coordinateSystemForElementFromPoint + "Y"])
+  coordinateSystemForElementFromPoint = if navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) then "client" else "page"
+  elementFromTouchEvent = (event) ->
+    touch = event.changedTouches[0]
+    log("touch")
+    doc.elementFromPoint(touch[coordinateSystemForElementFromPoint + "X"],touch[coordinateSystemForElementFromPoint + "Y"])
 
   class DragDrop
     constructor: (event,el = event.target) ->
@@ -101,8 +102,19 @@
           @el.style["-webkit-transition"] = "all 0.2s"
           @el.style["-webkit-transform"] = "translate(0,0)"
 
+      # ensure we get the element beneath the dragged item
+      parent = @el.parentElement
+      parent.removeChild(@el)
+
       target = elementFromTouchEvent(event)
+
+      if next = @el.nextSibling
+        parent.insertBefore @el, next
+      else
+        parent.appendChild @el
+
       if target
+        log("Found drop target #{target.tagName}")
         dropEvt = doc.createEvent "Event"
         dropEvt.initEvent "drop", true, true
         dropEvt.dataTransfer =
@@ -114,16 +126,8 @@
           snapBack = false
           @el.style["-webkit-transform"] = "translate(0,0)"
         once doc, "drop", =>
+          log "drop event not canceled"
           doSnapBack() if snapBack
-
-        # dispatch event on drop target
-        parent = @el.parentNode
-        replacementFn = if next = @el.nextSibling
-            => parent.insertBefore @el, next
-          else
-            => parent.appendChild @el
-        parent.removeChild(@el)
-        replacementFn()
 
         target.dispatchEvent(dropEvt)
       else
