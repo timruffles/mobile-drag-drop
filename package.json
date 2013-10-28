@@ -1,6 +1,6 @@
 {
   "name": "drag-drop-webkit-mobile",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Shims drag-drop events for mobile webkits - iOS, Android.",
   "main": "ios-drag-drop.js",
   "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",

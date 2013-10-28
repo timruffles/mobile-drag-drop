@@ -174,14 +174,6 @@
     return target
   }
 
-  function getEls(el, selector) {
-    if (!selector) {
-      selector = el
-      el = doc
-    }
-    return [].slice.call(el.querySelectorAll(selector));
-  }
-
   function readTransform(el) {
     var transform = el.style["-webkit-transform"];
     var x = 0
