@@ -148,17 +148,12 @@
   }
 
   // event listeners
-  function dragstart(evt) {
-    evt.preventDefault();
-    new DragDrop(evt);
-  }
-
   function touchstart(evt) {
     var el = evt.target;
     do {
       if (el.hasAttribute("draggable")) {
         evt.preventDefault();
-        return dragstart(evt, el);
+        new DragDrop(evt,el);
       }
     } while((el = el.parentNode) && el != doc.body)
   }
