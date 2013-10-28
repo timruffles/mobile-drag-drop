@@ -2,7 +2,7 @@
 
 The HTML 5 drag'n'drop API allows you to implement drag'n'drop
 with the same code on [most desktop browsers](http://caniuse.com/#search=drag). Unfortunately, you'll notice iOS doesn't
-support it, so no iPad action for you!
+support it, so no iPad (or Android) action for you!
 
 Luckily, WebKit gives us enough tools to shim seamlessly. If you drop
 this script in your page your existing HTML 5 drag'n'drop code should
