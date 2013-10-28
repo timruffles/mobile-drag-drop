@@ -166,6 +166,7 @@
   // DOM helpers
   function elementFromTouchEvent(el,event) {
     var parent = el.parentElement;
+    var next = el.nextSibling
     parent.removeChild(el);
 
     var touch = event.changedTouches[0];
@@ -174,7 +175,7 @@
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
 
-    if (next = el.nextSibling) {
+    if(next) {
       parent.insertBefore(el, next);
     } else {
       parent.appendChild(el);
