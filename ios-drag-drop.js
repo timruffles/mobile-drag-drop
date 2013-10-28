@@ -1,10 +1,6 @@
 (function(doc) {
 
-  var VERBOSE = 3;
-  var DEBUG = 2;
-  var INFO = 1;
-  var ERROR = 0;
-  var LOG_LEVEL = VERBOSE;
+  log = function() {}; // noOp, remove this line to enable debugging
 
   main()
 
@@ -62,7 +58,6 @@
       }
     },
     move: function(event) {
-      log("dragmove", VERBOSE);
       var deltas = { x: [], y: [] };
 
       ;[].forEach.call(event.changedTouches,function(touch, index) {
@@ -220,13 +215,8 @@
 
 
   // general helpers
-  function log(msg, level) {
-    if (level == null) {
-      level = ERROR;
-    }
-    if (level <= LOG_LEVEL) {
-      return console.log(msg);
-    }
+  function log(msg) {
+    console.log(msg);
   }
 
   function average(arr) {
