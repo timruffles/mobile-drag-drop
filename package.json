@@ -1,5 +1,5 @@
 {
-  "name": "drag-drop-webkit-shim",
+  "name": "drag-drop-webkit-mobile",
   "version": "0.2.0",
   "description": "Shims drag-drop events for mobile webkits - iOS, Android.",
   "main": "ios-drag-drop.js",
