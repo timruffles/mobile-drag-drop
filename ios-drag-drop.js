@@ -4,10 +4,7 @@
 
   main()
 
-  var coordinateSystemForElementFromPoint;
-
   function main() {
-    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
 
     var div = doc.createElement('div');
     dragDiv = 'draggable' in div;
@@ -161,8 +158,8 @@
 
     var touch = event.changedTouches[0];
     target = doc.elementFromPoint(
-      touch[coordinateSystemForElementFromPoint + "X"] - window.pageXOffset, 
-      touch[coordinateSystemForElementFromPoint + "Y"] - window.pageYOffset
+      touch.pageX - window.pageXOffset, 
+      touch.pageY - window.pageYOffset
     );
 
     if(next) {
