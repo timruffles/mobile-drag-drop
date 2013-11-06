@@ -2,21 +2,8 @@
 
   log = function() {}; // noOp, remove this line to enable debugging
 
-  main()
-
-  function main() {
-
-    var div = doc.createElement('div');
-    dragDiv = 'draggable' in div;
-    evts = 'ondragstart' in div && 'ondrop' in div;
-
-    var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
-    log((needsPatch ? "" : "not ") + "patching html5 drag drop");
-
-    if(false && !needsPatch) return
-
-    doc.addEventListener("touchstart", touchstart);
-  }
+  // Drag event detection not effective - add poly to devices with touch events
+  doc.addEventListener("touchstart", touchstart);
 
   function DragDrop(event, el) {
 
