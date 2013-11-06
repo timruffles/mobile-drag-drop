@@ -13,9 +13,9 @@
     var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
-    if (needsPatch) {
-      doc.addEventListener("touchstart", touchstart);
-    }
+    if(false && !needsPatch) return
+
+    doc.addEventListener("touchstart", touchstart);
   }
 
   function DragDrop(event, el) {
