@@ -161,8 +161,8 @@
 
     var touch = event.changedTouches[0];
     target = doc.elementFromPoint(
-      touch[coordinateSystemForElementFromPoint + "X"], 
-      touch[coordinateSystemForElementFromPoint + "Y"]
+      touch[coordinateSystemForElementFromPoint + "X"] - window.pageXOffset, 
+      touch[coordinateSystemForElementFromPoint + "Y"] - window.pageYOffset
     );
 
     if(next) {
