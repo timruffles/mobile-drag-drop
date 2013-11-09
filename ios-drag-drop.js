@@ -4,6 +4,7 @@
   if (!('ontouchstart' in window)) return;
 
   // Except Chrome on ChromeOS which may have user initiated drag and drop
+  // TODO: Get a recent ChromeBook and test
   if (/CrOS.*Chrome/.exec(navigator.userAgent)) return;
 
   doc.addEventListener("touchstart", touchstart);
