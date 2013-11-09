@@ -2,7 +2,12 @@
 
   log = function() {}; // noOp, remove this line to enable debugging
 
-  // Drag event detection not effective - add poly to devices with touch events
+  // Add drag poly to devices with touch events
+  if (!('ontouchstart' in window)) return;
+
+  // Except Chrome on ChromeOS which may have user initiated drag and drop
+  if (/CrOS.*Chrome/.exec(navigator.userAgent)) return;
+
   doc.addEventListener("touchstart", touchstart);
 
   function DragDrop(event, el) {
