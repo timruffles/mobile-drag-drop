@@ -1,7 +1,5 @@
 (function(doc) {
 
-  log = function() {}; // noOp, remove this line to enable debugging
-
   // Add drag poly to devices with touch events
   if (!('ontouchstart' in window)) return;
 
@@ -18,7 +16,7 @@
 
     event.preventDefault();
 
-    log("dragstart");
+//    log("dragstart");
 
     this.dispatchDragStart()
     this.elTranslation = readTransform(this.el);
@@ -38,7 +36,7 @@
         cleanup();
       }
       function cleanup() {
-        log("cleanup");
+//        log("cleanup");
         this.touchPositions = {};
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
@@ -70,15 +68,15 @@
       // we'll dispatch drop if there's a target, then dragEnd. If drop isn't fired
       // or isn't cancelled, we'll snap back
       // drop comes first http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
-      log("dragend");
+//      log("dragend");
 
       var target = elementFromTouchEvent(this.el,event)
 
       if (target) {
-        log("found drop target " + target.tagName);
+//        log("found drop target " + target.tagName);
         this.dispatchDrop()
       } else {
-        log("no drop target, scheduling snapBack")
+//        log("no drop target, scheduling snapBack")
         once(doc, "dragend", this.snapBack, this);
       }
 
@@ -103,7 +101,7 @@
       }.bind(this);
 
       once(doc, "drop", function() {
-        log("drop event not canceled");
+//        log("drop event not canceled");
         if (snapBack) this.snapBack()
       },this);
 
@@ -194,19 +192,12 @@
     return el.addEventListener(event,listener);
   }
 
-
-  // general helpers
-  function log(msg) {
-    console.log(msg);
-  }
-
   function average(arr) {
     if (arr.length === 0) return 0;
     return arr.reduce((function(s, v) {
       return v + s;
     }), 0) / arr.length;
   }
-
 
   // Function.bind polyfill for Safari < 5.1.4 and iOS.
   // From https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
