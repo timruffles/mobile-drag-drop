@@ -1,25 +1,13 @@
 (function(doc) {
 
-  log = function() {}; // noOp, remove this line to enable debugging
+  // Add drag poly to devices with touch events
+  if (!('ontouchstart' in window)) return;
 
-  main()
+  // Except Chrome on ChromeOS which may have user initiated drag and drop
+  // TODO: Get a recent ChromeBook and test
+  if (/CrOS.*Chrome/.exec(navigator.userAgent)) return;
 
-  var coordinateSystemForElementFromPoint;
-
-  function main() {
-    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
-
-    var div = doc.createElement('div');
-    dragDiv = 'draggable' in div;
-    evts = 'ondragstart' in div && 'ondrop' in div;
-
-    var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
-    log((needsPatch ? "" : "not ") + "patching html5 drag drop");
-
-    if(false && !needsPatch) return
-
-    doc.addEventListener("touchstart", touchstart);
-  }
+  doc.addEventListener("touchstart", touchstart);
 
   function DragDrop(event, el) {
 
@@ -29,9 +17,9 @@
 
     event.preventDefault();
 
-    log("dragstart");
+//    log("dragstart");
 
-    this.dispatchDragStart()
+    this.dispatchDragEvent("dragstart", this.el);
     this.elTranslation = readTransform(this.el);
 
     this.listen()
@@ -49,7 +37,7 @@
         cleanup();
       }
       function cleanup() {
-        log("cleanup");
+//        log("cleanup");
         this.touchPositions = {};
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
@@ -75,21 +63,35 @@
       this.elTranslation.x += average(deltas.x);
       this.elTranslation.y += average(deltas.y);
       this.el.style["-webkit-transform"] = "translate(" + this.elTranslation.x + "px," + this.elTranslation.y + "px)";
+
+      var target = elementFromTouchEvent(this.el,event);
+
+      if (target === null) return;
+
+      if (target != this.prevTarget) {
+        if (this.prevTarget !== undefined) {
+           this.dispatchDragEvent("dragleave",this.prevTarget);
+        }
+        this.prevTarget = target;
+        this.dispatchDragEvent("dragenter",this.prevTarget);
+      }
+      this.dispatchDragEvent("dragover",this.prevTarget);
+
     },
     dragend: function(event) {
 
       // we'll dispatch drop if there's a target, then dragEnd. If drop isn't fired
       // or isn't cancelled, we'll snap back
       // drop comes first http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
-      log("dragend");
+//      log("dragend");
 
       var target = elementFromTouchEvent(this.el,event)
 
       if (target) {
-        log("found drop target " + target.tagName);
+//        log("found drop target " + target.tagName);
         this.dispatchDrop()
       } else {
-        log("no drop target, scheduling snapBack")
+//        log("no drop target, scheduling snapBack")
         once(doc, "dragend", this.snapBack, this);
       }
 
@@ -114,7 +116,7 @@
       }.bind(this);
 
       once(doc, "drop", function() {
-        log("drop event not canceled");
+//        log("drop event not canceled");
         if (snapBack) this.snapBack()
       },this);
 
@@ -129,17 +131,17 @@
         this.el.style["-webkit-transform"] = "translate(0,0)";
       }.bind(this));
     },
-    dispatchDragStart: function() {
+    dispatchDragEvent: function(eventname, el) {
       var evt = doc.createEvent("Event");
-      evt.initEvent("dragstart", true, true);
+      evt.initEvent(eventname, true, true);
       evt.dataTransfer = {
         setData: function(type, val) {
           return this.dragData[type] = val;
         }.bind(this),
         dropEffect: "move"
       };
-      this.el.dispatchEvent(evt);
-    }
+      el.dispatchEvent(evt);
+    }   
   }
 
   // event listeners
@@ -161,8 +163,8 @@
 
     var touch = event.changedTouches[0];
     target = doc.elementFromPoint(
-      touch[coordinateSystemForElementFromPoint + "X"], 
-      touch[coordinateSystemForElementFromPoint + "Y"]
+      touch.pageX - window.pageXOffset, 
+      touch.pageY - window.pageYOffset
     );
 
     if(next) {
@@ -205,12 +207,6 @@
     return el.addEventListener(event,listener);
   }
 
-
-  // general helpers
-  function log(msg) {
-    console.log(msg);
-  }
-
   function average(arr) {
     if (arr.length === 0) return 0;
     return arr.reduce((function(s, v) {
@@ -218,4 +214,7 @@
     }), 0) / arr.length;
   }
 
+  // Function.bind polyfill for Safari < 5.1.4 and iOS.
+  // From https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+  Function.prototype.bind||(Function.prototype.bind=function(c){if("function"!==typeof this)throw new TypeError("Function.prototype.bind - binding an object that is not callable");var d=Array.prototype.slice.call(arguments,1),e=this,a=function(){},b=function(){return e.apply(this instanceof a?this:c||window,d.concat(Array.prototype.slice.call(arguments)))};a.prototype=this.prototype;b.prototype=new a;return b});
 })(document);
