@@ -74,7 +74,7 @@
 
       this.elTranslation.x += average(deltas.x);
       this.elTranslation.y += average(deltas.y);
-      this.el.style["-webkit-transform"] = "translate(" + this.elTranslation.x + "px," + this.elTranslation.y + "px)";
+      writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
     },
     dragend: function(event) {
 
@@ -110,7 +110,7 @@
       dropEvt.preventDefault = function() {
          // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
         snapBack = false;
-        this.el.style["-webkit-transform"] = "translate(0,0)";
+        writeTransform(this.el, 0, 0);
       }.bind(this);
 
       once(doc, "drop", function() {
@@ -126,7 +126,7 @@
       },this);
       setTimeout(function() {
         this.el.style["-webkit-transition"] = "all 0.2s";
-        this.el.style["-webkit-transform"] = "translate(0,0)";
+        writeTransform(this.el, 0, 0)
       }.bind(this));
     },
     dispatchDragStart: function() {
@@ -161,7 +161,7 @@
 
     var touch = event.changedTouches[0];
     target = doc.elementFromPoint(
-      touch[coordinateSystemForElementFromPoint + "X"], 
+      touch[coordinateSystemForElementFromPoint + "X"],
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
 
@@ -184,6 +184,11 @@
       y = parseInt(match[2],10)
     }
     return { x: x, y: y };
+  }
+
+  function writeTransform(el, x, y) {
+    var transform = el.style["-webkit-transform"].replace(/translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, '');
+    el.style["-webkit-transform"] = transform + " translate(" + x + "px," + y + "px)";
   }
 
   function onEvt(el, event, handler, context) {
