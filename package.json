@@ -22,5 +22,10 @@
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/timruffles/ios-html5-drag-drop-shim/issues"
+  },
+  "devDependencies": {
+    "grunt-contrib-uglify": "~0.3.2",
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.8.0"
   }
 }
