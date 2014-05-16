@@ -10,8 +10,8 @@
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
 
     var div = doc.createElement('div');
-    dragDiv = 'draggable' in div;
-    evts = 'ondragstart' in div && 'ondrop' in div;
+    var dragDiv = 'draggable' in div;
+    var evts = 'ondragstart' in div && 'ondrop' in div;
 
     var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
@@ -87,7 +87,7 @@
 
       if (target) {
         log("found drop target " + target.tagName);
-        this.dispatchDrop()
+        this.dispatchDrop(target)
       } else {
         log("no drop target, scheduling snapBack")
         once(doc, "dragend", this.snapBack, this);
@@ -97,7 +97,7 @@
       dragendEvt.initEvent("dragend", true, true);
       this.el.dispatchEvent(dragendEvt);
     },
-    dispatchDrop: function() {
+    dispatchDrop: function(target) {
       var snapBack = true;
 
       var dropEvt = doc.createEvent("Event");
@@ -160,7 +160,7 @@
     parent.removeChild(el);
 
     var touch = event.changedTouches[0];
-    target = doc.elementFromPoint(
+    var target = doc.elementFromPoint(
       touch[coordinateSystemForElementFromPoint + "X"],
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
