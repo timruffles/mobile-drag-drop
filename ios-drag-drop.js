@@ -74,6 +74,7 @@
 
       this.elTranslation.x += average(deltas.x);
       this.elTranslation.y += average(deltas.y);
+      this.el.style["z-index"] = "999999";
       this.el.style["pointer-events"] = "none";
       writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
     },
@@ -110,6 +111,7 @@
       };
       dropEvt.preventDefault = function() {
          // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
+        this.el.style["z-index"] = "";
         this.el.style["pointer-events"] = "auto";
         snapBack = false;
         writeTransform(this.el, 0, 0);
@@ -125,6 +127,7 @@
     snapBack: function() {
       once(this.el, "webkitTransitionEnd", function() {
         this.el.style["pointer-events"] = "auto";
+        this.el.style["z-index"] = "";
         this.el.style["-webkit-transition"] = "none";
       },this);
       setTimeout(function() {
