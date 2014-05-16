@@ -16,7 +16,7 @@
     var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
-    if(!needsPatch) return
+    if(!needsPatch) return;
 
     doc.addEventListener("touchstart", touchstart);
   }
@@ -60,7 +60,7 @@
     move: function(event) {
       var deltas = { x: [], y: [] };
 
-      ;[].forEach.call(event.changedTouches,function(touch, index) {
+      [].forEach.call(event.changedTouches,function(touch, index) {
         var lastPosition = this.touchPositions[index];
         if (lastPosition) {
           deltas.x.push(touch.pageX - lastPosition.x);
@@ -134,7 +134,8 @@
       evt.initEvent("dragstart", true, true);
       evt.dataTransfer = {
         setData: function(type, val) {
-          return this.dragData[type] = val;
+          this.dragData[type] = val;
+          return val;
         }.bind(this),
         dropEffect: "move"
       };
@@ -150,7 +151,7 @@
         evt.preventDefault();
         new DragDrop(evt,el);
       }
-    } while((el = el.parentNode) && el != doc.body)
+    } while((el = el.parentNode) && el !== doc.body)
   }
 
   // DOM helpers
