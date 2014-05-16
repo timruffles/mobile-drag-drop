@@ -74,6 +74,7 @@
 
       this.elTranslation.x += average(deltas.x);
       this.elTranslation.y += average(deltas.y);
+      this.el.style["pointer-events"] = "none";
       writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
     },
     dragend: function(event) {
@@ -109,6 +110,7 @@
       };
       dropEvt.preventDefault = function() {
          // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
+        this.el.style["pointer-events"] = "auto";
         snapBack = false;
         writeTransform(this.el, 0, 0);
       }.bind(this);
@@ -122,6 +124,7 @@
     },
     snapBack: function() {
       once(this.el, "webkitTransitionEnd", function() {
+        this.el.style["pointer-events"] = "auto";
         this.el.style["-webkit-transition"] = "none";
       },this);
       setTimeout(function() {
@@ -156,22 +159,11 @@
 
   // DOM helpers
   function elementFromTouchEvent(el,event) {
-    var parent = el.parentElement;
-    var next = el.nextSibling
-    parent.removeChild(el);
-
     var touch = event.changedTouches[0];
     var target = doc.elementFromPoint(
       touch[coordinateSystemForElementFromPoint + "X"],
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
-
-    if(next) {
-      parent.insertBefore(el, next);
-    } else {
-      parent.appendChild(el);
-    }
-
     return target
   }
 
