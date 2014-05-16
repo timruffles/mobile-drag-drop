@@ -77,6 +77,15 @@
       this.el.style["z-index"] = "999999";
       this.el.style["pointer-events"] = "none";
       writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
+
+      var target = elementFromTouchEvent(this.el,event)
+      if (target != this.lastEnter) {
+        if (this.lastEnter) {
+          this.dispatchLeave();
+        }
+        this.lastEnter = target;
+        this.dispatchEnter();
+      }
     },
     dragend: function(event) {
 
@@ -84,6 +93,10 @@
       // or isn't cancelled, we'll snap back
       // drop comes first http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
       log("dragend");
+
+      if (this.lastEnter) {
+        this.dispatchLeave();
+      }
 
       var target = elementFromTouchEvent(this.el,event)
 
@@ -123,6 +136,31 @@
       },this);
 
       target.dispatchEvent(dropEvt);
+    },
+    dispatchEnter: function() {
+
+      var enterEvt = doc.createEvent("Event");
+      enterEvt.initEvent("dragenter", true, true);
+      enterEvt.dataTransfer = {
+        getData: function(type) {
+          return this.dragData[type];
+        }.bind(this)
+      };
+
+      this.lastEnter.dispatchEvent(enterEvt);
+    },
+    dispatchLeave: function() {
+
+      var leaveEvt = doc.createEvent("Event");
+      leaveEvt.initEvent("dragleave", true, true);
+      leaveEvt.dataTransfer = {
+        getData: function(type) {
+          return this.dragData[type];
+        }.bind(this)
+      };
+
+      this.lastEnter.dispatchEvent(leaveEvt);
+      this.lastEnter = null;
     },
     snapBack: function() {
       once(this.el, "webkitTransitionEnd", function() {
