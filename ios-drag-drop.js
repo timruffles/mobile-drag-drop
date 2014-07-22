@@ -31,11 +31,11 @@
 
     log("dragstart");
 
+    this.addDragStyles();
     this.dispatchDragStart()
     this.elTranslation = readTransform(this.el);
 
-    this.listen()
-
+    this.listen();
   }
 
   DragDrop.prototype = {
@@ -108,7 +108,8 @@
         }.bind(this)
       };
       dropEvt.preventDefault = function() {
-         // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
+        // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
+        this.removeDragStyles();
         snapBack = false;
         writeTransform(this.el, 0, 0);
       }.bind(this);
@@ -122,6 +123,7 @@
     },
     snapBack: function() {
       once(this.el, "webkitTransitionEnd", function() {
+        this.removeDragStyles();
         this.el.style["-webkit-transition"] = "none";
       },this);
       setTimeout(function() {
@@ -140,8 +142,39 @@
         dropEffect: "move"
       };
       this.el.dispatchEvent(evt);
+    },
+    addDragStyles: function() {
+      if (!this.clonedEl) {
+
+        // clone a placeholder into the DOM
+        this.clonedEl = this.el.cloneNode(true);
+        this.clonedEl.style.display = 'none';
+        this.el.parentNode.insertBefore(this.clonedEl, this.el.nextSibling);
+      }
+      if (this.clonedEl.style.display !== 'none') {
+        return;
+      }
+      if (!this.originalPosition) {
+        this.originalPosition = this.el.style.position || 'static';
+      }
+      this.el.style["z-index"] = "999999";
+      this.el.style["pointer-events"] = "none";
+
+      this.clonedEl.style.display = this.el.style.display;
+      this.el.style.position = 'fixed';
+    },
+    removeDragStyles: function() {
+      this.el.style["z-index"] = "";
+      this.el.style["pointer-events"] = "auto";
+      this.el.style.position = this.originalPosition;
+      this.originalPosition = null;
+      this.clonedEl.style.display = 'none';
+
+      // cleanup
+      this.clonedEl.parentNode.removeChild(this.clonedEl);
+      this.clonedEl = null;
     }
-  }
+  };
 
   // event listeners
   function touchstart(evt) {
