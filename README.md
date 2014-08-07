@@ -9,8 +9,8 @@ just work.
 
 ## Demos
 
-- [drag drop](./demo)
-- [drag drop with enter leave support](./enter-leave)
+- [drag drop](http://timruffles.github.io/ios-html5-drag-drop-shim/demo/)
+- [drag drop with enter leave support](http://timruffles.github.io/ios-html5-drag-drop-shim/enter-leave/)
 
 Check out the demo to see it in action. It should work on Android, but I
 don't have an Android phone to test. Let me know <a
