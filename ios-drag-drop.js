@@ -1,12 +1,12 @@
 (function(doc) {
 
-  log = function() {}; // noOp, remove this line to enable debugging
-
-  main()
+  log = noop; // noOp, remove this line to enable debugging
 
   var coordinateSystemForElementFromPoint;
 
-  function main() {
+  function main(config) {
+    config = config || {};
+
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
 
     var div = doc.createElement('div');
@@ -17,6 +17,10 @@
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
     if(!needsPatch) return;
+
+    if(!config.enableEnterLeave) {
+      DragDrop.prototype.synthesizeEnterLeave = noop;
+    }
 
     doc.addEventListener("touchstart", touchstart);
   }
@@ -78,6 +82,9 @@
       this.el.style["pointer-events"] = "none";
       writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
 
+      this.synthesizeEnterLeave(event);
+    },
+    synthesizeEnterLeave: function(event) {
       var target = elementFromTouchEvent(this.el,event)
       if (target != this.lastEnter) {
         if (this.lastEnter) {
@@ -256,5 +263,10 @@
       return v + s;
     }), 0) / arr.length;
   }
+
+  function noop() {}
+
+  main(window.iosDragDropShim);
+
 
 })(document);
