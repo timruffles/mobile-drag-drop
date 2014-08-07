@@ -27,6 +27,12 @@ var iosDragDropShim = { enableEnterLeave: true }
 <script src="vendor/ios-drag-drop.js"></script>
 ```
 
+## Shim behaviour
+
+- all drag events, with `dragenter` and `dragleave` enabled via config flag
+- as far as possible, moves dragged element to top of visual hierarchy
+- animated snap-back
+
 ## Thanks
 
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's
