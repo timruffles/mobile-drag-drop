@@ -109,7 +109,7 @@
 
       if (target) {
         log("found drop target " + target.tagName);
-        this.dispatchDrop(target)
+        this.dispatchDrop(target, event)
       } else {
         log("no drop target, scheduling snapBack")
         once(doc, "dragend", this.snapBack, this);
@@ -119,11 +119,17 @@
       dragendEvt.initEvent("dragend", true, true);
       this.el.dispatchEvent(dragendEvt);
     },
-    dispatchDrop: function(target) {
+    dispatchDrop: function(target, event) {
       var snapBack = true;
 
       var dropEvt = doc.createEvent("Event");
       dropEvt.initEvent("drop", true, true);
+
+      var x = event[coordinateSystemForElementFromPoint + 'X'];
+      var y = event[coordinateSystemForElementFromPoint + 'Y'];
+      dropEvt.offsetX = target.x - x;
+      dropEvt.offsetY = target.y - y;
+
       dropEvt.dataTransfer = {
         getData: function(type) {
           return this.dragData[type];
