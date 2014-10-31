@@ -125,10 +125,11 @@
       var dropEvt = doc.createEvent("Event");
       dropEvt.initEvent("drop", true, true);
 
-      var x = event[coordinateSystemForElementFromPoint + 'X'];
-      var y = event[coordinateSystemForElementFromPoint + 'Y'];
-      dropEvt.offsetX = target.x - x;
-      dropEvt.offsetY = target.y - y;
+      var touch = event.changedTouches[0];
+      var x = touch[coordinateSystemForElementFromPoint + 'X'];
+      var y = touch[coordinateSystemForElementFromPoint + 'Y'];
+      dropEvt.offsetX = x - target.x;
+      dropEvt.offsetY = y - target.y;
 
       dropEvt.dataTransfer = {
         getData: function(type) {
