@@ -198,7 +198,7 @@
   function touchstart(evt) {
     var el = evt.target;
     do {
-      if (el.hasAttribute("draggable")) {
+      if (el.getAttribute("draggable") == "true") {
         evt.preventDefault();
         new DragDrop(evt,el);
       }
