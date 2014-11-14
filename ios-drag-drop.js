@@ -7,7 +7,7 @@
   function main(config) {
     config = config || {};
 
-    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
+    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
 
     var div = doc.createElement('div');
     var dragDiv = 'draggable' in div;
