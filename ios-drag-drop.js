@@ -93,9 +93,13 @@
           this.dispatchLeave(event);
         }
         this.lastEnter = target;
-        this.dispatchEnter(event);
+        if (this.lastEnter) {
+          this.dispatchEnter(event);
+        }
       }
-      this.dispatchOver(event);
+      if (this.lastEnter) {
+        this.dispatchOver(event);
+      }
     },
     dragend: function(event) {
 
