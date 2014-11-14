@@ -29,6 +29,7 @@
 
     this.touchPositions = {};
     this.dragData = {};
+    this.dragDataTypes = [];
     this.el = el || event.target
 
     event.preventDefault();
@@ -55,6 +56,7 @@
       function cleanup() {
         log("cleanup");
         this.touchPositions = {};
+        this.dragDataTypes = [];
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
           return handler.off();
@@ -132,6 +134,7 @@
       dropEvt.offsetY = y - target.y;
 
       dropEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
@@ -156,6 +159,7 @@
       var enterEvt = doc.createEvent("Event");
       enterEvt.initEvent("dragenter", true, true);
       enterEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
@@ -168,6 +172,7 @@
       var leaveEvt = doc.createEvent("Event");
       leaveEvt.initEvent("dragleave", true, true);
       leaveEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
@@ -193,6 +198,9 @@
       evt.dataTransfer = {
         setData: function(type, val) {
           this.dragData[type] = val;
+          if (this.dragDataTypes.indexOf(type) == -1) {
+            this.dragDataTypes[this.dragDataTypes.length] = type;
+          }
           return val;
         }.bind(this),
         dropEffect: "move"
