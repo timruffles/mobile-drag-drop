@@ -7,7 +7,7 @@
   function main(config) {
     config = config || {};
 
-    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS 5(?:_\d+)+ like Mac/) ? "client" : "page";
+    coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
 
     var div = doc.createElement('div');
     var dragDiv = 'draggable' in div;
@@ -29,6 +29,7 @@
 
     this.touchPositions = {};
     this.dragData = {};
+    this.dragDataTypes = [];
     this.el = el || event.target
 
     event.preventDefault();
@@ -55,6 +56,7 @@
       function cleanup() {
         log("cleanup");
         this.touchPositions = {};
+        this.dragDataTypes = [];
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
           return handler.off();
@@ -88,10 +90,15 @@
       var target = elementFromTouchEvent(this.el,event)
       if (target != this.lastEnter) {
         if (this.lastEnter) {
-          this.dispatchLeave();
+          this.dispatchLeave(event);
         }
         this.lastEnter = target;
-        this.dispatchEnter();
+        if (this.lastEnter) {
+          this.dispatchEnter(event);
+        }
+      }
+      if (this.lastEnter) {
+        this.dispatchOver(event);
       }
     },
     dragend: function(event) {
@@ -102,14 +109,14 @@
       log("dragend");
 
       if (this.lastEnter) {
-        this.dispatchLeave();
+        this.dispatchLeave(event);
       }
 
       var target = elementFromTouchEvent(this.el,event)
 
       if (target) {
         log("found drop target " + target.tagName);
-        this.dispatchDrop(target)
+        this.dispatchDrop(target, event)
       } else {
         log("no drop target, scheduling snapBack")
         once(doc, "dragend", this.snapBack, this);
@@ -119,12 +126,20 @@
       dragendEvt.initEvent("dragend", true, true);
       this.el.dispatchEvent(dragendEvt);
     },
-    dispatchDrop: function(target) {
+    dispatchDrop: function(target, event) {
       var snapBack = true;
 
       var dropEvt = doc.createEvent("Event");
       dropEvt.initEvent("drop", true, true);
+
+      var touch = event.changedTouches[0];
+      var x = touch[coordinateSystemForElementFromPoint + 'X'];
+      var y = touch[coordinateSystemForElementFromPoint + 'Y'];
+      dropEvt.offsetX = x - target.x;
+      dropEvt.offsetY = y - target.y;
+
       dropEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
@@ -144,27 +159,54 @@
 
       target.dispatchEvent(dropEvt);
     },
-    dispatchEnter: function() {
+    dispatchEnter: function(event) {
 
       var enterEvt = doc.createEvent("Event");
       enterEvt.initEvent("dragenter", true, true);
       enterEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
       };
 
+      var touch = event.changedTouches[0];
+      enterEvt.pageX = touch.pageX;
+      enterEvt.pageY = touch.pageY;
+
       this.lastEnter.dispatchEvent(enterEvt);
     },
-    dispatchLeave: function() {
+    dispatchOver: function(event) {
+
+      var overEvt = doc.createEvent("Event");
+      overEvt.initEvent("dragover", true, true);
+      overEvt.dataTransfer = {
+        types: this.dragDataTypes,
+        getData: function(type) {
+          return this.dragData[type];
+        }.bind(this)
+      };
+
+      var touch = event.changedTouches[0];
+      overEvt.pageX = touch.pageX;
+      overEvt.pageY = touch.pageY;
+
+      this.lastEnter.dispatchEvent(overEvt);
+    },
+    dispatchLeave: function(event) {
 
       var leaveEvt = doc.createEvent("Event");
       leaveEvt.initEvent("dragleave", true, true);
       leaveEvt.dataTransfer = {
+        types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
         }.bind(this)
       };
+
+      var touch = event.changedTouches[0];
+      leaveEvt.pageX = touch.pageX;
+      leaveEvt.pageY = touch.pageY;
 
       this.lastEnter.dispatchEvent(leaveEvt);
       this.lastEnter = null;
@@ -186,6 +228,9 @@
       evt.dataTransfer = {
         setData: function(type, val) {
           this.dragData[type] = val;
+          if (this.dragDataTypes.indexOf(type) == -1) {
+            this.dragDataTypes[this.dragDataTypes.length] = type;
+          }
           return val;
         }.bind(this),
         dropEffect: "move"
@@ -198,7 +243,7 @@
   function touchstart(evt) {
     var el = evt.target;
     do {
-      if (el.hasAttribute("draggable")) {
+      if (el.draggable === true) {
         evt.preventDefault();
         new DragDrop(evt,el);
       }

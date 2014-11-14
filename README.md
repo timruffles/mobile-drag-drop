@@ -18,7 +18,7 @@ href="http://twitter.com/timruffles">@timruffles</a>.
 
 ## Install/config
 
-If you want enter/leave events, add a config object to the page before you include the shim.
+If you want enter/over/leave events, add a config object to the page before you include the shim.
 
 ```html
 <script>
@@ -26,6 +26,12 @@ var iosDragDropShim = { enableEnterLeave: true }
 </script>
 <script src="vendor/ios-drag-drop.js"></script>
 ```
+
+## Shim behaviour
+
+- all drag events, with `dragenter`, `dragover` and `dragleave` enabled via config flag
+- as far as possible, moves dragged element to top of visual hierarchy
+- animated snap-back
 
 ## Thanks
 
