@@ -90,10 +90,15 @@
       var target = elementFromTouchEvent(this.el,event)
       if (target != this.lastEnter) {
         if (this.lastEnter) {
-          this.dispatchLeave();
+          this.dispatchLeave(event);
         }
         this.lastEnter = target;
-        this.dispatchEnter();
+        if (this.lastEnter) {
+          this.dispatchEnter(event);
+        }
+      }
+      if (this.lastEnter) {
+        this.dispatchOver(event);
       }
     },
     dragend: function(event) {
@@ -104,7 +109,7 @@
       log("dragend");
 
       if (this.lastEnter) {
-        this.dispatchLeave();
+        this.dispatchLeave(event);
       }
 
       var target = elementFromTouchEvent(this.el,event)
@@ -154,7 +159,7 @@
 
       target.dispatchEvent(dropEvt);
     },
-    dispatchEnter: function() {
+    dispatchEnter: function(event) {
 
       var enterEvt = doc.createEvent("Event");
       enterEvt.initEvent("dragenter", true, true);
@@ -165,9 +170,30 @@
         }.bind(this)
       };
 
+      var touch = event.changedTouches[0];
+      enterEvt.pageX = touch.pageX;
+      enterEvt.pageY = touch.pageY;
+
       this.lastEnter.dispatchEvent(enterEvt);
     },
-    dispatchLeave: function() {
+    dispatchOver: function(event) {
+
+      var overEvt = doc.createEvent("Event");
+      overEvt.initEvent("dragover", true, true);
+      overEvt.dataTransfer = {
+        types: this.dragDataTypes,
+        getData: function(type) {
+          return this.dragData[type];
+        }.bind(this)
+      };
+
+      var touch = event.changedTouches[0];
+      overEvt.pageX = touch.pageX;
+      overEvt.pageY = touch.pageY;
+
+      this.lastEnter.dispatchEvent(overEvt);
+    },
+    dispatchLeave: function(event) {
 
       var leaveEvt = doc.createEvent("Event");
       leaveEvt.initEvent("dragleave", true, true);
@@ -177,6 +203,10 @@
           return this.dragData[type];
         }.bind(this)
       };
+
+      var touch = event.changedTouches[0];
+      leaveEvt.pageX = touch.pageX;
+      leaveEvt.pageY = touch.pageY;
 
       this.lastEnter.dispatchEvent(leaveEvt);
       this.lastEnter = null;
