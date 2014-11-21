@@ -35,6 +35,8 @@ var iosDragDropShim = { enableEnterLeave: true }
 
 ## Thanks
 
+To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-shim/graphs/contributors) who've provided massive extensions and fixes to the original.
+
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's
 drop-in nature.
 
