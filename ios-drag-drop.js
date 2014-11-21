@@ -32,8 +32,6 @@
     this.dragDataTypes = [];
     this.el = el || event.target
 
-    event.preventDefault();
-
     log("dragstart");
 
     this.dispatchDragStart()
