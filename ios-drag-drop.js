@@ -49,7 +49,7 @@
 
       function ontouchend(event) {
         this.dragend(event, event.target);
-        cleanup();
+        cleanup.bind(this)();
       }
       function cleanup() {
         log("cleanup");
@@ -210,15 +210,15 @@
       this.lastEnter = null;
     },
     snapBack: function() {
-      once(this.el, "webkitTransitionEnd", function() {
-        this.el.style["pointer-events"] = "auto";
-        this.el.style["z-index"] = "";
-        this.el.style["-webkit-transition"] = "none";
+      once(this.el, "webkitTransitionEnd", function(e) {
+        e.target.style["pointer-events"] = "auto";
+        e.target.style["z-index"] = "";
+        e.target.style["-webkit-transition"] = "none";
       },this);
-      setTimeout(function() {
+      (function() {
         this.el.style["-webkit-transition"] = "all 0.2s";
-        writeTransform(this.el, 0, 0)
-      }.bind(this));
+        writeTransform(this.el, 0, 0);
+      }.bind(this))();
     },
     dispatchDragStart: function() {
       var evt = doc.createEvent("Event");
