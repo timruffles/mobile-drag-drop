@@ -49,7 +49,7 @@
 
       function ontouchend(event) {
         this.dragend(event, event.target);
-        cleanup.bind(this)();
+        cleanup.call(this);
       }
       function cleanup() {
         log("cleanup");
@@ -214,11 +214,10 @@
         e.target.style["pointer-events"] = "auto";
         e.target.style["z-index"] = "";
         e.target.style["-webkit-transition"] = "none";
-      },this);
-      (function() {
-        this.el.style["-webkit-transition"] = "all 0.2s";
-        writeTransform(this.el, 0, 0);
-      }.bind(this))();
+      });
+
+      this.el.style["-webkit-transition"] = "all 0.2s";
+      writeTransform(this.el, 0, 0);
     },
     dispatchDragStart: function() {
       var evt = doc.createEvent("Event");
@@ -304,7 +303,6 @@
     }
     return el.addEventListener(event,listener);
   }
-
 
   // general helpers
   function log(msg) {
