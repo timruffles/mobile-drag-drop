@@ -30,8 +30,7 @@ var iosDragDropShim = { enableEnterLeave: true }
 ## Shim behaviour
 
 - all drag events, with `dragenter`, `dragover` and `dragleave` enabled via config flag
-- as far as possible, moves dragged element to top of visual hierarchy
-- animated snap-back
+- creates a partially transparent drag image based on the dragged element
 
 ## Thanks
 
