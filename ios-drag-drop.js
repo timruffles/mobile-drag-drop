@@ -138,8 +138,8 @@
       var y = touch[coordinateSystemForElementFromPoint + 'Y'];
       dropEvt.clientX = x;
 	  dropEvt.clientY = y;
-	  dropEvt.offsetX = x - event.target.clientLeft;
-	  dropEvt.offsetY = y - event.target.clientTop;
+	  dropEvt.offsetX = x - target.clientLeft;
+	  dropEvt.offsetY = y - target.clientTop;
 
       dropEvt.dataTransfer = {
         types: this.dragDataTypes,
