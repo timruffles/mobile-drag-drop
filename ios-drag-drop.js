@@ -27,17 +27,15 @@
 
   function DragDrop(event, el) {
 
-    this.touchPositions = {};
     this.dragData = {};
     this.dragDataTypes = [];
+    this.dragImage = null;
     this.el = el || event.target
-
-    event.preventDefault();
 
     log("dragstart");
 
     this.dispatchDragStart()
-    this.elTranslation = readTransform(this.el);
+    this.createDragImage();
 
     this.listen()
 
@@ -51,12 +49,15 @@
 
       function ontouchend(event) {
         this.dragend(event, event.target);
-        cleanup();
+        cleanup.call(this);
       }
       function cleanup() {
         log("cleanup");
-        this.touchPositions = {};
         this.dragDataTypes = [];
+        if (this.dragImage != null) {
+          this.dragImage.parentNode.removeChild(this.dragImage);
+          this.dragImage = null;
+        }
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
           return handler.off();
@@ -64,30 +65,32 @@
       }
     },
     move: function(event) {
-      var deltas = { x: [], y: [] };
+      var pageXs = [], pageYs = [];
+      [].forEach.call(event.changedTouches, function(touch, index) {
+        pageXs.push(touch.pageX);
+        pageYs.push(touch.pageY);
+      });
 
-      [].forEach.call(event.changedTouches,function(touch, index) {
-        var lastPosition = this.touchPositions[index];
-        if (lastPosition) {
-          deltas.x.push(touch.pageX - lastPosition.x);
-          deltas.y.push(touch.pageY - lastPosition.y);
-        } else {
-          this.touchPositions[index] = lastPosition = {};
-        }
-        lastPosition.x = touch.pageX;
-        lastPosition.y = touch.pageY;
-      }.bind(this))
-
-      this.elTranslation.x += average(deltas.x);
-      this.elTranslation.y += average(deltas.y);
-      this.el.style["z-index"] = "999999";
-      this.el.style["pointer-events"] = "none";
-      writeTransform(this.el, this.elTranslation.x, this.elTranslation.y);
+      this.dragImage.style["left"] = average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2) + "px";
+      this.dragImage.style["top"] = average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2) + "px";
 
       this.synthesizeEnterLeave(event);
     },
+    hideDragImage: function() {
+      if (this.dragImage && this.dragImage.style["display"] != "none") {
+        this.dragImageDisplay = this.dragImage.style["display"];
+        this.dragImage.style["display"] = "none";
+      }
+    },
+    showDragImage: function() {
+      if (this.dragImage) {
+        this.dragImage.style["display"] = this.dragImageDisplay ? this.dragImageDisplay : "block";
+      }
+    },
     synthesizeEnterLeave: function(event) {
+      this.hideDragImage();
       var target = elementFromTouchEvent(this.el,event)
+      this.showDragImage();
       if (target != this.lastEnter) {
         if (this.lastEnter) {
           this.dispatchLeave(event);
@@ -103,8 +106,7 @@
     },
     dragend: function(event) {
 
-      // we'll dispatch drop if there's a target, then dragEnd. If drop isn't fired
-      // or isn't cancelled, we'll snap back
+      // we'll dispatch drop if there's a target, then dragEnd.
       // drop comes first http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
       log("dragend");
 
@@ -112,14 +114,15 @@
         this.dispatchLeave(event);
       }
 
+      this.hideDragImage();
       var target = elementFromTouchEvent(this.el,event)
+      this.showDragImage();
 
       if (target) {
         log("found drop target " + target.tagName);
         this.dispatchDrop(target, event)
       } else {
-        log("no drop target, scheduling snapBack")
-        once(doc, "dragend", this.snapBack, this);
+        log("no drop target")
       }
 
       var dragendEvt = doc.createEvent("Event");
@@ -127,8 +130,6 @@
       this.el.dispatchEvent(dragendEvt);
     },
     dispatchDrop: function(target, event) {
-      var snapBack = true;
-
       var dropEvt = doc.createEvent("Event");
       dropEvt.initEvent("drop", true, true);
 
@@ -146,15 +147,10 @@
       };
       dropEvt.preventDefault = function() {
          // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
-        this.el.style["z-index"] = "";
-        this.el.style["pointer-events"] = "auto";
-        snapBack = false;
-        writeTransform(this.el, 0, 0);
       }.bind(this);
 
       once(doc, "drop", function() {
         log("drop event not canceled");
-        if (snapBack) this.snapBack()
       },this);
 
       target.dispatchEvent(dropEvt);
@@ -211,17 +207,6 @@
       this.lastEnter.dispatchEvent(leaveEvt);
       this.lastEnter = null;
     },
-    snapBack: function() {
-      once(this.el, "webkitTransitionEnd", function() {
-        this.el.style["pointer-events"] = "auto";
-        this.el.style["z-index"] = "";
-        this.el.style["-webkit-transition"] = "none";
-      },this);
-      setTimeout(function() {
-        this.el.style["-webkit-transition"] = "all 0.2s";
-        writeTransform(this.el, 0, 0)
-      }.bind(this));
-    },
     dispatchDragStart: function() {
       var evt = doc.createEvent("Event");
       evt.initEvent("dragstart", true, true);
@@ -236,6 +221,15 @@
         dropEffect: "move"
       };
       this.el.dispatchEvent(evt);
+    },
+    createDragImage: function() {
+      this.dragImage = this.el.cloneNode(true);
+      duplicateStyle(this.el, this.dragImage);
+      this.dragImage.style["opacity"] = "0.5";
+      this.dragImage.style["position"] = "absolute";
+      this.dragImage.style["z-index"] = "999999";
+      this.dragImage.style["pointer-events"] = "none";
+      doc.body.appendChild(this.dragImage);
     }
   }
 
@@ -244,6 +238,17 @@
     var el = evt.target;
     do {
       if (el.draggable === true) {
+        // If draggable isn't explicitly set for anchors, then simulate a click event.
+        // Otherwise plain old vanilla links will stop working.
+        // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
+        if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a") {
+          var clickEvt = document.createEvent("MouseEvents");
+          clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
+            evt.screenX, evt.screenY, evt.clientX, evt.clientY,
+            evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
+          el.dispatchEvent(clickEvt);
+          log("Simulating click to anchor");
+        }
         evt.preventDefault();
         new DragDrop(evt,el);
       }
@@ -258,23 +263,6 @@
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
     return target
-  }
-
-  function readTransform(el) {
-    var transform = el.style["-webkit-transform"];
-    var x = 0
-    var y = 0
-    var match = /translate\(\s*(\d+)[^,]*,\D*(\d+)/.exec(transform)
-    if(match) {
-      x = parseInt(match[1],10)
-      y = parseInt(match[2],10)
-    }
-    return { x: x, y: y };
-  }
-
-  function writeTransform(el, x, y) {
-    var transform = el.style["-webkit-transform"].replace(/translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, '');
-    el.style["-webkit-transform"] = transform + " translate(" + x + "px," + y + "px)";
   }
 
   function onEvt(el, event, handler, context) {
@@ -296,6 +284,32 @@
     return el.addEventListener(event,listener);
   }
 
+  function duplicateStyle(srcNode, dstNode) {
+    // Is this node an element?
+    if (dstNode.nodeType == 1) {
+      // Remove any potential conflict attributes
+      dstNode.removeAttribute("id");
+      dstNode.removeAttribute("class");
+      dstNode.removeAttribute("style");
+      dstNode.removeAttribute("draggable");
+    }
+
+    // Clone the style
+    var cs = window.getComputedStyle(srcNode);
+    if (cs) {
+      for (var i = 0; i < cs.length; i++) {
+        var csName = cs[i];
+        dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
+      }
+    }
+
+    // Do the same for the children
+    if (srcNode.hasChildNodes()) {
+      for (var i = 0; i < srcNode.childNodes.length; i++) {
+        duplicateStyle(srcNode.childNodes[i], dstNode.childNodes[i]);
+      }
+    }
+  }
 
   // general helpers
   function log(msg) {

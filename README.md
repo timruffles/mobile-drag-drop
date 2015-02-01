@@ -30,10 +30,11 @@ var iosDragDropShim = { enableEnterLeave: true }
 ## Shim behaviour
 
 - all drag events, with `dragenter`, `dragover` and `dragleave` enabled via config flag
-- as far as possible, moves dragged element to top of visual hierarchy
-- animated snap-back
+- creates a partially transparent drag image based on the dragged element
 
 ## Thanks
+
+To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-shim/graphs/contributors) who've provided massive extensions and fixes to the original.
 
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's
 drop-in nature.
