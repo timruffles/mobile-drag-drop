@@ -70,7 +70,7 @@
         pageXs.push(touch.pageX);
         pageYs.push(touch.pageY);
       });
-
+      this.showDragImage();
       this.dragImage.style["left"] = average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2) + "px";
       this.dragImage.style["top"] = average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2) + "px";
 
@@ -230,6 +230,7 @@
       this.dragImage.style["z-index"] = "999999";
       this.dragImage.style["pointer-events"] = "none";
       doc.body.appendChild(this.dragImage);
+      this.hideDragImage();
     }
   }
 
