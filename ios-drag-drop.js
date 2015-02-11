@@ -284,19 +284,18 @@
     return el.addEventListener(event,listener);
   }
 
+  // duplicateStyle expects dstNode to be a clone of srcNode
   function duplicateStyle(srcNode, dstNode) {
     // Is this node an element?
-    if (dstNode.nodeType == 1) {
+    if (srcNode.nodeType == 1) {
       // Remove any potential conflict attributes
       dstNode.removeAttribute("id");
       dstNode.removeAttribute("class");
       dstNode.removeAttribute("style");
       dstNode.removeAttribute("draggable");
-    }
 
-    // Clone the style
-    var cs = window.getComputedStyle(srcNode);
-    if (cs) {
+      // Clone the style
+      var cs = window.getComputedStyle(srcNode);
       for (var i = 0; i < cs.length; i++) {
         var csName = cs[i];
         dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
