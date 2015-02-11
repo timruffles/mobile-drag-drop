@@ -267,7 +267,7 @@
         }
       }
 
-      this.translateDragImage(-999, -999);
+      this.translateDragImage(-9999, -9999);
 
       doc.body.appendChild(this.dragImage);
     }
