@@ -30,6 +30,8 @@
     this.dragData = {};
     this.dragDataTypes = [];
     this.dragImage = null;
+    this.dragImageTransform = null;
+    this.dragImageWebKitTransform = null;
     this.el = el || event.target
 
     log("dragstart");
@@ -57,6 +59,8 @@
         if (this.dragImage != null) {
           this.dragImage.parentNode.removeChild(this.dragImage);
           this.dragImage = null;
+          this.dragImageTransform = null;
+          this.dragImageWebKitTransform = null;
         }
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
@@ -71,8 +75,9 @@
         pageYs.push(touch.pageY);
       });
 
-      this.dragImage.style["left"] = average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2) + "px";
-      this.dragImage.style["top"] = average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2) + "px";
+      var x = average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2);
+      var y = average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2);
+      this.translateDragImage(x, y);
 
       this.synthesizeEnterLeave(event);
     },
@@ -85,6 +90,18 @@
     showDragImage: function() {
       if (this.dragImage) {
         this.dragImage.style["display"] = this.dragImageDisplay ? this.dragImageDisplay : "block";
+      }
+    },
+    // We use translate instead of top/left because of sub-pixel rendering and for the hope of better performance
+    // http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
+    translateDragImage: function(x, y) {
+      var translate = " translate(" + x + "px," + y + "px)";
+
+      if (this.dragImageWebKitTransform !== null) {
+        this.dragImage.style["-webkit-transform"] = this.dragImageWebKitTransform + translate;
+      }
+      if (this.dragImageTransform !== null) {
+        this.dragImage.style["transform"] = this.dragImageTransform + translate;
       }
     },
     synthesizeEnterLeave: function(event) {
@@ -224,11 +241,34 @@
     },
     createDragImage: function() {
       this.dragImage = this.el.cloneNode(true);
+      
       duplicateStyle(this.el, this.dragImage);
+      
       this.dragImage.style["opacity"] = "0.5";
       this.dragImage.style["position"] = "absolute";
+      this.dragImage.style["left"] = "0px";
+      this.dragImage.style["top"] = "0px";
       this.dragImage.style["z-index"] = "999999";
       this.dragImage.style["pointer-events"] = "none";
+
+      var transform = this.dragImage.style["transform"];
+      if (typeof transform !== "undefined") {
+        this.dragImageTransform = "";
+        if (transform != "none") {
+          this.dragImageTransform = transform.replace(/translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, '');
+        }
+      }
+
+      var webkitTransform = this.dragImage.style["-webkit-transform"];
+      if (typeof webkitTransform !== "undefined") {
+        this.dragImageWebKitTransform = "";
+        if (webkitTransform != "none") {
+          this.dragImageWebKitTransform = webkitTransform.replace(/translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, '');
+        }
+      }
+
+      this.translateDragImage(-999, -999);
+
       doc.body.appendChild(this.dragImage);
     }
   }
