@@ -153,8 +153,11 @@
       var touch = event.changedTouches[0];
       var x = touch[coordinateSystemForElementFromPoint + 'X'];
       var y = touch[coordinateSystemForElementFromPoint + 'Y'];
-      dropEvt.offsetX = x - target.x;
-      dropEvt.offsetY = y - target.y;
+
+      var targetOffset = getOffset(target);
+
+      dropEvt.offsetX = x - targetOffset.x;
+      dropEvt.offsetY = y - targetOffset.y;
 
       dropEvt.dataTransfer = {
         types: this.dragDataTypes,
@@ -303,6 +306,15 @@
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
     return target
+  }
+
+  //calculate the offset position of an element (relative to the window, not the document)
+  function getOffset(el) {
+    var rect = el.getBoundingClientRect();
+    return {
+      "x": rect.left,
+      "y": rect.top
+    };
   }
 
   function onEvt(el, event, handler, context) {
