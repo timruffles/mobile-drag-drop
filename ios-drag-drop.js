@@ -13,7 +13,7 @@
     var dragDiv = 'draggable' in div;
     var evts = 'ondragstart' in div && 'ondrop' in div;
 
-    var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod/.test(navigator.userAgent);
+    var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
     if(!needsPatch) return;
