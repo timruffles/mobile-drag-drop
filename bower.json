@@ -1,0 +1,22 @@
+{
+  "name": "drag-drop-webkit-mobile",
+  "description": "Shims drag-drop events for mobile webkit browsers (iOS).",
+  "version": "1.1.1",
+  "main": "ios-drag-drop.js",
+  "ignore": [
+    "*",
+    "!ios-drag-drop.js",
+    "!README.md"
+  ],
+  "authors": [
+    "Tim Ruffles <me@truffles.me.uk>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
+  },
+  "license": "BSD-2-Clause",
+  "moduleType": [
+    "globals"
+  ]
+}
