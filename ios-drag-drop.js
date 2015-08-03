@@ -153,8 +153,10 @@
       var touch = event.changedTouches[0];
       var x = touch[coordinateSystemForElementFromPoint + 'X'];
       var y = touch[coordinateSystemForElementFromPoint + 'Y'];
-      dropEvt.offsetX = x - target.x;
-      dropEvt.offsetY = y - target.y;
+      dropEvt.clientX = x;
+	  dropEvt.clientY = y;
+	  dropEvt.offsetX = x - target.clientLeft;
+	  dropEvt.offsetY = y - target.clientTop;
 
       dropEvt.dataTransfer = {
         types: this.dragDataTypes,
@@ -245,6 +247,8 @@
       duplicateStyle(this.el, this.dragImage);
       
       this.dragImage.style["opacity"] = "0.5";
+	  this.dragImage.style["left"] = "-999";
+	  this.dragImage.style["top"] = "-999";
       this.dragImage.style["position"] = "absolute";
       this.dragImage.style["left"] = "0px";
       this.dragImage.style["top"] = "0px";
