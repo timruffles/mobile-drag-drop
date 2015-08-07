@@ -2,14 +2,15 @@
   "name": "drag-drop-webkit-mobile",
   "description": "Shims drag-drop events for mobile webkit browsers (iOS).",
   "version": "1.1.1",
-  "main": "ios-drag-drop.js",
+  "main": ["release/mobile-drag-and-drop-polyfill.min.js", "release/mobile-drag-and-drop-polyfill.css"],
   "ignore": [
     "*",
-    "!ios-drag-drop.js",
+    "!release/**/*",
     "!README.md"
   ],
   "authors": [
-    "Tim Ruffles <me@truffles.me.uk>"
+    "Tim Ruffles <me@truffles.me.uk>",
+    "Stefan Steinhart <stefanreppner@googlemail.com>"
   ],
   "repository": {
     "type": "git",
