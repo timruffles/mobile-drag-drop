@@ -63,12 +63,6 @@ module MobileDragAndDropPolyfill {
          * interval in ms.
          */
         iterationInterval:number;
-        /**
-         * //TODO still needed? what browsers?
-         * event target property to remedy cross-browser differences
-         * in touch event coordinates. set in init via browser detection.
-         */
-        coordinateSystemForElementFromPoint:string;
     }
 
     //<editor-fold desc="polyfill initializer">
@@ -117,11 +111,6 @@ module MobileDragAndDropPolyfill {
 
             DragAndDropInitializer.config.log( "Applying mobile drag and drop polyfill." );
 
-            //TODO still needed? on what user agents/browsers?
-            //if( navigator.userAgent.match( /OS [1-4](?:_\d+)+ like Mac/ ) ) {
-            //    DragAndDrop.config.coordinateSystemForElementFromPoint = "page";
-            //}
-
             // add listeners suitable for detecting a potential drag operation
             window.document.addEventListener( "touchstart", DragAndDropInitializer.OnTouchstart );
         }
@@ -132,10 +121,9 @@ module MobileDragAndDropPolyfill {
          *
          * //TODO introduce interface for feature detection that is returned from this method and added to config for use throughout the polyfill
          *
-         * //TODO test where drag and drop works natively and where we have to apply the shim:
+         * //TODO test where where support is still unknown
          *
-         * //TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse or
-         * ..?
+         * //TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse
          *
          * d'n'd support state:
          *
@@ -146,19 +134,19 @@ module MobileDragAndDropPolyfill {
          *                                                          //TODO how can we detect that polyfill should be applied?
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Firefox                          Native
+         * Firefox                          Native                  No issues
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Safari                           Native
+         * Safari                           Native                  No issues
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
          * Opera                            Native                  //TODO Same as chrome regarding touch events?
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Internet Explorer 11             Native
+         * Internet Explorer 11             Native                  No issues
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Edge                             Native
+         * Edge                             Unknown                 Unknown
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
          * Mobile Safari                    Polyfill                //TODO analyze strange behaviour on ipad on drag/touchend/cancel when close to the right
@@ -177,13 +165,14 @@ module MobileDragAndDropPolyfill {
          * device
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Mobile Firefox/FireOS            Unknown
+         * Firefox on Android               Polyfill                No issues besides mobile firefox app behaviour
+         *                                                          (https://bugzilla.mozilla.org/show_bug.cgi?id=1192182)
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Amazon Silk                      Unknown
+         * Amazon Silk                      Unknown                 Unknown
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
-         * Ubuntu Phone                     Unknown
+         * Ubuntu Phone                     Unknown                 Unknown
          * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          * -
          * ...
@@ -575,29 +564,13 @@ module MobileDragAndDropPolyfill {
             // apply the translate
             this.translateDragImage( x, y );
 
-            //TODO test as alternative to append to body, working on ios (test android, winphone and ms surface)
             // append the dragImage as sibling to the source node, this enables to leave styling to existing css classes
             this.sourceNode.parentNode.insertBefore( this.dragImage, this.sourceNode.nextSibling );
-            //this.doc.body.appendChild( this.dragImage );
+            //this.doc.body.appendChild( this.dragImage ); //fallback to above
         }
 
         // backup for saving the css `display` property value on dragImage show/hide
         private dragImageDisplayCss:string = null;
-
-        //TODO remove when sure that pointer-events: none on the dragimage will disable hit-testing for the element (cross-browser)
-        private hideDragImage() {
-            if( this.dragImage && this.dragImage.style[ "display" ] != "none" ) {
-                this.dragImageDisplayCss = this.dragImage.style[ "display" ];
-                this.dragImage.style[ "display" ] = "none";
-            }
-        }
-
-        //TODO remove when sure that pointer-events: none on the dragimage will disable hit-testing for the element (cross-browser)
-        private showDragImage() {
-            if( this.dragImage ) {
-                this.dragImage.style[ "display" ] = this.dragImageDisplayCss ? this.dragImageDisplayCss : "block";
-            }
-        }
 
         private translateDragImage( x:number, y:number ) {
             // using translate3d for best performance
@@ -756,11 +729,7 @@ module MobileDragAndDropPolyfill {
                 this.config.log( "touch event that did not contain initial drag operation touch slipped through" );
                 return;
             }
-            //TODO remove when sure that pointer-events: none on the dragimage will disable hit-testing for the element (cross-browser)
-            //this.hideDragImage();
             var newUserSelection:HTMLElement = <HTMLElement>Util.ElementFromTouch( this.doc, touch );
-            //TODO remove when sure that pointer-events: none on the dragimage will disable hit-testing for the element (cross-browser)
-            //this.showDragImage();
 
             var previousTargetElement = this.currentDropTarget;
 
@@ -1272,25 +1241,6 @@ module MobileDragAndDropPolyfill {
             //TODO does a relatedTarget exist for this event?
             var leaveEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            return cancelled;
-        }
-
-        /**
-         * TODO dragexit is not in the official spec - include at all?
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private dragexit( targetElement:Element ):boolean {
-            this.config.log( "dragexit" );
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-
-            //TODO does a relatedTarget exist for this event?
-            var exitEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( exitEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
 
