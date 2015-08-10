@@ -21,12 +21,20 @@ Check out the demo to see it in action and monitor the console to see the events
 
 ## Install/Config
 
+Install
+
 `bower install drag-drop-webkit-mobile --save`
+
+
+Include
 
 ```HTML
 <link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
 <script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
 ```
+
+
+Initialize
 
 ```JavaScript
 var options = {
@@ -55,10 +63,11 @@ declare module MobileDragAndDropPolyfill {
 
 You can provide a custom class that will be added to the dragImage-element via the [options](#options).
 
-The default class will be applied always.
+The default class will be applied always. Of course you are free to specify any overrides on the default class.
 
 ```CSS
 .mobile-dnd-poly-drag-image {
+    opacity: .5;
 }
 ```
 
@@ -87,7 +96,7 @@ current drop effect/operation on dragging.
 }
 ```
 
-Support for `setDragImage() has not yet arrived, contributions are welcome.
+`Note: Support for setDragImage() to override the dragImage has not yet arrived, contributions are welcome.`
 
 
 ## Compatibility and known issues
@@ -122,9 +131,9 @@ By default now (FF39.0) touch behavior is be off.
 When touches are active drag and drop interaction will still work, so no need to polyfill.
 
 **Firefox on Android: <a name="firefox-android-issues"></a>**
-No critical issues but UX suffers because of [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370)
+No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
 
-`TODO test where where support is still unknown and try to discover any issues`
+`TODO test where support is still unknown and try to discover any issues`
 
 `TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse`
 
@@ -137,6 +146,8 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 | IE11        |                                          |          |             | `event.preventDefault()` when registered on body |                                       |               |              |
 | Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
 | Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
+
+_empty cells mean there is nothing special to take into account_
 
 **Further notices:**
 
@@ -155,6 +166,8 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 ## Contribute
 
 Contributions are welcome. I tried to comment as much as possible and provide a few grunt tasks for making it easy to get involved.
+The HTML5 spec on drag and drop should altough be your first read if you're new to the topic:
+https://html.spec.whatwg.org/multipage/interaction.html#dnd
 
 The project uses TypeScript as main language for several reasons:
 * type-safety & compiler support for easier maintenance
