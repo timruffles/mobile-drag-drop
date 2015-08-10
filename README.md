@@ -27,78 +27,61 @@ Check out the demo to see it in action.
 `TODO`
 
 
-## Compatibility table and known issues
+## Compatibility and known issues
 
-| Browser                          |  Support                 |  Known issues                                                                                |
-| -------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
-| Chrome                           |  Native                  |  No known issues.                                                                            |
-|                                  |                          |  Chrome supports touch devices/events. When run on a desktop touch device like MS Surface    |
-|                                  |                          |  it switches to touches which also disables native drag and drop support.                    |
-|                                  |                          |  Touch behaviour can also be set in chrome://flags by a user to "auto", "on", "off".         |
-|                                  |                          |  Also there is a configuration for enabling drag and drop through touch interaction but      |
-|                                  |                          |  only for Windows and the option is off by default.                                          |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Firefox                          |  Native                  |  Touch behaviour can also be set in about:config by a user to "0" (off), "1" (on), "2"(auto).|
-|                                  |                          |  When touches are active drag and drop interaction will still work, so no need to polyfill.  |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Safari                           |  Native                  |  No known issues                                                                             |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Opera                            |  Native                  |  Same as chrome in every aspect since the same engine is used.                               |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Internet Explorer 11             |  Native                  |  No known issues                                                                             |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Edge                             |  Unknown                 |  Unknown                                                                                     |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Mobile Safari                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge`       |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Chrome on iOS                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge`       |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Chrome on Android                |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge`       |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Chrome on touch device           |  Polyfill                |  No known issues.                                                                            |
-|                                  |                          |  There is a configuration for enabling drag and drop through touch interaction but           |
-|                                  |                          |  only for Windows and the option is off by default. The polyfill still works if this         |
-|                                  |                          |  setting is active. We cannot detect if this flag is set so we just stick to applying        |
-|                                  |                          |  the polyfill.                                                                               |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Firefox on touch device          |  Native                  |  No known issues                                                                             |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Firefox on Android               |  Polyfill                |  No known issues besides mobile firefox app behaviour (https://bugzilla.mozilla.org/show_bug.cgi?id=1192182) |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Amazon Silk                      |  Unknown                 |  Unknown                                                                                     |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| Ubuntu Phone                     |  Unknown                 |  Unknown                                                                                     |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| IEMobile                         |  Native                  |  Unknown                                                                                     |
-| - - - - - - - - - - - - - - - -  | - - - - - - - - - - - -  | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  |
-| ...                              |                          |                                                                                              |
-| -------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| Browser                          |  Support                 |  Known issues                                  |
+| -------------------------------- | ------------------------ | ---------------------------------------------- |
+| Chrome                           |  Native                  |  No known issues. [More info](#chrome-issues)  |
+| Firefox                          |  Native                  |  No known issues. [More info](#firefox-issues) |
+| Safari                           |  Native                  |  No known issues.                              |
+| Opera                            |  Native                  |  Same as Chrome.                               |
+| Internet Explorer 11             |  Native                  |  No known issues.                              |
+| Edge                             |  Unknown                 |  Unknown                                       |
+| Mobile Safari                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| Chrome on iOS                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| Chrome on Android                |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
+| Firefox on touch device          |  Native                  |  No known issues.                              |
+| Firefox on Android               |  Polyfill                |  No known issues. [More info](#firefox-android-issues) |
+| Amazon Silk                      |  Unknown                 |  Unknown                                       |
+| Ubuntu Phone                     |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| IEMobile                         |  Native                  |  Unknown                                       |
+| -------------------------------- | ------------------------ | ---------------------------------------------- |
+
+#### Chrome: <a name="chrome-issues"></a>
+Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it switches to touches which also disables native 
+drag and drop support. Touch behaviour can also be set in chrome://flags by a user to "auto", "on", "off".   
+Also there is a configuration for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
+The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill.
+
+#### Firefox: <a name="firefox-issues"></a>
+Touch behaviour can be set in about:config by a user to "0" (off), "1" (on), "2"(auto).
+By default now (FF39.0) touch behavior is be off.
+When touches are active drag and drop interaction will still work, so no need to polyfill.
+
+#### Firefox on Android: <a name="firefox-android-issues"></a>
+No critical issues but UX suffers because of [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370)
 
 `TODO test where where support is still unknown and try to discover any issues`
+
 `TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse`
 
 ## Cross-browser differences in HTML5 drag'n'drop API
 
-| **Event**     | Firefox                                  | IE11                                             | Chrome | Chrome on Android                      | (Polyfill)          |
-|---------------|------------------------------------------|--------------------------------------------------|--------|----------------------------------------|----------------------
-| **dragstart** | `event.dataTransfer.setData(type, data)` |                                                  |        |                                        |                     |
-| **drag**      |                                          |                                                  |        |                                        |                     |
-| **dragend**   |                                          |                                                  |        |                                        |                     |
-| **dragenter** |                                          | `event.preventDefault()` when registered on body |        | `event.preventDefault()` or `dropzone` | `event.preventDefault()` or `dropzone` |
-| **dragover**  |                                          |                                                  |        |                                        |                     |
-| **dragleave** |                                          |                                                  |        |                                        |                     |
-| **dragexit**  |                                          |                                                  |        |                                        |                     |
+| **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover** | **dragleave** | **dragexit** |
+| ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------ | ------------- | ------------ |
+| Firefox     | `event.dataTransfer.setData(type, data)` |          |             |                                                  |              |               |              |
+| IE11        |                                          |          |             | `event.preventDefault()` when registered on body |              |               |              |
+| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone`           |              |               |              |
+| Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone`           |              |               |              |
 
-Further notices:
+**Further notices:**
 * If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also
 * When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
 * IE11 and Chrome scroll automatically when dragging close to a viewport edge.
-      
----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#### Baseline recommendations for cross-browser support:
-
-* Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`.
+**Baseline recommendations for cross-browser support:**
+* Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`. This is the expected behavior defined by the spec.
 * Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`.
 * If you have a `dragenter`-listener on your `body`-element, call `event.preventDefault()` to ensure the drag operation is not aborted prematurely.
 * Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag operation is aborted and `drop` never emitted.
