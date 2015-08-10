@@ -21,15 +21,17 @@ module.exports = function (grunt) {
       dev: {
         options: {
           port: 8000,
+          // target development files
           base: ['.', 'spec-compliance'],
-          open: true
+          open: true,
+          //livereload: true
         }
       },
       release: {
         options: {
           keepalive: true,
           port: 8001,
-          base: ['.release/', 'spec-compliance']
+          base: ['spec-compliance']
         }
       }
     },
@@ -53,6 +55,12 @@ module.exports = function (grunt) {
       release: {
         src: '*.css',
         dest: 'release/'
+      },
+      demoPage: {
+        files: [
+          // includes files within path
+          {expand: true, cwd:'release', src: ['*.js', '*.css'], dest: 'spec-compliance/', filter: 'isFile', flatten:true}
+        ]
       }
     }
   });
@@ -62,7 +70,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-ts");
 
-  grunt.registerTask("release", ["ts:release", "copy:release", "uglify:release"]);
+  grunt.registerTask("release", ["ts:release", "copy:release", "uglify:release", "copy:demoPage"]);
 
   grunt.registerTask("default", ["connect:dev", "ts:dev"]);
 };

@@ -16,7 +16,7 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 
 [Demo](http://reppners.github.io/ios-html5-drag-drop-shim/spec-compliance/)
 
-Check out the demo to see it in action.
+Check out the demo to see it in action and monitor the console to see the events firing.
 
 
 ## Install/Config
@@ -62,7 +62,7 @@ The default class will be applied always.
 }
 ```
 
-Also there will be classes applied to the dragImage-element according to the
+Also there will be classes applied to the `dragImage`-element according to the
 current drop effect/operation on dragging.
 
 ```CSS
@@ -87,7 +87,8 @@ current drop effect/operation on dragging.
 }
 ```
 
-Support for setDragImage has not yet arrived, contributions are welcome.
+Support for `setDragImage() has not yet arrived, contributions are welcome.
+
 
 ## Compatibility and known issues
 
@@ -127,6 +128,7 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 
 `TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse`
 
+
 ## Cross-browser differences in HTML5 drag'n'drop API
 
 | **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover**                          | **dragleave** | **dragexit** |
@@ -149,6 +151,7 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 * If you have a `dragenter`-listener on your `body`-element, call `event.preventDefault()` to ensure the drag operation is not aborted prematurely.
 * Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag operation is aborted and `drop` never emitted.
 
+
 ## Contribute
 
 Contributions are welcome. I tried to comment as much as possible and provide a few grunt tasks for making it easy to get involved.
@@ -161,7 +164,6 @@ To start working head to your terminal after checkout and execute:
 1. `npm install`
 2. `grunt`
 3. go!
-
 
 ## Thanks
 
