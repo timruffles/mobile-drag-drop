@@ -1,4 +1,4 @@
-`TODO` integrate travis ci, write unit and end2end tests (saucelabs?)
+`TODO integrate travis ci, write unit and end2end tests (saucelabs?). if any browser starts to behave differently we should notice it.`
 
 # Polyfill for HTML 5 drag'n'drop
 
@@ -46,20 +46,19 @@ Check out the demo to see it in action.
 | Amazon Silk                      |  Unknown                 |  Unknown                                       |
 | Ubuntu Phone                     |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
 | IEMobile                         |  Native                  |  Unknown                                       |
-| -------------------------------- | ------------------------ | ---------------------------------------------- |
 
-#### Chrome: <a name="chrome-issues"></a>
+**Chrome: <a name="chrome-issues"></a>**
 Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it switches to touches which also disables native 
 drag and drop support. Touch behaviour can also be set in chrome://flags by a user to "auto", "on", "off".   
 Also there is a configuration for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
 The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill.
 
-#### Firefox: <a name="firefox-issues"></a>
+**Firefox: <a name="firefox-issues"></a>**
 Touch behaviour can be set in about:config by a user to "0" (off), "1" (on), "2"(auto).
 By default now (FF39.0) touch behavior is be off.
 When touches are active drag and drop interaction will still work, so no need to polyfill.
 
-#### Firefox on Android: <a name="firefox-android-issues"></a>
+**Firefox on Android: <a name="firefox-android-issues"></a>**
 No critical issues but UX suffers because of [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370)
 
 `TODO test where where support is still unknown and try to discover any issues`
