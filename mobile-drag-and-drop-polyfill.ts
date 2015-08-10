@@ -200,19 +200,15 @@ module MobileDragAndDropPolyfill {
             var el = <HTMLElement>event.target;
 
             do {
-
                 if( el.draggable === false ) {
                     continue;
                 }
-
                 if( el.getAttribute( "draggable" ) === "true" ) {
                     return el;
                 }
-
             } while( (el = <HTMLElement>el.parentNode) && el !== window.document.body );
             //}
         }
-
 
         /**
          * Implements callback invoked when a drag operation has ended or crashed.

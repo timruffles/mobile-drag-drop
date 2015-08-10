@@ -4,19 +4,9 @@
 module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
-    jshint: {
-      all: ["ios-drag-drop.js"],
-      options: {
-        jshintrc: true,
-      }
-    },
     uglify: {
       options: {
         banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */"
-      },
-      build: {
-        src: "ios-drag-drop.js",
-        dest: "ios-drag-drop.min.js"
       },
       release: {
         options: {
@@ -28,11 +18,11 @@ module.exports = function (grunt) {
       }
     },
     connect: {
-      spec: {
+      dev: {
         options: {
-          keepalive: true,
           port: 8000,
-          base: ['.', 'spec-compliance']
+          base: ['.', 'spec-compliance'],
+          open: true
         }
       },
       release: {
@@ -44,7 +34,7 @@ module.exports = function (grunt) {
       }
     },
     ts: {
-      build: {
+      dev: {
         src: ["*.ts", "!node_modules/**/*.ts"],
         watch: '.'
       },
@@ -68,15 +58,11 @@ module.exports = function (grunt) {
   });
 
   grunt.loadNpmTasks("grunt-contrib-uglify");
-  grunt.loadNpmTasks("grunt-contrib-jshint");
   grunt.loadNpmTasks("grunt-contrib-connect");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-ts");
 
   grunt.registerTask("release", ["ts:release", "copy:release", "uglify:release"]);
 
-  grunt.registerTask("default", [
-    "connect:spec",
-    "ts:build"
-  ]);
+  grunt.registerTask("default", ["connect:dev", "ts:dev"]);
 };

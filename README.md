@@ -12,20 +12,82 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 
 ## Demos
 
-`TODO`
+`TODO demo page containing all the different things that need to be working as a test base and to show capabilities/spec compliance`
+
+[Demo](http://reppners.github.io/ios-html5-drag-drop-shim/spec-compliance/)
 
 Check out the demo to see it in action.
 
 
 ## Install/Config
 
-`TODO`
+`bower install drag-drop-webkit-mobile --save`
 
+```HTML
+<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
+<script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
+```
+
+```JavaScript
+var options = {
+    log: function() {
+        // activate logging by implementing this method
+    },
+    dragImageClass: "my-custom-drag-image-style"
+}
+// options are optional ;)
+MobileDragAndDropPolyfill.Initialize(options);
+```
+
+**Api & Options<a name="options"></a>**:
+
+```TypeScript
+declare module MobileDragAndDropPolyfill {
+    interface Config {
+        log?: (...args: any[]) => void;
+        dragImageClass?: string;
+    }
+    var Initialize: (config?: Config) => void;
+}
+```
 
 ## Customization
 
-`TODO`
+You can provide a custom class that will be added to the dragImage-element via the [options](#options).
 
+The default class will be applied always.
+
+```CSS
+.mobile-dnd-poly-drag-image {
+}
+```
+
+Also there will be classes applied to the dragImage-element according to the
+current drop effect/operation on dragging.
+
+```CSS
+/* applied when the drag effect is none and the operation ends */
+.mobile-dnd-poly-drag-image.snapback {
+    -webkit-transition: -webkit-transform 250ms ease-out;
+    -moz-transition: -moz-transform 250ms ease-out;
+    -o-transition: -o-transform 250ms ease-out;
+    transition: transform 250ms ease-out;
+}
+/* applied on no drag effect */
+.mobile-dnd-poly-drag-image.none {
+}
+/* applied on copy drag effect */
+.mobile-dnd-poly-drag-image.copy {
+}
+/* applied on move drag effect */
+.mobile-dnd-poly-drag-image.move {
+}
+/* applied on link drag effect */
+.mobile-dnd-poly-drag-image.link {
+}
+```
+
+Support for setDragImage has not yet arrived, contributions are welcome.
 
 ## Compatibility and known issues
 
@@ -89,7 +151,16 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 
 ## Contribute
 
-`TODO`
+Contributions are welcome. I tried to comment as much as possible and provide a few grunt tasks for making it easy to get involved.
+
+The project uses TypeScript as main language for several reasons:
+* type-safety & compiler support for easier maintenance
+* easily switch to ES6 when its ready
+
+To start working head to your terminal after checkout and execute:
+1. `npm install`
+2. `grunt`
+3. go!
 
 
 ## Thanks
@@ -101,4 +172,4 @@ To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-
 
 ## License
 
-[MIT License](LICENSE)
+[BSD 2 License](LICENSE)

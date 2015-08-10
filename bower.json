@@ -24,7 +24,7 @@
     "mobile",
     "polyfill"
   ],
-  "license": "MIT",
+  "license": "BSD 2 License",
   "moduleType": [
     "globals"
   ]
