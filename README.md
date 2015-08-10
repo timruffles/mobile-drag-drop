@@ -68,19 +68,21 @@ No critical issues but UX suffers because of [scrolling location bar](https://bu
 
 ## Cross-browser differences in HTML5 drag'n'drop API
 
-| **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover** | **dragleave** | **dragexit** |
-| ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------ | ------------- | ------------ |
-| Firefox     | `event.dataTransfer.setData(type, data)` |          |             |                                                  |              |               |              |
-| IE11        |                                          |          |             | `event.preventDefault()` when registered on body |              |               |              |
-| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone`           |              |               |              |
-| Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone`           |              |               |              |
+| **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover**                          | **dragleave** | **dragexit** |
+| ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------------------------------- | ------------- | ------------ |
+| Firefox     | `event.dataTransfer.setData(type, data)` |          |             | [effectAllowed,dropEffect](#ff-quirk)            | [effectAllowed,dropEffect](#ff-quirk) |               |              |
+| IE11        |                                          |          |             | `event.preventDefault()` when registered on body |                                       |               |              |
+| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
+| Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
 
 **Further notices:**
-* If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also
+
+* <a name="ff-quirk"></a>If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also.
 * When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
 * IE11 and Chrome scroll automatically when dragging close to a viewport edge.
 
 **Baseline recommendations for cross-browser support:**
+
 * Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`. This is the expected behavior defined by the spec.
 * Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`.
 * If you have a `dragenter`-listener on your `body`-element, call `event.preventDefault()` to ensure the drag operation is not aborted prematurely.
