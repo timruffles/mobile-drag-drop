@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset=utf-8>
-    <meta name="viewport" content="width=620">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1">
     <title>iOS shim for HTML5 Drag and drop</title>
     <link rel="stylesheet" href="demo.css">
     <script src="demo.js"></script>
@@ -71,6 +71,8 @@
             addEvent(el, 'drag', function (e) {
 
                 console.log('drag');
+
+                e.stopImmediatePropagation();
             });
 
             addEvent(el, 'dragend', function (e) {
@@ -86,18 +88,26 @@
 
         addEvent(document.body, 'dragover', function (e) {
             console.log('body dragover');
+
+            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'dragexit', function (e) {
             console.log('body dragexit');
+
+            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'drop', function (e) {
             console.log('body drop');
+
+            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'dragleave', function (e) {
             console.log('body dragleave');
+
+            e.stopImmediatePropagation();
         });
 
         var bin = document.querySelector('#bin');

@@ -21,20 +21,23 @@ Check out the demo to see it in action and monitor the console to see the events
 
 ## Install/Config
 
-Install
+**Install**
 
 `bower install drag-drop-webkit-mobile --save`
 
 
-Include
+**Include**
 
 ```HTML
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
 <link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
 <script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
 ```
+_The meta viewport tag is needed because mobile browsers zoom out when something is dragged close to the right edge of the screen._
+_While this may be a good intent to give the user an overview on where he is and where he could drop something, it is quite choppy and interrupting UX._
+_You can try it out yourself and see what suits your application best ;)_
 
-
-Initialize
+**Initialize**
 
 ```JavaScript
 var options = {

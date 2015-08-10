@@ -441,6 +441,7 @@ module MobileDragAndDropPolyfill {
 
         private onTouchMove( event:TouchEvent ) {
 
+            // filter unrelated touches
             if( Util.IsTouchIdentifierContainedInTouchEvent( event, this.initialDragTouchIdentifier ) === false ) {
                 return;
             }
@@ -473,6 +474,7 @@ module MobileDragAndDropPolyfill {
 
         private onTouchEndOrCancel( event:TouchEvent ) {
 
+            // filter unrelated touches
             if( Util.IsTouchIdentifierContainedInTouchEvent( event, this.initialDragTouchIdentifier ) === false ) {
                 return;
             }
@@ -638,7 +640,7 @@ module MobileDragAndDropPolyfill {
             this.dragImage.removeEventListener( "transitionend", this.snapbackEndedCb );
             this.dragImage.removeEventListener( "webkitTransitionEnd", this.snapbackEndedCb );
 
-            // remove the class // basically not needed because the element will be removed anyway
+            // remove the class, basically not needed because the element will be removed anyway
             //this.dragImage.classList.remove( "snapback" );
 
             // Fire a DND event named dragend at the source node.
@@ -1094,7 +1096,19 @@ module MobileDragAndDropPolyfill {
         //    return false;
         //}
 
+        /**
+         * Helper method for recursively go from a nested element up the ancestor chain
+         * to see if any element has a dropzone.
+         *
+         * @param element
+         * @returns {any}
+         * @constructor
+         */
         private static FindDropzoneElement( element:HTMLElement ):HTMLElement {
+
+            if( !element || !element.hasAttribute || typeof element.hasAttribute !== "function") {
+                return null;
+            }
 
             if( element.hasAttribute( "dropzone" ) ) {
                 return element;
@@ -1246,7 +1260,6 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
 
-            //TODO does a relatedTarget exist for this event?
             var overEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragover", true, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( overEvt );
 
@@ -1447,7 +1460,7 @@ module MobileDragAndDropPolyfill {
             return this.dataStore.effectAllowed;
         }
 
-        //TODO effectAllowed can be set only on dragstart
+        //TODO effectAllowed can be set only on dragstart?
         public set effectAllowed( value ) {
             if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
                 return;
@@ -1579,7 +1592,8 @@ module MobileDragAndDropPolyfill {
         }
 
         //TODO integrate feature detection to switch to MouseEvent/DragEvent constructor if makes sense for simulating drag events and event constructors work
-        // at all for our usecase TODO is offsetX offsetY a MUST for drag events?
+        // at all for our usecase
+        // TODO is offsetX offsetY a MUST for drag events?
         public static CreateDragEventFromTouch( e:TouchEvent, typeArg:string, cancelable:boolean, window:Window, dataTransfer:DataTransfer, relatedTarget:Element = null ) {
 
             var touch:Touch = e.changedTouches[ 0 ];
