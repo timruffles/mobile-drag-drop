@@ -16,35 +16,17 @@
     </header>
     <article>
         <p>Drag the list items over the dustbin, and drop them to have the bin eat the item</p>
+
         <div id="bin">
             <div id="innerBin"></div>
         </div>
         <ul>
-            <li><a id="one" href="#"><span style="display: inline-block; background: lightblue">one</span></a></li>
+            <li><a href="#" id="one"><span style="display: inline-block; background: lightblue">one</span></a></li>
             <li><a href="#" id="two">two</a></li>
             <li><a href="#" id="three">three</a></li>
             <li><a href="#" id="four">four</a></li>
             <li><a href="#" id="five">five</a></li>
         </ul>
-        <hr/>
-        <h4>Text for dragging</h4>
-        <label>
-            <input type="text" value="test"/>
-        </label>
-        <label>
-            <textarea>can u drag me?</textarea>
-        </label>
-        <p>some text that might be draggable when selected?</p>
-        <hr/>
-        <h4>Clickables</h4>
-        <a href="#">Some test link</a>
-        <a href="#" draggable="false">Another undraggable</a>
-        <hr/>
-        <h4>Draggables</h4>
-        <a href="#" draggable="true">Draggable test link</a>
-        <span draggable="true">Draggable span</span>
-
-        <div draggable="true" style="width: 50px; height:50px; border:solid white 2px; background-color:black;"></div>
         <hr/>
         <h4>Notes</h4>
         <ol>
@@ -57,7 +39,7 @@
             log: function () {
 
                 var msg = "dnd-poly: ";
-                for(var i = 0; i < arguments.length; i++) {
+                for (var i = 0; i < arguments.length; i++) {
                     msg += arguments[i];
                 }
 
@@ -68,8 +50,6 @@
         var missed = ['hey!', 'missed it :(', 'that was close..', 'ARRRR'];
         var eat = ['yum!', 'gulp', 'burp!', 'nom'];
         var yum = document.createElement('p');
-        var msie = /*@cc_on!@*/0;
-        yum.style.opacity = 1;
 
         var links = document.querySelectorAll('li > a'), el = null;
         for (var i = 0; i < links.length; i++) {
@@ -104,8 +84,6 @@
             });
         }
 
-        var bin = document.querySelector('#bin');
-
         addEvent(document.body, 'dragover', function (e) {
             console.log('body dragover');
         });
@@ -122,114 +100,87 @@
             console.log('body dragleave');
         });
 
+        var bin = document.querySelector('#bin');
+
+        addEvent(bin, 'dragenter', function (e) {
+            console.log('bin dragenter');
+
+            e.preventDefault();
+            bin.className = 'over';
+        });
+
         addEvent(bin, 'dragover', function (e) {
             console.log('bin dragover');
 
             e.preventDefault(); // allows us to drop
             e.dataTransfer.dropEffect = 'copy'; // we have to set it for firefox to be happy
-
-            //    this.className = 'over';
-            //    return false;
         });
 
-        // to get IE to work
-        addEvent(bin, 'dragenter', function (e) {
-            console.log('bin dragenter');
-
-            e.preventDefault();
-
-            //    this.className = 'over';
-            //    return false;
+        addEvent(bin, 'dragexit', function (e) {
+            console.log('bin dragexit');
         });
 
         addEvent(bin, 'dragleave', function () {
             console.log('bin dragleave');
+
+            bin.className = '';
         });
 
         addEvent(bin, 'drop', function (e) {
             console.log('bin drop');
 
-            if (e.stopPropagation) e.stopPropagation(); // stops the browser from redirecting...why???
-
             // stupid nom text + fade effect
-            bin.className = '';
             yum.innerHTML = missed[parseInt(Math.random() * missed.length)];
 
             var y = yum.cloneNode(true);
             bin.appendChild(y);
 
             setTimeout(function () {
-                var t = setInterval(function () {
-                    if (y.style.opacity <= 0) {
-                        if (msie) { // don't bother with the animation
-                            y.style.display = 'none';
-                        }
-                        clearInterval(t);
-                    } else {
-                        y.style.opacity -= 0.1;
-                    }
-                }, 50);
+                y.classList.add("fadeout");
             }, 250);
-
-            return false;
         });
 
         var innerBin = document.querySelector('#innerBin');
 
-        addEvent(innerBin, 'dragover', function (e) {
-            e.preventDefault(); // allows us to drop
-            e.dataTransfer.dropEffect = 'copy';
-
-            console.log('apperture dragover');
-
-            //    this.className = 'over';
-            //    return false;
-        });
-
-        // to get IE to work
         addEvent(innerBin, 'dragenter', function (e) {
-            e.preventDefault();
             console.log('apperture dragenter');
 
-            //    this.className = 'over';
-            //    return false;
+            e.preventDefault();
+        });
+
+        addEvent(innerBin, 'dragover', function (e) {
+            console.log('apperture dragover');
+
+            e.preventDefault(); // allows us to drop
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        addEvent(innerBin, 'dragexit', function (e) {
+            console.log('bin dragexit');
         });
 
         addEvent(innerBin, 'dragleave', function (e) {
             console.log('apperture dragleave');
-
-            this.className = '';
         });
 
         addEvent(innerBin, 'drop', function (e) {
-            //    if (e.stopPropagation) e.stopPropagation(); // stops the browser from redirecting...why???
             console.log('apperture drop');
+
+            e.stopPropagation();
 
             var el = document.getElementById(e.dataTransfer.getData('Text'));
 
             el.parentNode.removeChild(el);
 
             // stupid nom text + fade effect
-            bin.className = '';
             yum.innerHTML = eat[parseInt(Math.random() * eat.length)];
 
             var y = yum.cloneNode(true);
             bin.appendChild(y);
 
             setTimeout(function () {
-                var t = setInterval(function () {
-                    if (y.style.opacity <= 0) {
-                        if (msie) { // don't bother with the animation
-                            y.style.display = 'none';
-                        }
-                        clearInterval(t);
-                    } else {
-                        y.style.opacity -= 0.1;
-                    }
-                }, 50);
+                y.classList.add("fadeout");
             }, 250);
-
-            return false;
         });
 
     </script>

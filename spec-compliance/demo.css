@@ -371,3 +371,19 @@ li.over {
   color: #fff;
   text-shadow: #000 2px 2px 2px;
 }
+
+#innerBin {
+  position:relative;
+  top: 50px;
+  left: 50px;
+  width: 60px;
+  height: 50px;
+  background-color: rgba(255,255,255,.5);
+  border: 2px dashed white;
+  border-radius: 5px;
+}
+
+.fadeout {
+  transition: opacity 1s;
+  opacity: 0;
+}
