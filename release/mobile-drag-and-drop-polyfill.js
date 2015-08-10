@@ -8,34 +8,32 @@ var MobileDragAndDropPolyfill;
         }
         DragAndDropInitializer.Initialize = function (config) {
             Util.Merge(DragAndDropInitializer.config, config);
-            if (DragAndDropInitializer.IsDragAndDropSupportedNatively()) {
+            var featureDetection = {};
+            if (DragAndDropInitializer.IsDragAndDropSupportedNatively(featureDetection)) {
                 return;
             }
             DragAndDropInitializer.config.log("Applying mobile drag and drop polyfill.");
             window.document.addEventListener("touchstart", DragAndDropInitializer.OnTouchstart);
         };
-        DragAndDropInitializer.IsDragAndDropSupportedNatively = function () {
-            var div = window.document.createElement('div');
-            var dragDiv = 'draggable' in div;
-            var evts = 'ondragstart' in div && 'ondrop' in div;
-            var knownUserAgent = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
-            if (dragDiv) {
-                DragAndDropInitializer.config.log("draggable property is present");
-            }
-            if (evts) {
-                DragAndDropInitializer.config.log("drag events are present");
-            }
-            if (window["MouseEvent"] && typeof MouseEvent.constructor === 'function') {
-                DragAndDropInitializer.config.log("mouse event constructor is available");
-            }
-            if (window["DragEvent"] && typeof DragEvent.constructor === 'function') {
-                DragAndDropInitializer.config.log("drag event constructor is available");
-            }
-            if (knownUserAgent) {
-                DragAndDropInitializer.config.log("user agent is known to need drag'n'drop polyfill");
-            }
-            var needsPatch = !(dragDiv || evts) || knownUserAgent;
-            return !needsPatch;
+        DragAndDropInitializer.IsDragAndDropSupportedNatively = function (featureDetection) {
+            featureDetection.draggable = 'draggable' in window.document.documentElement;
+            featureDetection.dragEvents = ('ondragstart' in window.document.documentElement);
+            featureDetection.touchEvents = ('ontouchstart' in window.document.documentElement);
+            featureDetection.mouseEventConstructor = ('MouseEvent' in window);
+            featureDetection.dragEventConstructor = ('DragEvent' in window);
+            featureDetection.customEventConstructor = ('CustomEvent' in window);
+            featureDetection.isBlinkEngine = !!(window.chrome) || /chrome/i.test(navigator.userAgent);
+            featureDetection.isGeckoEngine = /firefox/i.test(navigator.userAgent);
+            featureDetection.userAgentNotSupportingNativeDnD =
+                (/iPad|iPhone|iPod|Android/.test(navigator.userAgent)
+                    ||
+                        featureDetection.touchEvents && (featureDetection.isBlinkEngine));
+            Util.ForIn(featureDetection, function (value, key) {
+                DragAndDropInitializer.config.log("feature '" + key + "' is '" + value + "'");
+            });
+            return (featureDetection.userAgentNotSupportingNativeDnD === false
+                && featureDetection.draggable
+                && featureDetection.dragEvents);
         };
         DragAndDropInitializer.OnTouchstart = function (e) {
             DragAndDropInitializer.config.log("global touchstart");
@@ -43,7 +41,7 @@ var MobileDragAndDropPolyfill;
                 DragAndDropInitializer.config.log("drag operation already active");
                 return;
             }
-            var dragTarget = DragOperationController.IsDragOperation(e, DragAndDropInitializer.config);
+            var dragTarget = DragAndDropInitializer.TargetIsDraggable(e, DragAndDropInitializer.config);
             if (!dragTarget) {
                 return;
             }
@@ -54,22 +52,45 @@ var MobileDragAndDropPolyfill;
             }
             catch (err) {
                 DragAndDropInitializer.config.log(err);
-                DragAndDropInitializer.DragOperationEnded();
+                DragAndDropInitializer.DragOperationEnded(dragTarget, e, DragOperationState.CANCELLED);
             }
         };
-        DragAndDropInitializer.DragOperationEnded = function () {
+        DragAndDropInitializer.TargetIsDraggable = function (event, config) {
+            //1. Determine what is being dragged, as follows:
+            var el = event.target;
+            do {
+                if (el.draggable === false) {
+                    continue;
+                }
+                if (el.getAttribute("draggable") === "true") {
+                    return el;
+                }
+            } while ((el = el.parentNode) && el !== window.document.body);
+        };
+        DragAndDropInitializer.DragOperationEnded = function (sourceNode, event, state) {
             DragAndDropInitializer.dragOperationActive = false;
+            if (state === DragOperationState.POTENTIAL) {
+                DragAndDropInitializer.config.log("No movement on draggable. Dispatching click..");
+                var clickEvt = Util.CreateMouseEventFromTouch(event, "click");
+                sourceNode.dispatchEvent(clickEvt);
+            }
         };
         DragAndDropInitializer.dragOperationActive = false;
         DragAndDropInitializer.config = {
             log: function () {
             },
             dragImageClass: null,
-            iterationInterval: 150,
-            coordinateSystemForElementFromPoint: "client"
+            iterationInterval: 150
         };
         return DragAndDropInitializer;
     })();
+    var DragOperationState;
+    (function (DragOperationState) {
+        DragOperationState[DragOperationState["POTENTIAL"] = 0] = "POTENTIAL";
+        DragOperationState[DragOperationState["STARTED"] = 1] = "STARTED";
+        DragOperationState[DragOperationState["ENDED"] = 2] = "ENDED";
+        DragOperationState[DragOperationState["CANCELLED"] = 3] = "CANCELLED";
+    })(DragOperationState || (DragOperationState = {}));
     var DragOperationController = (function () {
         function DragOperationController(config, sourceNode, initialEvent, dragOperationEndedCb) {
             this.config = config;
@@ -80,38 +101,37 @@ var MobileDragAndDropPolyfill;
             this.transformStyleMixins = {};
             this.immediateUserSelection = null;
             this.currentDropTarget = null;
-            this.dragDataStore = new DragDataStore();
+            this.dragDataStore = null;
             this.dataTransfer = null;
             this.currentDragOperation = "none";
             this.iterationLock = false;
             this.intervalId = null;
             this.lastTouchEvent = null;
             this.initialDragTouchIdentifier = null;
-            this.dragOperationEnded = false;
-            this.dragOperationCancelled = false;
-            this.dragImageDisplayCss = null;
+            this.dragOperationState = DragOperationState.POTENTIAL;
             config.log("setting up potential drag operation..");
             this.touchMoveHandler = this.onTouchMove.bind(this);
             this.touchEndOrCancelHandler = this.onTouchEndOrCancel.bind(this);
-            this.snapbackEndedCb = this.snapbackTransitionEnded.bind(this);
-            this.dataTransfer = new DataTransfer(this.dragDataStore);
             this.lastTouchEvent = initialEvent;
             this.initialDragTouchIdentifier = this.lastTouchEvent.changedTouches[0].identifier;
-            if (this.dragstart(this.sourceNode)) {
-                config.log("dragstart cancelled");
-                this.cleanup();
-            }
-            else {
-                this.setup();
-            }
-        }
-        DragOperationController.prototype.setup = function () {
-            var _this = this;
-            this.config.log("setup");
-            this.createDragImage(this.lastTouchEvent);
             document.addEventListener("touchmove", this.touchMoveHandler);
             document.addEventListener("touchend", this.touchEndOrCancelHandler);
             document.addEventListener("touchcancel", this.touchEndOrCancelHandler);
+        }
+        DragOperationController.prototype.setupDragAndDropOperation = function () {
+            var _this = this;
+            this.config.log("starting drag and drop operation");
+            this.dragOperationState = DragOperationState.STARTED;
+            this.dragDataStore = new DragDataStore();
+            this.dataTransfer = new DataTransfer(this.dragDataStore);
+            this.createDragImage(this.lastTouchEvent);
+            if (this.dragstart(this.sourceNode)) {
+                this.config.log("dragstart cancelled");
+                this.dragOperationState = DragOperationState.CANCELLED;
+                this.cleanup();
+                return;
+            }
+            this.snapbackEndedCb = this.snapbackTransitionEnded.bind(this);
             this.intervalId = setInterval(function () {
                 if (_this.iterationLock) {
                     _this.config.log('iteration skipped because previous iteration hast not yet finished.');
@@ -135,19 +155,22 @@ var MobileDragAndDropPolyfill;
                 this.dragImage.parentNode.removeChild(this.dragImage);
                 this.dragImage = null;
             }
-            this.doc = null;
-            this.immediateUserSelection = null;
             this.dataTransfer = null;
-            this.currentDropTarget = null;
             this.dragDataStore = null;
-            this.lastTouchEvent = null;
+            this.immediateUserSelection = null;
+            this.currentDropTarget = null;
             this.touchEndOrCancelHandler = null;
             this.touchMoveHandler = null;
             this.snapbackEndedCb = null;
-            this.dragOperationEndedCb();
+            this.dragOperationEndedCb(this.sourceNode, this.lastTouchEvent, this.dragOperationState);
+            this.lastTouchEvent = null;
         };
         DragOperationController.prototype.onTouchMove = function (event) {
             if (Util.IsTouchIdentifierContainedInTouchEvent(event, this.initialDragTouchIdentifier) === false) {
+                return;
+            }
+            if (this.dragOperationState === DragOperationState.POTENTIAL) {
+                this.setupDragAndDropOperation();
                 return;
             }
             event.preventDefault();
@@ -166,12 +189,15 @@ var MobileDragAndDropPolyfill;
             if (Util.IsTouchIdentifierContainedInTouchEvent(event, this.initialDragTouchIdentifier) === false) {
                 return;
             }
+            if (this.dragOperationState === DragOperationState.POTENTIAL) {
+                this.cleanup();
+                return;
+            }
             event.preventDefault();
             event.stopImmediatePropagation();
             this.config.log("touch cancelled or ended");
             this.lastTouchEvent = event;
-            this.dragOperationEnded = true;
-            this.dragOperationCancelled = (event.type === "touchcancel");
+            this.dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
         };
         DragOperationController.PrepareNodeCopyAsDragImage = function (srcNode, dstNode) {
             if (srcNode.nodeType === 1) {
@@ -219,17 +245,6 @@ var MobileDragAndDropPolyfill;
             this.translateDragImage(x, y);
             this.sourceNode.parentNode.insertBefore(this.dragImage, this.sourceNode.nextSibling);
         };
-        DragOperationController.prototype.hideDragImage = function () {
-            if (this.dragImage && this.dragImage.style["display"] != "none") {
-                this.dragImageDisplayCss = this.dragImage.style["display"];
-                this.dragImage.style["display"] = "none";
-            }
-        };
-        DragOperationController.prototype.showDragImage = function () {
-            if (this.dragImage) {
-                this.dragImage.style["display"] = this.dragImageDisplayCss ? this.dragImageDisplayCss : "block";
-            }
-        };
         DragOperationController.prototype.translateDragImage = function (x, y) {
             var _this = this;
             var translate = " translate3d(" + x + "px," + y + "px, 0)";
@@ -262,29 +277,8 @@ var MobileDragAndDropPolyfill;
             this.dragImage.removeEventListener("transitionend", this.snapbackEndedCb);
             this.dragImage.removeEventListener("webkitTransitionEnd", this.snapbackEndedCb);
             this.dragend(this.sourceNode);
+            this.dragOperationState = DragOperationState.ENDED;
             this.cleanup();
-        };
-        DragOperationController.IsDragOperation = function (event, config) {
-            config.log("detecting possible drag operation..");
-            var el = event.target;
-            do {
-                if (el.draggable === false) {
-                    continue;
-                }
-                if (el.tagName == "A" && !el.getAttribute("draggable")) {
-                    var clickEvt = Util.CreateMouseEventFromTouch(event, "click");
-                    config.log("dispatching click on anchor");
-                    var cancelled = el.dispatchEvent(clickEvt);
-                    if (!cancelled) {
-                        event.preventDefault();
-                        return null;
-                    }
-                }
-                if (el.getAttribute("draggable")) {
-                    config.log("drag on tag");
-                    return el;
-                }
-            } while ((el = el.parentNode) && el !== window.document.body);
         };
         DragOperationController.prototype.dragAndDropProcessModelIteration = function () {
             var dragCancelled = this.drag(this.sourceNode);
@@ -292,13 +286,14 @@ var MobileDragAndDropPolyfill;
                 this.config.log("drag event cancelled.");
                 this.currentDragOperation = "none";
             }
-            if (dragCancelled || this.dragOperationEnded) {
-                var dragFailed = this.DragOperationEnded(this.dragOperationCancelled);
+            if (dragCancelled || this.dragOperationState === DragOperationState.ENDED || this.dragOperationState === DragOperationState.CANCELLED) {
+                var dragFailed = this.DragOperationEnded(this.dragOperationState);
                 if (dragFailed) {
                     this.snapbackDragImage();
                     return;
                 }
                 this.dragend(this.sourceNode);
+                this.dragOperationState = DragOperationState.ENDED;
                 this.cleanup();
                 return;
             }
@@ -311,6 +306,9 @@ var MobileDragAndDropPolyfill;
             var previousTargetElement = this.currentDropTarget;
             if (newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget) {
                 this.immediateUserSelection = newUserSelection;
+                if (this.currentDropTarget !== null) {
+                    this.dragexit(this.currentDropTarget);
+                }
                 if (this.immediateUserSelection === null) {
                     this.currentDropTarget = this.immediateUserSelection;
                     this.config.log("current drop target changed to null");
@@ -322,9 +320,15 @@ var MobileDragAndDropPolyfill;
                         this.currentDragOperation = DragOperationController.DetermineDragOperation(this.dataTransfer);
                     }
                     else {
-                        this.config.log("dragenter not prevented");
-                        if (DragOperationController.GetOperationForMatchingDropzone(this.immediateUserSelection, this.dragDataStore) !== "none") {
+                        this.config.log("dragenter not prevented, searching for dropzone..");
+                        var newTarget = DragOperationController.FindDropzoneElement(this.immediateUserSelection);
+                        if (newTarget === this.immediateUserSelection &&
+                            DragOperationController.GetOperationForMatchingDropzone(this.immediateUserSelection, this.dragDataStore) !== "none") {
                             this.currentDropTarget = this.immediateUserSelection;
+                        }
+                        else if (newTarget !== null && DragOperationController.GetOperationForMatchingDropzone(newTarget, this.dragDataStore)) {
+                            this.dragenter(newTarget, this.currentDropTarget);
+                            this.currentDropTarget = newTarget;
                         }
                         else if (this.immediateUserSelection === this.doc.body) {
                         }
@@ -336,7 +340,7 @@ var MobileDragAndDropPolyfill;
             }
             if (previousTargetElement !== this.currentDropTarget && (Util.IsDOMElement(previousTargetElement))) {
                 this.config.log("current drop target changed.");
-                this.dragleave(previousTargetElement);
+                this.dragleave(previousTargetElement, this.currentDropTarget);
             }
             if (Util.IsDOMElement(this.currentDropTarget)) {
                 if (this.dragover(this.currentDropTarget) === false) {
@@ -356,11 +360,11 @@ var MobileDragAndDropPolyfill;
             this.dragImage.classList.remove("none");
             this.dragImage.classList.add(this.currentDragOperation);
         };
-        DragOperationController.prototype.DragOperationEnded = function (cancelled) {
-            this.config.log("drag operation end detected. cancelled: " + !!cancelled);
+        DragOperationController.prototype.DragOperationEnded = function (state) {
+            this.config.log("drag operation end detected. state: " + DragOperationState[state]);
             var dragFailed = (this.currentDragOperation === "none"
                 || this.currentDropTarget === null
-                || cancelled);
+                || state === DragOperationState.CANCELLED);
             if (dragFailed) {
                 if (Util.IsDOMElement(this.currentDropTarget)) {
                     this.dragleave(this.currentDropTarget);
@@ -419,13 +423,16 @@ var MobileDragAndDropPolyfill;
             }
             return "copy";
         };
+        DragOperationController.FindDropzoneElement = function (element) {
+            if (element.hasAttribute("dropzone")) {
+                return element;
+            }
+            if (element === window.document.body) {
+                return null;
+            }
+            return DragOperationController.FindDropzoneElement(element.parentElement);
+        };
         DragOperationController.GetOperationForMatchingDropzone = function (element, dragDataStore) {
-            // If the current target element is an element with a dropzone attribute that matches the drag data store and specifies an operation
-            //      Set the current drag operation to the operation specified by the dropzone attribute of the current target element.
-            // If the current target element is an element with a dropzone attribute that matches the drag data store and does not specify an operation
-            //      Set the current drag operation to "copy".
-            // Otherwise
-            //      Reset the current drag operation to "none".
             var value = element.getAttribute("dropzone");
             if (!value) {
                 return "none";
@@ -477,11 +484,12 @@ var MobileDragAndDropPolyfill;
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
             return cancelled;
         };
-        DragOperationController.prototype.dragenter = function (targetElement) {
+        DragOperationController.prototype.dragenter = function (targetElement, relatedTarget) {
+            if (relatedTarget === void 0) { relatedTarget = null; }
             this.config.log("dragenter");
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect(this.dragDataStore.effectAllowed, this.sourceNode);
-            var enterEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, this.currentDropTarget);
+            var enterEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, relatedTarget);
             var cancelled = !targetElement.dispatchEvent(enterEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
             return cancelled;
@@ -495,19 +503,22 @@ var MobileDragAndDropPolyfill;
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
             return cancelled;
         };
-        DragOperationController.prototype.dragleave = function (targetElement) {
-            this.config.log("dragleave");
+        DragOperationController.prototype.dragexit = function (targetElement) {
+            this.config.log("dragexit");
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            var leaveEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, null);
+            this.dataTransfer.dropEffect = "none";
+            var leaveEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(leaveEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
             return cancelled;
         };
-        DragOperationController.prototype.dragexit = function (targetElement) {
-            this.config.log("dragexit");
+        DragOperationController.prototype.dragleave = function (targetElement, relatedTarget) {
+            if (relatedTarget === void 0) { relatedTarget = null; }
+            this.config.log("dragleave");
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            var exitEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null);
-            var cancelled = !targetElement.dispatchEvent(exitEvt);
+            this.dataTransfer.dropEffect = "none";
+            var leaveEvt = Util.CreateDragEventFromTouch(this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, relatedTarget);
+            var cancelled = !targetElement.dispatchEvent(leaveEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
             return cancelled;
         };
@@ -565,26 +576,30 @@ var MobileDragAndDropPolyfill;
             enumerable: true,
             configurable: true
         });
-        DataTransfer.prototype.setData = function (format, data) {
+        DataTransfer.prototype.setData = function (type, data) {
             if (this.dataStore.mode === DragDataStoreMode._DISCONNECTED) {
                 return;
             }
-            if (this.dataStore.mode === DragDataStoreMode.READWRITE) {
-                this.dataStore.data[format] = data;
-                var index = this.dataStore.types.indexOf(format);
-                if (index > -1) {
-                    this.dataStore.types.push(format);
-                }
+            if (this.dataStore.mode !== DragDataStoreMode.READWRITE) {
+                return;
+            }
+            if (type.indexOf(" ") > -1) {
+                throw new Error("Space character not allowed in drag data item type string");
+            }
+            this.dataStore.data[type] = data;
+            var index = this.dataStore.types.indexOf(type);
+            if (index > -1) {
+                this.dataStore.types.push(type);
             }
         };
-        DataTransfer.prototype.getData = function (format) {
+        DataTransfer.prototype.getData = function (type) {
             if (this.dataStore.mode === DragDataStoreMode._DISCONNECTED) {
                 return null;
             }
             if (this.dataStore.mode === DragDataStoreMode.PROTECTED) {
                 return null;
             }
-            return this.dataStore.data[format] || "";
+            return this.dataStore.data[type] || "";
         };
         DataTransfer.prototype.clearData = function (format) {
             if (this.dataStore.mode === DragDataStoreMode._DISCONNECTED) {
@@ -601,7 +616,7 @@ var MobileDragAndDropPolyfill;
             this.dataStore.data = {};
             this.dataStore.types = [];
         };
-        DataTransfer.prototype.setDragImage = function () {
+        DataTransfer.prototype.setDragImage = function (image, x, y) {
             if (this.dataStore.mode === DragDataStoreMode._DISCONNECTED) {
                 return null;
             }

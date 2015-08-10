@@ -58,12 +58,12 @@
         MobileDragAndDropPolyfill.Initialize({
             log: function () {
 
-                var msg = "dnd-poly: ";
-                for(var i = 0; i < arguments.length; i++) {
-                    msg += arguments[i];
-                }
-
-                console.log(msg);
+//                var msg = "dnd-poly: ";
+//                for(var i = 0; i < arguments.length; i++) {
+//                    msg += arguments[i];
+//                }
+//
+//                console.log(msg);
             }
         });
 
@@ -99,19 +99,21 @@
 
                 console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
             });
+
+            addEvent(el, 'click', function (e) {
+
+                console.log('clicked on draggable');
+            });
         }
 
         var bin = document.querySelector('#bin');
 
-        // to get IE to work
-//        addEvent(document.body, 'dragenter', function (e) {
-//            e.preventDefault();
-//            console.log('body dragenter');
-//        });
-
-        // to get IE to work
         addEvent(document.body, 'dragover', function (e) {
             console.log('body dragover');
+        });
+
+        addEvent(document.body, 'dragexit', function (e) {
+            console.log('body dragexit');
         });
 
         addEvent(document.body, 'drop', function (e) {
