@@ -106,14 +106,14 @@ There is a CSS-file you can drop in that defines default styles and icons:
 | Opera                            |  Native                  |  Same as Chrome.                               |
 | Internet Explorer 11             |  Native                  |  No known issues.                              |
 | Edge                             |  Unknown                 |  Unknown                                       |
-| Mobile Safari                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
-| Chrome on iOS                    |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
-| Chrome on Android                |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| Mobile Safari                    |  Polyfill                |  No known issues.                              |
+| Chrome on iOS                    |  Polyfill                |  No known issues.                              |
+| Chrome on Android                |  Polyfill                |  No known issues.                              |
 | Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
 | Firefox on touch device          |  Native                  |  No known issues.                              |
 | Firefox on Android               |  Polyfill                |  No known issues. [More info](#firefox-android-issues) |
 | Amazon Silk                      |  Unknown                 |  Unknown                                       |
-| Ubuntu Phone                     |  Polyfill                |  `TODO analyze strange behaviour on drag/touchend/cancel when close to the right edge` |
+| Ubuntu Phone                     |  Polyfill                |  No known issues.                              |
 | IEMobile                         |  Native                  |  Unknown                                       |
 
 **Chrome: <a name="chrome-issues"></a>**
