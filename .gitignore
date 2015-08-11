@@ -1,6 +1,5 @@
 !/release/**
-!/spec-compliance/mobile-drag-and-drop-polyfill.js
-!/spec-compliance/mobile-drag-and-drop-polyfill.js.map
+!/spec-compliance/**
 
 node_modules/
 .tscache/

@@ -54,10 +54,21 @@ MobileDragAndDropPolyfill.Initialize(options);
 
 ```TypeScript
 declare module MobileDragAndDropPolyfill {
+    /**
+    * polyfill config
+    */
     interface Config {
-        log?: (...args: any[]) => void;
-        dragImageClass?: string;
+        log?:( ...args:any[] ) => void; // switch on/off logging by providing log fn
+        dragImageClass?:string;         // add custom class to dragImage
+        scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
+        scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
     }
+    /**
+    * The polyfill must be actively initialized.
+    * At this point you have the ability to pass a config.
+    * @param config
+    * @constructor
+    */
     var Initialize: (config?: Config) => void;
 }
 ```

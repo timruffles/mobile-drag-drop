@@ -12,7 +12,7 @@ module MobileDragAndDropPolyfill {
         log?:( ...args:any[] ) => void; // switch on/off logging by providing log fn
         dragImageClass?:string;         // add custom class to dragImage
         scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
-        scrollVelocity?:number          // how much px should be scrolled per animation frame iteration?
+        scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
     }
 
     /**
