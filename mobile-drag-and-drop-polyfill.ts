@@ -267,8 +267,12 @@ module MobileDragAndDropPolyfill {
         private dragImage:HTMLElement = null;
         // container for the cross-browser transform style properties
         private transformStyleMixins = {};
+        // the current page coordinates of the dragImage
+        private dragImagePageCoordinates:Point;
         // bound callback for transitionend on drag image "snapback" transition.
         private snapbackEndedCb:EventListener;
+        // the point relative to viewport that is used to determine the drop target
+        private currentHotspotCoordinates:Point = null;
 
         // the element the user currently hovers while dragging
         private immediateUserSelection:HTMLElement = null;
@@ -370,6 +374,11 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore = new DragDataStore();
             this.dataTransfer = new DataTransfer( this.dragDataStore );
 
+            this.currentHotspotCoordinates = {
+                x: null,
+                y: null
+            };
+
             // 8. Update the drag data store default feedback as appropriate for the user agent
             // (if the user is dragging the selection, then the selection would likely be the basis for this feedback;
             // if the user is dragging an element, then that element's rendering would be used; if the drag began outside the user agent,
@@ -428,6 +437,7 @@ module MobileDragAndDropPolyfill {
                 this.dragImage = null;
             }
 
+            this.currentHotspotCoordinates = null;
             this.dataTransfer = null;
             this.dragDataStore = null;
             this.immediateUserSelection = null;
@@ -455,7 +465,8 @@ module MobileDragAndDropPolyfill {
 
             // drag operation did not start yet but on movement it should start
             if( this.dragOperationState === DragOperationState.POTENTIAL ) {
-                //TODO check for some kind of threshold to overcome before starting a drag operation?
+                //TODO check for some kind of threshold to overcome before starting a drag operation? feels good in iOS, nexus android chrome feels a little
+                // nervous
                 this.setupDragAndDropOperation();
                 return;
             }
@@ -466,15 +477,15 @@ module MobileDragAndDropPolyfill {
 
             this.lastTouchEvent = event;
 
-            var centroid = Util.GetCentroidOfTouches(event);
-            centroid.x -= (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
-            centroid.y -= (parseInt( <any>this.dragImage.offsetHeight, 10 ) / 2);
+            // populate shared coordinates from touch event
+            Util.SetCentroidCoordinatesOfTouchesInViewport( event, this.currentHotspotCoordinates );
+            Util.SetCentroidCoordinatesOfTouchesInPage( event, this.dragImagePageCoordinates );
+            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
-            this.translateDragImage( centroid.x, centroid.y );
-
+            //TODO use initial touch or centroid?
             var touch = Util.GetTouchContainedInTouchEventByIdentifier( event, this.initialDragTouchIdentifier );
             this.calculateViewportScrollFactor( touch.clientX, touch.clientY );
-            if( this.scrollFactor.x !== 0 || this.scrollFactor.y !== 0 ) {
+            if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) || DragOperationController.VerticalScrollEndReach( this.scrollIntention ) ) {
                 this.setupScrollAnimation();
             }
             else {
@@ -510,37 +521,37 @@ module MobileDragAndDropPolyfill {
 
         //<editor-fold desc="programmatic scroll/zoom">
 
-        private scrollFactor:Point;
+        private scrollIntention:Point;
 
         private calculateViewportScrollFactor( x:number, y:number ) {
-            if( !this.scrollFactor ) {
-                this.scrollFactor = <any>{};
+            if( !this.scrollIntention ) {
+                this.scrollIntention = <any>{};
             }
 
             // LEFT
             if( x < this.config.scrollThreshold ) {
-                this.scrollFactor.x = -1;
+                this.scrollIntention.x = -1;
             }
             // RIGHT
             else if( this.doc.documentElement.clientWidth - x < this.config.scrollThreshold ) {
-                this.scrollFactor.x = 1;
+                this.scrollIntention.x = 1;
             }
             // NONE
             else {
-                this.scrollFactor.x = 0;
+                this.scrollIntention.x = 0;
             }
 
             // TOP
             if( y < this.config.scrollThreshold ) {
-                this.scrollFactor.y = -1;
+                this.scrollIntention.y = -1;
             }
             // BOTTOM
             else if( this.doc.documentElement.clientHeight - y < this.config.scrollThreshold ) {
-                this.scrollFactor.y = 1;
+                this.scrollIntention.y = 1;
             }
             // NONE
             else {
-                this.scrollFactor.y = 0;
+                this.scrollIntention.y = 0;
             }
         }
 
@@ -572,24 +583,32 @@ module MobileDragAndDropPolyfill {
 
         private performScroll( timestamp ) {
 
-            //TODO move the dragImage while scrolling
+            // indicates that a teardown took place
+            if( !this.scrollAnimationCb || !this.scrollAnimationFrameId ) {
+                return;
+            }
 
-            var horizontalScroll = this.scrollFactor.x * this.config.scrollVelocity;
-            var verticalScroll = this.scrollFactor.y * this.config.scrollVelocity;
-
-            DragOperationController.SetHorizontalScroll( this.doc, horizontalScroll );
-            DragOperationController.SetVerticalScroll( this.doc, verticalScroll );
-
-            if( DragOperationController.HorizontalScrollEndReach() && DragOperationController.VerticalScrollEndReach() ) {
+            // check wether the current scroll has reached a limit
+            var horizontalScrollEndReached = DragOperationController.HorizontalScrollEndReach( this.scrollIntention );
+            var verticalScrollEndReached = DragOperationController.VerticalScrollEndReach( this.scrollIntention );
+            if( horizontalScrollEndReached && verticalScrollEndReached ) {
                 this.config.log( "scroll end reached" );
                 this.teardownScrollAnimation();
                 return;
             }
 
-            // indicates that a teardown took place
-            if( !this.scrollAnimationCb || !this.scrollAnimationFrameId ) {
-                return;
+            // update dragImage position
+            if( !horizontalScrollEndReached ) {
+                var horizontalScroll = this.scrollIntention.x * this.config.scrollVelocity;
+                DragOperationController.GetSetHorizontalScroll( this.doc, horizontalScroll );
+                this.dragImagePageCoordinates.x += horizontalScroll;
             }
+            if( !verticalScrollEndReached ) {
+                var verticalScroll = this.scrollIntention.y * this.config.scrollVelocity;
+                DragOperationController.GetSetVerticalScroll( this.doc, verticalScroll );
+                this.dragImagePageCoordinates.y += verticalScroll;
+            }
+            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
             this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
         }
@@ -605,7 +624,11 @@ module MobileDragAndDropPolyfill {
          * @param scroll
          * @constructor
          */
-        private static SetHorizontalScroll( document:Document, scroll:number ) {
+        private static GetSetHorizontalScroll( document:Document, scroll?:number ) {
+            if(arguments.length === 1) {
+                return document.documentElement.scrollLeft || document.body.scrollLeft;
+            }
+
             document.documentElement.scrollLeft += scroll;
             document.body.scrollLeft += scroll;
         }
@@ -621,7 +644,11 @@ module MobileDragAndDropPolyfill {
          * @param scroll
          * @constructor
          */
-        private static SetVerticalScroll( document:Document, scroll:number ) {
+        private static GetSetVerticalScroll( document:Document, scroll?:number ) {
+            if(arguments.length === 1) {
+                return document.documentElement.scrollTop || document.body.scrollTop;
+            }
+
             document.documentElement.scrollTop += scroll;
             document.body.scrollTop += scroll;
         }
@@ -633,17 +660,31 @@ module MobileDragAndDropPolyfill {
          *
          * checks if a horizontal scroll limit has been reached
          *
-         * @param appliedScroll
-         * @returns {boolean}
          * @constructor
+         * @param scrollIntention
          */
-        private static HorizontalScrollEndReach() {
+        private static HorizontalScrollEndReach( scrollIntention:Point ) {
 
-            var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-            var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+            var scrollLeft = DragOperationController.GetSetHorizontalScroll(document);
 
-            return (scrollLeft <= 0
-                    || scrollLeft >= scrollWidth)
+            // wants to scroll to the right
+            if( scrollIntention.x > 0 ) {
+
+                var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+
+                // is already at the right edge
+                return (scrollLeft + document.documentElement.clientWidth) >= (scrollWidth);
+            }
+            // wants to scroll to the left
+            else if( scrollIntention.x < 0 ) {
+
+                // is already at left edge
+                return scrollLeft <= 0;
+            }
+            // no scroll
+            else {
+                return true;
+            }
         }
 
         /**
@@ -652,18 +693,29 @@ module MobileDragAndDropPolyfill {
          * https://github.com/mathiasbynens/document.scrollingElement source: https://dev.opera.com/articles/fixing-the-scrolltop-bug/
          *
          * checks if a vertical scroll limit has been reached
-         *
-         * @param appliedScroll
-         * @returns {boolean}
-         * @constructor
          */
-        private static VerticalScrollEndReach() {
+        private static VerticalScrollEndReach( scrollIntention:Point ) {
 
-            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-            var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+            var scrollTop = DragOperationController.GetSetVerticalScroll(document);
 
-            return (scrollTop <= 0
-                    || scrollTop >= scrollHeight)
+            // wants to scroll to the bottom
+            if( scrollIntention.y > 0 ) {
+
+                var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+
+                // is already at the bottom
+                return (scrollTop + document.documentElement.clientHeight) >= scrollHeight;
+            }
+            // wants to scroll to the top
+            else if( scrollIntention.y < 0 ) {
+
+                // is already at top edge
+                return scrollTop <= 0;
+            }
+            // no scroll
+            else {
+                return true;
+            }
         }
 
         //</editor-fold>
@@ -741,19 +793,27 @@ module MobileDragAndDropPolyfill {
                 this.dragImage.classList.add( this.config.dragImageClass );
             }
 
-            var centroid = Util.GetCentroidOfTouches(event);
-            centroid.x -= (parseInt( <any>(<HTMLElement>this.sourceNode).offsetWidth, 10 ) / 2);
-            centroid.y -= (parseInt( <any>(<HTMLElement>this.sourceNode).offsetHeight, 10 ) / 2);
+            this.dragImagePageCoordinates = {
+                x: null,
+                y: null
+            };
+            Util.SetCentroidCoordinatesOfTouchesInPage( event, this.dragImagePageCoordinates );
 
             // apply the translate
-            this.translateDragImage( centroid.x, centroid.y );
+            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
             // append the dragImage as sibling to the source node, this enables to leave styling to existing css classes
             this.sourceNode.parentNode.insertBefore( this.dragImage, this.sourceNode.nextSibling );
             //this.doc.body.appendChild( this.dragImage ); //fallback to above
         }
 
-        private translateDragImage( x:number, y:number ) {
+        private translateDragImage( x:number, y:number, centerOnCoordinates:boolean = true ) {
+
+            if( centerOnCoordinates ) {
+                x -= (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
+                y -= (parseInt( <any>this.dragImage.offsetHeight, 10 ) / 2);
+            }
+
             // using translate3d for best performance
             var translate = " translate3d(" + x + "px," + y + "px, 0)";
 
@@ -794,7 +854,7 @@ module MobileDragAndDropPolyfill {
             elementTop -= topPadding;
 
             // apply the translate
-            this.translateDragImage( elementLeft, elementTop );
+            this.translateDragImage( elementLeft, elementTop, false );
         }
 
         /**
@@ -856,13 +916,7 @@ module MobileDragAndDropPolyfill {
 
             // If the drag event was not canceled and the user has not ended the drag-and-drop operation,
             // check the state of the drag-and-drop operation, as follows:
-
-            var touch:Touch = Util.GetTouchContainedInTouchEventByIdentifier( this.lastTouchEvent, this.initialDragTouchIdentifier );
-            if( !touch ) {
-                this.config.log( "touch event that did not contain initial drag operation touch slipped through" );
-                return;
-            }
-            var newUserSelection:HTMLElement = <HTMLElement>Util.ElementFromTouch( this.doc, touch );
+            var newUserSelection:HTMLElement = <HTMLElement>this.doc.elementFromPoint( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
 
             var previousTargetElement = this.currentDropTarget;
 
@@ -1819,13 +1873,14 @@ module MobileDragAndDropPolyfill {
         }
 
         /**
-         * Calc center of polygon spanned by multiple touches.
+         * Calc center of polygon spanned by multiple touches in page (full page size, with hidden scrollable area) coordinates.
          *
          * @param event
+         * @param outPoint
          * @returns {{x: (number|number), y: (number|number)}}
          * @constructor
          */
-        public static GetCentroidOfTouches(event:TouchEvent):Point {
+        public static SetCentroidCoordinatesOfTouchesInPage( event:TouchEvent, outPoint:Point ):void {
 
             var pageXs = [], pageYs = [];
             [].forEach.call( event.touches, function( touch ) {
@@ -1833,10 +1888,28 @@ module MobileDragAndDropPolyfill {
                 pageYs.push( touch.pageY );
             } );
 
-            return {
-                x: Util.Average( pageXs ),
-                y: Util.Average( pageYs )
-            };
+            outPoint.x = Util.Average( pageXs );
+            outPoint.y = Util.Average( pageYs )
+        }
+
+        /**
+         * Calc center of polygon spanned by multiple touches in viewport (screen coordinates) coordinates.
+         *
+         * @param event
+         * @param outPoint
+         * @returns {{x: (number|number), y: (number|number)}}
+         * @constructor
+         */
+        public static SetCentroidCoordinatesOfTouchesInViewport( event:TouchEvent, outPoint:Point ):void {
+
+            var clientXs = [], clientYs = [];
+            [].forEach.call( event.touches, function( touch ) {
+                clientXs.push( touch.clientX );
+                clientYs.push( touch.clientY );
+            } );
+
+            outPoint.x = Util.Average( clientXs );
+            outPoint.y = Util.Average( clientYs )
         }
     }
 

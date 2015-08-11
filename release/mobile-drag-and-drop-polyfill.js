@@ -104,6 +104,7 @@ var MobileDragAndDropPolyfill;
             this.doc = window.document;
             this.dragImage = null;
             this.transformStyleMixins = {};
+            this.currentHotspotCoordinates = null;
             this.immediateUserSelection = null;
             this.currentDropTarget = null;
             this.dragDataStore = null;
@@ -129,6 +130,10 @@ var MobileDragAndDropPolyfill;
             this.dragOperationState = DragOperationState.STARTED;
             this.dragDataStore = new DragDataStore();
             this.dataTransfer = new DataTransfer(this.dragDataStore);
+            this.currentHotspotCoordinates = {
+                x: null,
+                y: null
+            };
             this.createDragImage(this.lastTouchEvent);
             if (this.dragstart(this.sourceNode)) {
                 this.config.log("dragstart cancelled");
@@ -160,6 +165,7 @@ var MobileDragAndDropPolyfill;
                 this.dragImage.parentNode.removeChild(this.dragImage);
                 this.dragImage = null;
             }
+            this.currentHotspotCoordinates = null;
             this.dataTransfer = null;
             this.dragDataStore = null;
             this.immediateUserSelection = null;
@@ -181,13 +187,12 @@ var MobileDragAndDropPolyfill;
             event.preventDefault();
             event.stopImmediatePropagation();
             this.lastTouchEvent = event;
-            var centroid = Util.GetCentroidOfTouches(event);
-            centroid.x -= (parseInt(this.dragImage.offsetWidth, 10) / 2);
-            centroid.y -= (parseInt(this.dragImage.offsetHeight, 10) / 2);
-            this.translateDragImage(centroid.x, centroid.y);
+            Util.SetCentroidCoordinatesOfTouchesInViewport(event, this.currentHotspotCoordinates);
+            Util.SetCentroidCoordinatesOfTouchesInPage(event, this.dragImagePageCoordinates);
+            this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
             var touch = Util.GetTouchContainedInTouchEventByIdentifier(event, this.initialDragTouchIdentifier);
             this.calculateViewportScrollFactor(touch.clientX, touch.clientY);
-            if (this.scrollFactor.x !== 0 || this.scrollFactor.y !== 0) {
+            if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) || DragOperationController.VerticalScrollEndReach(this.scrollIntention)) {
                 this.setupScrollAnimation();
             }
             else {
@@ -209,26 +214,26 @@ var MobileDragAndDropPolyfill;
             this.dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
         };
         DragOperationController.prototype.calculateViewportScrollFactor = function (x, y) {
-            if (!this.scrollFactor) {
-                this.scrollFactor = {};
+            if (!this.scrollIntention) {
+                this.scrollIntention = {};
             }
             if (x < this.config.scrollThreshold) {
-                this.scrollFactor.x = -1;
+                this.scrollIntention.x = -1;
             }
             else if (this.doc.documentElement.clientWidth - x < this.config.scrollThreshold) {
-                this.scrollFactor.x = 1;
+                this.scrollIntention.x = 1;
             }
             else {
-                this.scrollFactor.x = 0;
+                this.scrollIntention.x = 0;
             }
             if (y < this.config.scrollThreshold) {
-                this.scrollFactor.y = -1;
+                this.scrollIntention.y = -1;
             }
             else if (this.doc.documentElement.clientHeight - y < this.config.scrollThreshold) {
-                this.scrollFactor.y = 1;
+                this.scrollIntention.y = 1;
             }
             else {
-                this.scrollFactor.y = 0;
+                this.scrollIntention.y = 0;
             }
         };
         DragOperationController.prototype.setupScrollAnimation = function () {
@@ -249,40 +254,68 @@ var MobileDragAndDropPolyfill;
             this.scrollAnimationCb = null;
         };
         DragOperationController.prototype.performScroll = function (timestamp) {
-            //TODO move the dragImage while scrolling
-            var horizontalScroll = this.scrollFactor.x * this.config.scrollVelocity;
-            var verticalScroll = this.scrollFactor.y * this.config.scrollVelocity;
-            DragOperationController.SetHorizontalScroll(this.doc, horizontalScroll);
-            DragOperationController.SetVerticalScroll(this.doc, verticalScroll);
-            if (DragOperationController.HorizontalScrollEndReach() && DragOperationController.VerticalScrollEndReach()) {
+            if (!this.scrollAnimationCb || !this.scrollAnimationFrameId) {
+                return;
+            }
+            var horizontalScrollEndReached = DragOperationController.HorizontalScrollEndReach(this.scrollIntention);
+            var verticalScrollEndReached = DragOperationController.VerticalScrollEndReach(this.scrollIntention);
+            if (horizontalScrollEndReached && verticalScrollEndReached) {
                 this.config.log("scroll end reached");
                 this.teardownScrollAnimation();
                 return;
             }
-            if (!this.scrollAnimationCb || !this.scrollAnimationFrameId) {
-                return;
+            if (!horizontalScrollEndReached) {
+                var horizontalScroll = this.scrollIntention.x * this.config.scrollVelocity;
+                DragOperationController.GetSetHorizontalScroll(this.doc, horizontalScroll);
+                this.dragImagePageCoordinates.x += horizontalScroll;
             }
+            if (!verticalScrollEndReached) {
+                var verticalScroll = this.scrollIntention.y * this.config.scrollVelocity;
+                DragOperationController.GetSetVerticalScroll(this.doc, verticalScroll);
+                this.dragImagePageCoordinates.y += verticalScroll;
+            }
+            this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
             this.scrollAnimationFrameId = window.requestAnimationFrame(this.scrollAnimationCb);
         };
-        DragOperationController.SetHorizontalScroll = function (document, scroll) {
+        DragOperationController.GetSetHorizontalScroll = function (document, scroll) {
+            if (arguments.length === 1) {
+                return document.documentElement.scrollLeft || document.body.scrollLeft;
+            }
             document.documentElement.scrollLeft += scroll;
             document.body.scrollLeft += scroll;
         };
-        DragOperationController.SetVerticalScroll = function (document, scroll) {
+        DragOperationController.GetSetVerticalScroll = function (document, scroll) {
+            if (arguments.length === 1) {
+                return document.documentElement.scrollTop || document.body.scrollTop;
+            }
             document.documentElement.scrollTop += scroll;
             document.body.scrollTop += scroll;
         };
-        DragOperationController.HorizontalScrollEndReach = function () {
-            var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-            var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
-            return (scrollLeft <= 0
-                || scrollLeft >= scrollWidth);
+        DragOperationController.HorizontalScrollEndReach = function (scrollIntention) {
+            var scrollLeft = DragOperationController.GetSetHorizontalScroll(document);
+            if (scrollIntention.x > 0) {
+                var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+                return (scrollLeft + document.documentElement.clientWidth) >= (scrollWidth);
+            }
+            else if (scrollIntention.x < 0) {
+                return scrollLeft <= 0;
+            }
+            else {
+                return true;
+            }
         };
-        DragOperationController.VerticalScrollEndReach = function () {
-            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-            var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-            return (scrollTop <= 0
-                || scrollTop >= scrollHeight);
+        DragOperationController.VerticalScrollEndReach = function (scrollIntention) {
+            var scrollTop = DragOperationController.GetSetVerticalScroll(document);
+            if (scrollIntention.y > 0) {
+                var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+                return (scrollTop + document.documentElement.clientHeight) >= scrollHeight;
+            }
+            else if (scrollIntention.y < 0) {
+                return scrollTop <= 0;
+            }
+            else {
+                return true;
+            }
         };
         DragOperationController.PrepareNodeCopyAsDragImage = function (srcNode, dstNode) {
             if (srcNode.nodeType === 1) {
@@ -321,14 +354,21 @@ var MobileDragAndDropPolyfill;
             if (this.config.dragImageClass) {
                 this.dragImage.classList.add(this.config.dragImageClass);
             }
-            var centroid = Util.GetCentroidOfTouches(event);
-            centroid.x -= (parseInt(this.sourceNode.offsetWidth, 10) / 2);
-            centroid.y -= (parseInt(this.sourceNode.offsetHeight, 10) / 2);
-            this.translateDragImage(centroid.x, centroid.y);
+            this.dragImagePageCoordinates = {
+                x: null,
+                y: null
+            };
+            Util.SetCentroidCoordinatesOfTouchesInPage(event, this.dragImagePageCoordinates);
+            this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
             this.sourceNode.parentNode.insertBefore(this.dragImage, this.sourceNode.nextSibling);
         };
-        DragOperationController.prototype.translateDragImage = function (x, y) {
+        DragOperationController.prototype.translateDragImage = function (x, y, centerOnCoordinates) {
             var _this = this;
+            if (centerOnCoordinates === void 0) { centerOnCoordinates = true; }
+            if (centerOnCoordinates) {
+                x -= (parseInt(this.dragImage.offsetWidth, 10) / 2);
+                y -= (parseInt(this.dragImage.offsetHeight, 10) / 2);
+            }
             var translate = " translate3d(" + x + "px," + y + "px, 0)";
             Util.ForIn(this.transformStyleMixins, function (value, key) {
                 _this.dragImage.style[key] = value + translate;
@@ -352,7 +392,7 @@ var MobileDragAndDropPolyfill;
             var topPadding = parseInt(cs.getPropertyValue("padding-top"), 10);
             elementLeft -= leftPadding;
             elementTop -= topPadding;
-            this.translateDragImage(elementLeft, elementTop);
+            this.translateDragImage(elementLeft, elementTop, false);
         };
         DragOperationController.prototype.snapbackTransitionEnded = function () {
             this.config.log("dragimage snap back transition ended");
@@ -379,12 +419,7 @@ var MobileDragAndDropPolyfill;
                 this.cleanup();
                 return;
             }
-            var touch = Util.GetTouchContainedInTouchEventByIdentifier(this.lastTouchEvent, this.initialDragTouchIdentifier);
-            if (!touch) {
-                this.config.log("touch event that did not contain initial drag operation touch slipped through");
-                return;
-            }
-            var newUserSelection = Util.ElementFromTouch(this.doc, touch);
+            var newUserSelection = this.doc.elementFromPoint(this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y);
             var previousTargetElement = this.currentDropTarget;
             if (newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget) {
                 this.immediateUserSelection = newUserSelection;
@@ -835,16 +870,23 @@ var MobileDragAndDropPolyfill;
             var target = doc.elementFromPoint(touch.clientX, touch.clientY);
             return target;
         };
-        Util.GetCentroidOfTouches = function (event) {
+        Util.SetCentroidCoordinatesOfTouchesInPage = function (event, outPoint) {
             var pageXs = [], pageYs = [];
             [].forEach.call(event.touches, function (touch) {
                 pageXs.push(touch.pageX);
                 pageYs.push(touch.pageY);
             });
-            return {
-                x: Util.Average(pageXs),
-                y: Util.Average(pageYs)
-            };
+            outPoint.x = Util.Average(pageXs);
+            outPoint.y = Util.Average(pageYs);
+        };
+        Util.SetCentroidCoordinatesOfTouchesInViewport = function (event, outPoint) {
+            var clientXs = [], clientYs = [];
+            [].forEach.call(event.touches, function (touch) {
+                clientXs.push(touch.clientX);
+                clientYs.push(touch.clientY);
+            });
+            outPoint.x = Util.Average(clientXs);
+            outPoint.y = Util.Average(clientYs);
         };
         return Util;
     })();
