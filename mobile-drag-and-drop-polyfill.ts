@@ -735,6 +735,7 @@ module MobileDragAndDropPolyfill {
 
             // add polyfill class for default styling
             this.dragImage.classList.add( "mobile-dnd-poly-drag-image" );
+            this.dragImage.classList.add( "mobile-dnd-poly-icon" );
             // add user config class
             if( this.config.dragImageClass ) {
                 this.dragImage.classList.add( this.config.dragImageClass );

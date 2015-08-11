@@ -1,6 +1,9 @@
+!/release/**
+!/spec-compliance/mobile-drag-and-drop-polyfill.js
+!/spec-compliance/mobile-drag-and-drop-polyfill.js.map
+
 node_modules/
 .tscache/
 
 mobile-drag-and-drop-polyfill.js
 mobile-drag-and-drop-polyfill.js.map
-

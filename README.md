@@ -72,12 +72,6 @@ The default class will be applied always. Of course you are free to specify any 
 .mobile-dnd-poly-drag-image {
     opacity: .5;
 }
-```
-
-Also there will be classes applied to the `dragImage`-element according to the
-current drop effect/operation on dragging.
-
-```CSS
 /* applied when the drag effect is none and the operation ends */
 .mobile-dnd-poly-drag-image.snapback {
     -webkit-transition: -webkit-transform 250ms ease-out;
@@ -85,18 +79,18 @@ current drop effect/operation on dragging.
     -o-transition: -o-transform 250ms ease-out;
     transition: transform 250ms ease-out;
 }
-/* applied on no drag effect */
-.mobile-dnd-poly-drag-image.none {
+/* applied always as a base class for drop effect styles */
+.mobile-dnd-poly-drag-icon {
 }
-/* applied on copy drag effect */
-.mobile-dnd-poly-drag-image.copy {
-}
-/* applied on move drag effect */
-.mobile-dnd-poly-drag-image.move {
-}
-/* applied on link drag effect */
-.mobile-dnd-poly-drag-image.link {
-}
+```
+
+Also there will be classes applied to the `dragImage`-element according to the
+current drop effect/operation on dragging: `none`, `copy`, `move`, `link`.
+
+There is a CSS-file you can drop in that defines default styles and icons:
+
+```HTML
+<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill-icons.css">
 ```
 
 `Note: Support for setDragImage() to override the dragImage has not yet arrived, contributions are welcome.`

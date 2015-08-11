@@ -62,6 +62,9 @@ var MobileDragAndDropPolyfill;
                 if (el.draggable === false) {
                     continue;
                 }
+                if (!el.getAttribute) {
+                    continue;
+                }
                 if (el.getAttribute("draggable") === "true") {
                     return el;
                 }
@@ -80,7 +83,9 @@ var MobileDragAndDropPolyfill;
             log: function () {
             },
             dragImageClass: null,
-            iterationInterval: 150
+            iterationInterval: 150,
+            scrollThreshold: 50,
+            scrollVelocity: 10
         };
         return DragAndDropInitializer;
     })();
@@ -176,28 +181,108 @@ var MobileDragAndDropPolyfill;
             event.preventDefault();
             event.stopImmediatePropagation();
             this.lastTouchEvent = event;
-            var pageXs = [], pageYs = [];
-            [].forEach.call(event.changedTouches, function (touch, index) {
-                pageXs.push(touch.pageX);
-                pageYs.push(touch.pageY);
-            });
-            var x = Util.Average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2);
-            var y = Util.Average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2);
-            this.translateDragImage(x, y);
+            var centroid = Util.GetCentroidOfTouches(event);
+            centroid.x -= (parseInt(this.dragImage.offsetWidth, 10) / 2);
+            centroid.y -= (parseInt(this.dragImage.offsetHeight, 10) / 2);
+            this.translateDragImage(centroid.x, centroid.y);
+            var touch = Util.GetTouchContainedInTouchEventByIdentifier(event, this.initialDragTouchIdentifier);
+            this.calculateViewportScrollFactor(touch.clientX, touch.clientY);
+            if (this.scrollFactor.x !== 0 || this.scrollFactor.y !== 0) {
+                this.setupScrollAnimation();
+            }
+            else {
+                this.teardownScrollAnimation();
+            }
         };
         DragOperationController.prototype.onTouchEndOrCancel = function (event) {
             if (Util.IsTouchIdentifierContainedInTouchEvent(event, this.initialDragTouchIdentifier) === false) {
                 return;
             }
+            this.teardownScrollAnimation();
             if (this.dragOperationState === DragOperationState.POTENTIAL) {
                 this.cleanup();
                 return;
             }
             event.preventDefault();
             event.stopImmediatePropagation();
-            this.config.log("touch cancelled or ended");
             this.lastTouchEvent = event;
             this.dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
+        };
+        DragOperationController.prototype.calculateViewportScrollFactor = function (x, y) {
+            if (!this.scrollFactor) {
+                this.scrollFactor = {};
+            }
+            if (x < this.config.scrollThreshold) {
+                this.scrollFactor.x = -1;
+            }
+            else if (this.doc.documentElement.clientWidth - x < this.config.scrollThreshold) {
+                this.scrollFactor.x = 1;
+            }
+            else {
+                this.scrollFactor.x = 0;
+            }
+            if (y < this.config.scrollThreshold) {
+                this.scrollFactor.y = -1;
+            }
+            else if (this.doc.documentElement.clientHeight - y < this.config.scrollThreshold) {
+                this.scrollFactor.y = 1;
+            }
+            else {
+                this.scrollFactor.y = 0;
+            }
+        };
+        DragOperationController.prototype.setupScrollAnimation = function () {
+            if (this.scrollAnimationFrameId) {
+                return;
+            }
+            this.config.log("setting up scroll animation");
+            this.scrollAnimationCb = this.performScroll.bind(this);
+            this.scrollAnimationFrameId = window.requestAnimationFrame(this.scrollAnimationCb);
+        };
+        DragOperationController.prototype.teardownScrollAnimation = function () {
+            if (!this.scrollAnimationFrameId) {
+                return;
+            }
+            this.config.log("tearing down scroll animation");
+            window.cancelAnimationFrame(this.scrollAnimationFrameId);
+            this.scrollAnimationFrameId = null;
+            this.scrollAnimationCb = null;
+        };
+        DragOperationController.prototype.performScroll = function (timestamp) {
+            //TODO move the dragImage while scrolling
+            var horizontalScroll = this.scrollFactor.x * this.config.scrollVelocity;
+            var verticalScroll = this.scrollFactor.y * this.config.scrollVelocity;
+            DragOperationController.SetHorizontalScroll(this.doc, horizontalScroll);
+            DragOperationController.SetVerticalScroll(this.doc, verticalScroll);
+            if (DragOperationController.HorizontalScrollEndReach() && DragOperationController.VerticalScrollEndReach()) {
+                this.config.log("scroll end reached");
+                this.teardownScrollAnimation();
+                return;
+            }
+            if (!this.scrollAnimationCb || !this.scrollAnimationFrameId) {
+                return;
+            }
+            this.scrollAnimationFrameId = window.requestAnimationFrame(this.scrollAnimationCb);
+        };
+        DragOperationController.SetHorizontalScroll = function (document, scroll) {
+            document.documentElement.scrollLeft += scroll;
+            document.body.scrollLeft += scroll;
+        };
+        DragOperationController.SetVerticalScroll = function (document, scroll) {
+            document.documentElement.scrollTop += scroll;
+            document.body.scrollTop += scroll;
+        };
+        DragOperationController.HorizontalScrollEndReach = function () {
+            var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+            var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+            return (scrollLeft <= 0
+                || scrollLeft >= scrollWidth);
+        };
+        DragOperationController.VerticalScrollEndReach = function () {
+            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+            return (scrollTop <= 0
+                || scrollTop >= scrollHeight);
         };
         DragOperationController.PrepareNodeCopyAsDragImage = function (srcNode, dstNode) {
             if (srcNode.nodeType === 1) {
@@ -232,17 +317,14 @@ var MobileDragAndDropPolyfill;
                 }
             });
             this.dragImage.classList.add("mobile-dnd-poly-drag-image");
+            this.dragImage.classList.add("mobile-dnd-poly-icon");
             if (this.config.dragImageClass) {
                 this.dragImage.classList.add(this.config.dragImageClass);
             }
-            var pageXs = [], pageYs = [];
-            [].forEach.call(event.changedTouches, function (touch, index) {
-                pageXs.push(touch.pageX);
-                pageYs.push(touch.pageY);
-            });
-            var x = Util.Average(pageXs) - (parseInt(this.sourceNode.offsetWidth, 10) / 2);
-            var y = Util.Average(pageYs) - (parseInt(this.sourceNode.offsetHeight, 10) / 2);
-            this.translateDragImage(x, y);
+            var centroid = Util.GetCentroidOfTouches(event);
+            centroid.x -= (parseInt(this.sourceNode.offsetWidth, 10) / 2);
+            centroid.y -= (parseInt(this.sourceNode.offsetHeight, 10) / 2);
+            this.translateDragImage(centroid.x, centroid.y);
             this.sourceNode.parentNode.insertBefore(this.dragImage, this.sourceNode.nextSibling);
         };
         DragOperationController.prototype.translateDragImage = function (x, y) {
@@ -424,6 +506,9 @@ var MobileDragAndDropPolyfill;
             return "copy";
         };
         DragOperationController.FindDropzoneElement = function (element) {
+            if (!element || !element.hasAttribute || typeof element.hasAttribute !== "function") {
+                return null;
+            }
             if (element.hasAttribute("dropzone")) {
                 return element;
             }
@@ -749,6 +834,17 @@ var MobileDragAndDropPolyfill;
         Util.ElementFromTouch = function (doc, touch) {
             var target = doc.elementFromPoint(touch.clientX, touch.clientY);
             return target;
+        };
+        Util.GetCentroidOfTouches = function (event) {
+            var pageXs = [], pageYs = [];
+            [].forEach.call(event.touches, function (touch) {
+                pageXs.push(touch.pageX);
+                pageYs.push(touch.pageY);
+            });
+            return {
+                x: Util.Average(pageXs),
+                y: Util.Average(pageYs)
+            };
         };
         return Util;
     })();
