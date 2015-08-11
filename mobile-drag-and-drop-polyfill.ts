@@ -164,7 +164,7 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
-            var dragTarget = DragAndDropInitializer.TargetIsDraggable( e, DragAndDropInitializer.config );
+            var dragTarget = DragAndDropInitializer.TryFindDraggableTarget( e, DragAndDropInitializer.config );
             // If there is no such element, then nothing is being dragged; abort these
             // steps, the drag-and-drop operation is never started.
             if( !dragTarget ) {
@@ -181,12 +181,12 @@ module MobileDragAndDropPolyfill {
             }
             catch( err ) {
                 DragAndDropInitializer.config.log( err );
-                DragAndDropInitializer.DragOperationEnded( dragTarget, e, DragOperationState.CANCELLED );
+                DragAndDropInitializer.DragOperationEnded( e, DragOperationState.CANCELLED );
             }
         }
 
         // NO drag operation because not enough movement was applied?
-        public static TargetIsDraggable( event:TouchEvent, config:InternalConfig ):Element {
+        public static TryFindDraggableTarget( event:TouchEvent, config:InternalConfig ):Element {
 
             //1. Determine what is being dragged, as follows:
 
@@ -221,15 +221,34 @@ module MobileDragAndDropPolyfill {
          * Implements callback invoked when a drag operation has ended or crashed.
          * Do global cleanup logic for a single drag operation here.
          */
-        private static DragOperationEnded( sourceNode:Element, event:TouchEvent, state:DragOperationState ) {
+        private static DragOperationEnded( event:TouchEvent, state:DragOperationState ) {
 
             DragAndDropInitializer.dragOperationActive = false;
 
+            //TODO do we need support/detection for single-click, double-click, right-click?
             if( state === DragOperationState.POTENTIAL ) {
-                DragAndDropInitializer.config.log( "No movement on draggable. Dispatching click.." );
-                //TODO do we need support/detection for single-click, double-click, right-click?
-                var clickEvt = Util.CreateMouseEventFromTouch( event, "click" );
-                sourceNode.dispatchEvent( clickEvt );
+
+                //TODO different target elements need different default actions
+                var target = (<HTMLElement>event.target);
+                var targetTagName = target.tagName;
+
+                var mouseEventType;
+                //TODO test which event is needed on what element, input elements so far are a bit ugly because focus is needed on fields that need keyboard
+                switch( targetTagName ) {
+                    case "SELECT":
+                        mouseEventType = "mousedown";
+                        break;
+                    case "INPUT":
+                    case "TEXTAREA":
+                        target.focus();
+                    default:
+                        mouseEventType = "click";
+                }
+
+                DragAndDropInitializer.config.log( "No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
+
+                var clickEvt = Util.CreateMouseEventFromTouch( event, mouseEventType );
+                target.dispatchEvent( clickEvt );
             }
         }
     }
@@ -304,7 +323,7 @@ module MobileDragAndDropPolyfill {
         // the state of the drag operation
         private dragOperationState:DragOperationState = DragOperationState.POTENTIAL;
 
-        constructor( private config:InternalConfig, private sourceNode:Element, initialEvent:TouchEvent, private dragOperationEndedCb:( sourceNode:Element, event:TouchEvent, state:DragOperationState )=>void ) {
+        constructor( private config:InternalConfig, private sourceNode:Element, initialEvent:TouchEvent, private dragOperationEndedCb:( event:TouchEvent, state:DragOperationState )=>void ) {
             config.log( "setting up potential drag operation.." );
 
             // create bound event listeners
@@ -447,7 +466,7 @@ module MobileDragAndDropPolyfill {
             this.touchMoveHandler = null;
             this.snapbackEndedCb = null;
 
-            this.dragOperationEndedCb( this.sourceNode, this.lastTouchEvent, this.dragOperationState );
+            this.dragOperationEndedCb( this.lastTouchEvent, this.dragOperationState );
 
             this.lastTouchEvent = null;
         }
@@ -485,7 +504,8 @@ module MobileDragAndDropPolyfill {
             //TODO use initial touch or centroid?
             var touch = Util.GetTouchContainedInTouchEventByIdentifier( event, this.initialDragTouchIdentifier );
             this.calculateViewportScrollFactor( touch.clientX, touch.clientY );
-            if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) || DragOperationController.VerticalScrollEndReach( this.scrollIntention ) ) {
+            if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) ||
+                DragOperationController.VerticalScrollEndReach( this.scrollIntention ) ) {
                 this.setupScrollAnimation();
             }
             else {
@@ -625,7 +645,7 @@ module MobileDragAndDropPolyfill {
          * @constructor
          */
         private static GetSetHorizontalScroll( document:Document, scroll?:number ) {
-            if(arguments.length === 1) {
+            if( arguments.length === 1 ) {
                 return document.documentElement.scrollLeft || document.body.scrollLeft;
             }
 
@@ -645,7 +665,7 @@ module MobileDragAndDropPolyfill {
          * @constructor
          */
         private static GetSetVerticalScroll( document:Document, scroll?:number ) {
-            if(arguments.length === 1) {
+            if( arguments.length === 1 ) {
                 return document.documentElement.scrollTop || document.body.scrollTop;
             }
 
@@ -665,7 +685,7 @@ module MobileDragAndDropPolyfill {
          */
         private static HorizontalScrollEndReach( scrollIntention:Point ) {
 
-            var scrollLeft = DragOperationController.GetSetHorizontalScroll(document);
+            var scrollLeft = DragOperationController.GetSetHorizontalScroll( document );
 
             // wants to scroll to the right
             if( scrollIntention.x > 0 ) {
@@ -696,7 +716,7 @@ module MobileDragAndDropPolyfill {
          */
         private static VerticalScrollEndReach( scrollIntention:Point ) {
 
-            var scrollTop = DragOperationController.GetSetVerticalScroll(document);
+            var scrollTop = DragOperationController.GetSetVerticalScroll( document );
 
             // wants to scroll to the bottom
             if( scrollIntention.y > 0 ) {
