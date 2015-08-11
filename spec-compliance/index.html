@@ -58,7 +58,6 @@
             el.setAttribute('draggable', 'true');
 
             addEvent(el, 'dragstart', function (e) {
-
                 console.log('dragstart');
 
                 e.dataTransfer.effectAllowed = 'copy'; // only dropEffect='copy' will be dropable
@@ -69,45 +68,32 @@
             });
 
             addEvent(el, 'drag', function (e) {
-
                 console.log('drag');
-
-                e.stopImmediatePropagation();
             });
 
             addEvent(el, 'dragend', function (e) {
-
                 console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
             });
 
             addEvent(el, 'click', function (e) {
-
                 console.log('clicked on draggable');
             });
         }
 
         addEvent(document.body, 'dragover', function (e) {
             console.log('body dragover');
-
-            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'dragexit', function (e) {
             console.log('body dragexit');
-
-            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'drop', function (e) {
             console.log('body drop');
-
-            e.stopImmediatePropagation();
         });
 
         addEvent(document.body, 'dragleave', function (e) {
             console.log('body dragleave');
-
-            e.stopImmediatePropagation();
         });
 
         var bin = document.querySelector('#bin');
@@ -116,28 +102,38 @@
             console.log('bin dragenter');
 
             e.preventDefault();
-            bin.className = 'over';
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.add('over');
         });
 
         addEvent(bin, 'dragover', function (e) {
             console.log('bin dragover');
 
             e.preventDefault(); // allows us to drop
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
             e.dataTransfer.dropEffect = 'copy'; // we have to set it for firefox to be happy
         });
 
         addEvent(bin, 'dragexit', function (e) {
             console.log('bin dragexit');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
         });
 
-        addEvent(bin, 'dragleave', function () {
+        addEvent(bin, 'dragleave', function (e) {
             console.log('bin dragleave');
 
-            bin.className = '';
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('over');
         });
 
         addEvent(bin, 'drop', function (e) {
             console.log('bin drop');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
 
             // stupid nom text + fade effect
             yum.innerHTML = missed[parseInt(Math.random() * missed.length)];
@@ -146,37 +142,54 @@
             bin.appendChild(y);
 
             setTimeout(function () {
-                y.classList.add("fadeout");
+                y.classList.add('fadeout');
             }, 250);
         });
 
         var innerBin = document.querySelector('#innerBin');
 
+        bin.classList.add('zoom');
+
         addEvent(innerBin, 'dragenter', function (e) {
             console.log('apperture dragenter');
 
             e.preventDefault();
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.add('in');
         });
 
         addEvent(innerBin, 'dragover', function (e) {
             console.log('apperture dragover');
 
             e.preventDefault(); // allows us to drop
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
             e.dataTransfer.dropEffect = 'copy';
         });
 
         addEvent(innerBin, 'dragexit', function (e) {
-            console.log('bin dragexit');
+            console.log('apperture dragexit');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
         });
 
         addEvent(innerBin, 'dragleave', function (e) {
             console.log('apperture dragleave');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
         });
 
         addEvent(innerBin, 'drop', function (e) {
             console.log('apperture drop');
 
-            e.stopPropagation();
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
 
             var el = document.getElementById(e.dataTransfer.getData('Text'));
 
@@ -189,17 +202,22 @@
             bin.appendChild(y);
 
             setTimeout(function () {
-                y.classList.add("fadeout");
+                y.classList.add('fadeout');
             }, 250);
         });
 
     </script>
-    <footer><a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built" href="http://twitter.com/rem">original demo by
-        @rem</a>/<a href="#view-source">source</a></footer>
+    <footer>
+        <a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built" href="http://twitter.com/rem">original demo by
+        @rem</a>/<a href="#view-source">source</a>
+    </footer>
 </section>
-<a href="https://github.com/timruffles/ios-html5-drag-drop-shim"><img style="position: absolute; top: 0; left: 0; border: 0;"
-                                                                      src="http://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
-                                                                      alt="Fork me on GitHub"/></a>
+
+<a href="https://github.com/timruffles/ios-html5-drag-drop-shim">
+    <img style="position: absolute; top: 0; left: 0; border: 0;"
+         src="http://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
+         alt="Fork me on GitHub"/>
+</a>
 
 </body>
 </html>

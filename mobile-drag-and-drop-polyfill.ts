@@ -9,8 +9,10 @@ module MobileDragAndDropPolyfill {
      * polyfill config
      */
     export interface Config {
-        log?:( ...args:any[] ) => void;
-        dragImageClass?:string;
+        log?:( ...args:any[] ) => void; // switch on/off logging by providing log fn
+        dragImageClass?:string;         // add custom class to dragImage
+        scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
+        scrollVelocity?:number          // how much px should be scrolled per animation frame iteration?
     }
 
     /**
@@ -80,7 +82,9 @@ module MobileDragAndDropPolyfill {
             log: function() {
             },
             dragImageClass: null,
-            iterationInterval: 150
+            iterationInterval: 150,
+            scrollThreshold: 50,
+            scrollVelocity: 10
         };
 
         /**
@@ -128,7 +132,6 @@ module MobileDragAndDropPolyfill {
                     // if is mobile safari or android browser
                     /iPad|iPhone|iPod|Android/.test( navigator.userAgent )
                     || // OR
-                    //if is gecko(firefox) with touch events enabled no native dnd
                     //if is blink(chrome/opera) with touch events enabled no native dnd
                     featureDetection.touchEvents && (featureDetection.isBlinkEngine)
                 );
@@ -169,6 +172,7 @@ module MobileDragAndDropPolyfill {
             }
 
             e.preventDefault();
+            //TODO stop event propagation?
 
             DragAndDropInitializer.dragOperationActive = true;
 
@@ -201,6 +205,9 @@ module MobileDragAndDropPolyfill {
 
             do {
                 if( el.draggable === false ) {
+                    continue;
+                }
+                if( !el.getAttribute ) {
                     continue;
                 }
                 if( el.getAttribute( "draggable" ) === "true" ) {
@@ -402,7 +409,7 @@ module MobileDragAndDropPolyfill {
          * remove listeners, delete references.
          * Goal is no memory leaks, obviously.
          *
-         * Tell the global drag and drop initializer that this operation finished, which enables enforcing only one drag operation at a time.
+         * Tells the global drag and drop initializer that this operation finished, which enables enforcing only one drag operation at a time.
          */
         private cleanup() {
             this.config.log( "cleanup" );
@@ -459,17 +466,20 @@ module MobileDragAndDropPolyfill {
 
             this.lastTouchEvent = event;
 
-            //TODO refactor, improve and put in method because it is used in another place when initializing drag image position
-            var pageXs = [], pageYs = [];
-            [].forEach.call( event.changedTouches, function( touch, index ) {
-                pageXs.push( touch.pageX );
-                pageYs.push( touch.pageY );
-            } );
+            var centroid = Util.GetCentroidOfTouches(event);
+            centroid.x -= (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
+            centroid.y -= (parseInt( <any>this.dragImage.offsetHeight, 10 ) / 2);
 
-            var x = Util.Average( pageXs ) - (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
-            var y = Util.Average( pageYs ) - (parseInt( <any>this.dragImage.offsetHeight, 10 ) / 2);
+            this.translateDragImage( centroid.x, centroid.y );
 
-            this.translateDragImage( x, y );
+            var touch = Util.GetTouchContainedInTouchEventByIdentifier( event, this.initialDragTouchIdentifier );
+            this.calculateViewportScrollFactor( touch.clientX, touch.clientY );
+            if( this.scrollFactor.x !== 0 || this.scrollFactor.y !== 0 ) {
+                this.setupScrollAnimation();
+            }
+            else {
+                this.teardownScrollAnimation();
+            }
         }
 
         private onTouchEndOrCancel( event:TouchEvent ) {
@@ -478,6 +488,8 @@ module MobileDragAndDropPolyfill {
             if( Util.IsTouchIdentifierContainedInTouchEvent( event, this.initialDragTouchIdentifier ) === false ) {
                 return;
             }
+
+            this.teardownScrollAnimation();
 
             // drag operation did not even start
             if( this.dragOperationState === DragOperationState.POTENTIAL ) {
@@ -489,10 +501,169 @@ module MobileDragAndDropPolyfill {
             event.preventDefault();
             event.stopImmediatePropagation();
 
-            this.config.log( "touch cancelled or ended" );
             this.lastTouchEvent = event;
 
             this.dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
+        }
+
+        //</editor-fold>
+
+        //<editor-fold desc="programmatic scroll/zoom">
+
+        private scrollFactor:Point;
+
+        private calculateViewportScrollFactor( x:number, y:number ) {
+            if( !this.scrollFactor ) {
+                this.scrollFactor = <any>{};
+            }
+
+            // LEFT
+            if( x < this.config.scrollThreshold ) {
+                this.scrollFactor.x = -1;
+            }
+            // RIGHT
+            else if( this.doc.documentElement.clientWidth - x < this.config.scrollThreshold ) {
+                this.scrollFactor.x = 1;
+            }
+            // NONE
+            else {
+                this.scrollFactor.x = 0;
+            }
+
+            // TOP
+            if( y < this.config.scrollThreshold ) {
+                this.scrollFactor.y = -1;
+            }
+            // BOTTOM
+            else if( this.doc.documentElement.clientHeight - y < this.config.scrollThreshold ) {
+                this.scrollFactor.y = 1;
+            }
+            // NONE
+            else {
+                this.scrollFactor.y = 0;
+            }
+        }
+
+        private scrollAnimationCb:FrameRequestCallback;
+        private scrollAnimationFrameId:any;
+
+        private setupScrollAnimation() {
+            if( this.scrollAnimationFrameId ) {
+                return;
+            }
+
+            this.config.log( "setting up scroll animation" );
+
+            this.scrollAnimationCb = this.performScroll.bind( this );
+            this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
+        }
+
+        private teardownScrollAnimation() {
+            if( !this.scrollAnimationFrameId ) {
+                return;
+            }
+
+            this.config.log( "tearing down scroll animation" );
+
+            window.cancelAnimationFrame( this.scrollAnimationFrameId );
+            this.scrollAnimationFrameId = null;
+            this.scrollAnimationCb = null;
+        }
+
+        private performScroll( timestamp ) {
+
+            //TODO move the dragImage while scrolling
+
+            var horizontalScroll = this.scrollFactor.x * this.config.scrollVelocity;
+            var verticalScroll = this.scrollFactor.y * this.config.scrollVelocity;
+
+            DragOperationController.SetHorizontalScroll( this.doc, horizontalScroll );
+            DragOperationController.SetVerticalScroll( this.doc, verticalScroll );
+
+            if( DragOperationController.HorizontalScrollEndReach() && DragOperationController.VerticalScrollEndReach() ) {
+                this.config.log( "scroll end reached" );
+                this.teardownScrollAnimation();
+                return;
+            }
+
+            // indicates that a teardown took place
+            if( !this.scrollAnimationCb || !this.scrollAnimationFrameId ) {
+                return;
+            }
+
+            this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
+        }
+
+        /**
+         * abstracting a way compatibility issues on scroll properties of document/body
+         * TODO since there seems to be a lack of compatibility regarding scroll properties on document/body maybe polyfill for it should be used:
+         * https://github.com/mathiasbynens/document.scrollingElement source: https://dev.opera.com/articles/fixing-the-scrolltop-bug/
+         *
+         * sets the horizontal scroll by adding an amount of px
+         *
+         * @param document
+         * @param scroll
+         * @constructor
+         */
+        private static SetHorizontalScroll( document:Document, scroll:number ) {
+            document.documentElement.scrollLeft += scroll;
+            document.body.scrollLeft += scroll;
+        }
+
+        /**
+         * abstracting a way compatibility issues on scroll properties of document/body
+         * TODO since there seems to be a lack of compatibility regarding scroll properties on document/body maybe polyfill for it should be used:
+         * https://github.com/mathiasbynens/document.scrollingElement source: https://dev.opera.com/articles/fixing-the-scrolltop-bug/
+         *
+         * sets the vertical scroll by adding an amount of px
+         *
+         * @param document
+         * @param scroll
+         * @constructor
+         */
+        private static SetVerticalScroll( document:Document, scroll:number ) {
+            document.documentElement.scrollTop += scroll;
+            document.body.scrollTop += scroll;
+        }
+
+        /**
+         * abstracting a way compatibility issues on scroll properties of document/body
+         * TODO since there seems to be a lack of compatibility regarding scroll properties on document/body maybe polyfill for it should be used:
+         * https://github.com/mathiasbynens/document.scrollingElement source: https://dev.opera.com/articles/fixing-the-scrolltop-bug/
+         *
+         * checks if a horizontal scroll limit has been reached
+         *
+         * @param appliedScroll
+         * @returns {boolean}
+         * @constructor
+         */
+        private static HorizontalScrollEndReach() {
+
+            var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+            var scrollWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+
+            return (scrollLeft <= 0
+                    || scrollLeft >= scrollWidth)
+        }
+
+        /**
+         * abstracting a way compatibility issues on scroll properties of document/body
+         * TODO since there seems to be a lack of compatibility regarding scroll properties on document/body maybe polyfill for it should be used:
+         * https://github.com/mathiasbynens/document.scrollingElement source: https://dev.opera.com/articles/fixing-the-scrolltop-bug/
+         *
+         * checks if a vertical scroll limit has been reached
+         *
+         * @param appliedScroll
+         * @returns {boolean}
+         * @constructor
+         */
+        private static VerticalScrollEndReach() {
+
+            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+
+            return (scrollTop <= 0
+                    || scrollTop >= scrollHeight)
         }
 
         //</editor-fold>
@@ -569,17 +740,12 @@ module MobileDragAndDropPolyfill {
                 this.dragImage.classList.add( this.config.dragImageClass );
             }
 
-            // calc position by looking at all involved touches
-            var pageXs = [], pageYs = [];
-            [].forEach.call( event.changedTouches, function( touch, index ) {
-                pageXs.push( touch.pageX );
-                pageYs.push( touch.pageY );
-            } );
-            var x = Util.Average( pageXs ) - (parseInt( <any>(<HTMLElement>this.sourceNode).offsetWidth, 10 ) / 2);
-            var y = Util.Average( pageYs ) - (parseInt( <any>(<HTMLElement>this.sourceNode).offsetHeight, 10 ) / 2);
+            var centroid = Util.GetCentroidOfTouches(event);
+            centroid.x -= (parseInt( <any>(<HTMLElement>this.sourceNode).offsetWidth, 10 ) / 2);
+            centroid.y -= (parseInt( <any>(<HTMLElement>this.sourceNode).offsetHeight, 10 ) / 2);
 
             // apply the translate
-            this.translateDragImage( x, y );
+            this.translateDragImage( centroid.x, centroid.y );
 
             // append the dragImage as sibling to the source node, this enables to leave styling to existing css classes
             this.sourceNode.parentNode.insertBefore( this.dragImage, this.sourceNode.nextSibling );
@@ -656,8 +822,6 @@ module MobileDragAndDropPolyfill {
 
         /**
          * according to https://html.spec.whatwg.org/multipage/interaction.html#drag-and-drop-processing-model
-         *
-         * //TODO check if the current processing model is the same as the newly referenced whatwg
          */
         private dragAndDropProcessModelIteration():void {
 
@@ -1106,7 +1270,7 @@ module MobileDragAndDropPolyfill {
          */
         private static FindDropzoneElement( element:HTMLElement ):HTMLElement {
 
-            if( !element || !element.hasAttribute || typeof element.hasAttribute !== "function") {
+            if( !element || !element.hasAttribute || typeof element.hasAttribute !== "function" ) {
                 return null;
             }
 
@@ -1383,7 +1547,7 @@ module MobileDragAndDropPolyfill {
             return null;
         }
 
-        //TODO do we need support for items property in DataTransfer polyfill?
+        //TODO support items property in DataTransfer polyfill
         public get items():DataTransferItemList {
             return null;
         }
@@ -1516,6 +1680,13 @@ module MobileDragAndDropPolyfill {
 
     //</editor-fold>
 
+    //<editor-fold desc="util">
+
+    interface Point {
+        x:number;
+        y:number;
+    }
+
     class Util {
 
         public static ForIn( obj:Object, cb:( value, key )=>void ) {
@@ -1645,5 +1816,28 @@ module MobileDragAndDropPolyfill {
 
             return target
         }
+
+        /**
+         * Calc center of polygon spanned by multiple touches.
+         *
+         * @param event
+         * @returns {{x: (number|number), y: (number|number)}}
+         * @constructor
+         */
+        public static GetCentroidOfTouches(event:TouchEvent):Point {
+
+            var pageXs = [], pageYs = [];
+            [].forEach.call( event.touches, function( touch ) {
+                pageXs.push( touch.pageX );
+                pageYs.push( touch.pageY );
+            } );
+
+            return {
+                x: Util.Average( pageXs ),
+                y: Util.Average( pageYs )
+            };
+        }
     }
+
+    //</editor-fold>
 }

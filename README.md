@@ -19,7 +19,7 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 Check out the demo to see it in action and monitor the console to see the events firing.
 
 
-## Install/Config
+## Install
 
 **Install**
 
@@ -50,7 +50,7 @@ var options = {
 MobileDragAndDropPolyfill.Initialize(options);
 ```
 
-**Api & Options<a name="options"></a>**:
+## API & Options <a name="options"></a>
 
 ```TypeScript
 declare module MobileDragAndDropPolyfill {
@@ -123,15 +123,16 @@ current drop effect/operation on dragging.
 | IEMobile                         |  Native                  |  Unknown                                       |
 
 **Chrome: <a name="chrome-issues"></a>**
-Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it switches to touches which also disables native 
-drag and drop support. Touch behaviour can also be set in chrome://flags by a user to "auto", "on", "off".   
-Also there is a configuration for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
-The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill.
+Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it turns on touch events
+which also disables native drag and drop support. Touch events can also be set by a user in `chrome://flags` to `auto`, `on`, `off`.   
+Also there is a flag for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
+The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill
+when Chrome is detect with touch events enabled.
 
 **Firefox: <a name="firefox-issues"></a>**
-Touch behaviour can be set in about:config by a user to "0" (off), "1" (on), "2"(auto).
-By default now (FF39.0) touch behavior is be off.
-When touches are active drag and drop interaction will still work, so no need to polyfill.
+Touch events can be activated by a user in `about:config` to `0` (off), `1` (on), `2`(auto).
+As of today (FF39.0) touch behavior is off.
+When touch events are active drag and drop interaction will still work, so no need to polyfill.
 
 **Firefox on Android: <a name="firefox-android-issues"></a>**
 No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
@@ -147,8 +148,8 @@ No critical issues but UX suffers because of the constantly [scrolling location 
 | ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------------------------------- | ------------- | ------------ |
 | Firefox     | `event.dataTransfer.setData(type, data)` |          |             | [effectAllowed,dropEffect](#ff-quirk)            | [effectAllowed,dropEffect](#ff-quirk) |               |              |
 | IE11        |                                          |          |             | `event.preventDefault()` when registered on body |                                       |               |              |
-| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
-| Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone`           |                                       |               |              |
+| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone` required  |                                       |               |              |
+| Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone` required  |                                       |               |              |
 
 _empty cells mean there is nothing special to take into account_
 
@@ -177,9 +178,12 @@ The project uses TypeScript as main language for several reasons:
 * easily switch to ES6 when its ready
 
 To start working head to your terminal after checkout and execute:
+
 1. `npm install`
+
 2. `grunt`
-3. go!
+
+3. start coding :)
 
 ## Thanks
 

@@ -4,6 +4,8 @@ body {
   margin: 0;
   margin-top: 40px;
   padding: 0;
+  width: 2000px;
+  height: 2000px;
 }
 
 section, header, footer {
@@ -355,6 +357,7 @@ li.over {
   border: 5px solid #000;
   position: relative;
   margin-top: 0;
+  overflow: hidden;
 }
 
 #bin.over {
@@ -381,6 +384,14 @@ li.over {
   background-color: rgba(255,255,255,.5);
   border: 2px dashed white;
   border-radius: 5px;
+}
+
+.zoom {
+  transition: transform 500ms;
+}
+
+.zoom.in {
+  transform: scale(2);
 }
 
 .fadeout {
