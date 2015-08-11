@@ -61,7 +61,7 @@
             addEvent(el, 'dragstart', function (e) {
                 console.log('dragstart');
 
-                e.dataTransfer.effectAllowed = 'copy'; // only dropEffect='copy' will be dropable
+                e.dataTransfer.effectAllowed = 'copyLink';
 
                 console.log('setting data: ' + this.id);
 
@@ -114,7 +114,7 @@
             e.preventDefault(); // allows us to drop
             e.stopPropagation(); // stop it here to prevent it bubble up
 
-            e.dataTransfer.dropEffect = 'copy'; // we have to set it for firefox to be happy
+            e.dataTransfer.dropEffect = 'link'; // we have to set it for firefox to be happy
         });
 
         addEvent(bin, 'dragexit', function (e) {
