@@ -499,11 +499,8 @@ module MobileDragAndDropPolyfill {
             // populate shared coordinates from touch event
             Util.SetCentroidCoordinatesOfTouchesInViewport( event, this.currentHotspotCoordinates );
             Util.SetCentroidCoordinatesOfTouchesInPage( event, this.dragImagePageCoordinates );
-            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
-            //TODO use initial touch or centroid?
-            var touch = Util.GetTouchContainedInTouchEventByIdentifier( event, this.initialDragTouchIdentifier );
-            this.calculateViewportScrollFactor( touch.clientX, touch.clientY );
+            this.calculateViewportScrollFactor( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
             if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) === false
                 || DragOperationController.VerticalScrollEndReach( this.scrollIntention ) === false ) {
                 this.setupScrollAnimation();
@@ -511,6 +508,12 @@ module MobileDragAndDropPolyfill {
             else {
                 this.teardownScrollAnimation();
             }
+
+            if(this.scrollAnimationFrameId) {
+                return;
+            }
+
+            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
         }
 
         private onTouchEndOrCancel( event:TouchEvent ) {
@@ -1670,7 +1673,7 @@ module MobileDragAndDropPolyfill {
 
             this.dataStore.data[ type ] = data;
             var index = this.dataStore.types.indexOf( type );
-            if( index > -1 ) {
+            if( index === -1 ) {
                 this.dataStore.types.push( type );
             }
         }

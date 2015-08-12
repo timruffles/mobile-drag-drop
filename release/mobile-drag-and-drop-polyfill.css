@@ -3,9 +3,8 @@
 }
 
 .mobile-dnd-poly-drag-image.snapback {
-    /* important is needed to force transition even when dragImage copied style properties would forbid it */
-    -webkit-transition: -webkit-transform 250ms ease-out !important;
-    -moz-transition: -moz-transform 250ms ease-out  !important;
+    -webkit-transition: -webkit-transform 250ms ease-out !important; /* Changed here */
+    -moz-transition: -moz-transform 250ms ease-out !important;
     -o-transition: -o-transform 250ms ease-out !important;
     transition: transform 250ms ease-out !important;
 }
