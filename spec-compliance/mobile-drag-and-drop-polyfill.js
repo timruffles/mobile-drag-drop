@@ -41,7 +41,7 @@ var MobileDragAndDropPolyfill;
                 DragAndDropInitializer.config.log("drag operation already active");
                 return;
             }
-            var dragTarget = DragAndDropInitializer.TargetIsDraggable(e, DragAndDropInitializer.config);
+            var dragTarget = DragAndDropInitializer.TryFindDraggableTarget(e, DragAndDropInitializer.config);
             if (!dragTarget) {
                 return;
             }
@@ -52,10 +52,10 @@ var MobileDragAndDropPolyfill;
             }
             catch (err) {
                 DragAndDropInitializer.config.log(err);
-                DragAndDropInitializer.DragOperationEnded(dragTarget, e, DragOperationState.CANCELLED);
+                DragAndDropInitializer.DragOperationEnded(e, DragOperationState.CANCELLED);
             }
         };
-        DragAndDropInitializer.TargetIsDraggable = function (event, config) {
+        DragAndDropInitializer.TryFindDraggableTarget = function (event, config) {
             //1. Determine what is being dragged, as follows:
             var el = event.target;
             do {
@@ -70,12 +70,25 @@ var MobileDragAndDropPolyfill;
                 }
             } while ((el = el.parentNode) && el !== window.document.body);
         };
-        DragAndDropInitializer.DragOperationEnded = function (sourceNode, event, state) {
+        DragAndDropInitializer.DragOperationEnded = function (event, state) {
             DragAndDropInitializer.dragOperationActive = false;
             if (state === DragOperationState.POTENTIAL) {
-                DragAndDropInitializer.config.log("No movement on draggable. Dispatching click..");
-                var clickEvt = Util.CreateMouseEventFromTouch(event, "click");
-                sourceNode.dispatchEvent(clickEvt);
+                var target = event.target;
+                var targetTagName = target.tagName;
+                var mouseEventType;
+                switch (targetTagName) {
+                    case "SELECT":
+                        mouseEventType = "mousedown";
+                        break;
+                    case "INPUT":
+                    case "TEXTAREA":
+                        target.focus();
+                    default:
+                        mouseEventType = "click";
+                }
+                DragAndDropInitializer.config.log("No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " ..");
+                var clickEvt = Util.CreateMouseEventFromTouch(event, mouseEventType);
+                target.dispatchEvent(clickEvt);
             }
         };
         DragAndDropInitializer.dragOperationActive = false;
@@ -173,7 +186,7 @@ var MobileDragAndDropPolyfill;
             this.touchEndOrCancelHandler = null;
             this.touchMoveHandler = null;
             this.snapbackEndedCb = null;
-            this.dragOperationEndedCb(this.sourceNode, this.lastTouchEvent, this.dragOperationState);
+            this.dragOperationEndedCb(this.lastTouchEvent, this.dragOperationState);
             this.lastTouchEvent = null;
         };
         DragOperationController.prototype.onTouchMove = function (event) {
@@ -192,7 +205,8 @@ var MobileDragAndDropPolyfill;
             this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
             var touch = Util.GetTouchContainedInTouchEventByIdentifier(event, this.initialDragTouchIdentifier);
             this.calculateViewportScrollFactor(touch.clientX, touch.clientY);
-            if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) || DragOperationController.VerticalScrollEndReach(this.scrollIntention)) {
+            if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) ||
+                DragOperationController.VerticalScrollEndReach(this.scrollIntention)) {
                 this.setupScrollAnimation();
             }
             else {
@@ -320,7 +334,14 @@ var MobileDragAndDropPolyfill;
         DragOperationController.PrepareNodeCopyAsDragImage = function (srcNode, dstNode) {
             if (srcNode.nodeType === 1) {
                 dstNode.removeAttribute("id");
+                dstNode.removeAttribute("class");
+                dstNode.removeAttribute("style");
                 dstNode.removeAttribute("draggable");
+                var cs = window.getComputedStyle(srcNode);
+                for (var i = 0; i < cs.length; i++) {
+                    var csName = cs[i];
+                    dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
+                }
             }
             if (srcNode.hasChildNodes()) {
                 for (var i = 0; i < srcNode.childNodes.length; i++) {
@@ -360,7 +381,7 @@ var MobileDragAndDropPolyfill;
             };
             Util.SetCentroidCoordinatesOfTouchesInPage(event, this.dragImagePageCoordinates);
             this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
-            this.sourceNode.parentNode.insertBefore(this.dragImage, this.sourceNode.nextSibling);
+            this.doc.body.appendChild(this.dragImage);
         };
         DragOperationController.prototype.translateDragImage = function (x, y, centerOnCoordinates) {
             var _this = this;
@@ -375,11 +396,17 @@ var MobileDragAndDropPolyfill;
             });
         };
         DragOperationController.prototype.snapbackDragImage = function () {
+            var sourceEl = this.sourceNode;
+            if (sourceEl.style.visibility === 'hidden' || sourceEl.style.display === 'none') {
+                this.config.log("source node is not visible. skipping snapback transition.");
+                this.snapbackTransitionEnded();
+                return;
+            }
             this.config.log("starting dragimage snap back");
             this.dragImage.addEventListener("transitionend", this.snapbackEndedCb);
             this.dragImage.addEventListener("webkitTransitionEnd", this.snapbackEndedCb);
             this.dragImage.classList.add("snapback");
-            var rect = this.sourceNode.getBoundingClientRect();
+            var rect = sourceEl.getBoundingClientRect();
             var elementLeft, elementTop;
             var scrollTop = document.documentElement.scrollTop ?
                 document.documentElement.scrollTop : document.body.scrollTop;

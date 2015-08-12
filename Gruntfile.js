@@ -53,13 +53,15 @@ module.exports = function (grunt) {
     },
     copy: {
       release: {
-        src: '*.css',
-        dest: 'release/'
+        files: [
+          // includes files within path
+          {expand: false, src: ['*.css'], dest: 'release/', filter: 'isFile'}
+        ]
       },
       demoPage: {
         files: [
           // includes files within path
-          {expand: true, cwd:'release', src: ['*.js', '*.css'], dest: 'spec-compliance/', filter: 'isFile', flatten:true}
+          {expand: true, cwd: 'release', src: ['*.js', '*.css'], dest: 'spec-compliance/', filter: 'isFile', flatten: true}
         ]
       }
     }
@@ -67,6 +69,7 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-contrib-connect");
+  grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-ts");
 

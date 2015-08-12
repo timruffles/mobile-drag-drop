@@ -1,5 +1,5 @@
 .mobile-dnd-poly-drag-image {
-    opacity: .5;
+    opacity: .5 !important;
 }
 
 .mobile-dnd-poly-drag-image.snapback {
@@ -7,20 +7,4 @@
     -moz-transition: -moz-transform 250ms ease-out;
     -o-transition: -o-transform 250ms ease-out;
     transition: transform 250ms ease-out;
-}
-
-.mobile-dnd-poly-drag-image.none {
-    background-color: red;
-}
-
-.mobile-dnd-poly-drag-image.copy {
-    background-color: green;
-}
-
-.mobile-dnd-poly-drag-image.move {
-    background-color: blue;
-}
-
-.mobile-dnd-poly-drag-image.link {
-    background-color: yellow;
 }
