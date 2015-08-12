@@ -858,7 +858,10 @@ module MobileDragAndDropPolyfill {
 
             var sourceEl = (<HTMLElement>this.sourceNode);
 
-            if(sourceEl.style.visibility === 'hidden' || sourceEl.style.display === 'none') {
+            var visiblity = window.getComputedStyle(sourceEl, null).getPropertyValue('visibility');
+            var display = window.getComputedStyle(sourceEl, null).getPropertyValue('display');
+
+            if(visiblity === 'hidden' || display === 'none') {
                 this.config.log( "source node is not visible. skipping snapback transition." );
 
                 // shortcut to end the drag operation
