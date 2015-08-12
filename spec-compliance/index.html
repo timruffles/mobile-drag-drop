@@ -164,6 +164,8 @@
 
             addEvent(el, 'click', function (e) {
                 console.log('clicked on draggable');
+
+                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
             });
         }
 
@@ -171,6 +173,8 @@
 
         addEvent(bin, 'dragenter', function (e) {
             console.log('bin dragenter');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
 
             e.preventDefault();
             e.stopPropagation(); // stop it here to prevent it bubble up
@@ -182,6 +186,8 @@
         addEvent(bin, 'dragover', function (e) {
             console.log('bin dragover');
 
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
+
             e.preventDefault(); // allows us to drop
             e.stopPropagation(); // stop it here to prevent it bubble up
 
@@ -191,11 +197,15 @@
         addEvent(bin, 'dragexit', function (e) {
             console.log('bin dragexit');
 
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
+
             e.stopPropagation(); // stop it here to prevent it bubble up
         });
 
         addEvent(bin, 'dragleave', function (e) {
             console.log('bin dragleave');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
 
             e.stopPropagation(); // stop it here to prevent it bubble up
 
@@ -204,6 +214,8 @@
 
         addEvent(bin, 'drop', function (e) {
             console.log('bin drop');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
 
             e.stopPropagation(); // stop it here to prevent it bubble up
 

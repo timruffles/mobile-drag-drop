@@ -247,7 +247,7 @@ module MobileDragAndDropPolyfill {
 
                 DragAndDropInitializer.config.log( "No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
 
-                var clickEvt = Util.CreateMouseEventFromTouch( event, mouseEventType );
+                var clickEvt = Util.CreateMouseEventFromTouch( target, event, mouseEventType );
                 target.dispatchEvent( clickEvt );
             }
         }
@@ -1462,7 +1462,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.READWRITE;
             this.dataTransfer.dropEffect = "none";
 
-            var evt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragstart", true, this.doc.defaultView, this.dataTransfer, null );
+            var evt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragstart", true, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( evt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1482,7 +1482,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
 
-            var evt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "drag", true, this.doc.defaultView, this.dataTransfer, null );
+            var evt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "drag", true, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( evt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1502,7 +1502,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
 
-            var enterEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, relatedTarget );
+            var enterEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, relatedTarget );
             var cancelled = !targetElement.dispatchEvent( enterEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1522,7 +1522,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
 
-            var overEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragover", true, this.doc.defaultView, this.dataTransfer, null );
+            var overEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragover", true, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( overEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1542,7 +1542,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
 
-            var leaveEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null );
+            var leaveEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1562,7 +1562,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
 
-            var leaveEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, relatedTarget );
+            var leaveEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, relatedTarget );
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1582,7 +1582,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = this.currentDragOperation;
 
-            var endEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "dragend", false, this.doc.defaultView, this.dataTransfer, null );
+            var endEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragend", false, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( endEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1602,7 +1602,7 @@ module MobileDragAndDropPolyfill {
             this.dragDataStore.mode = DragDataStoreMode.READONLY;
             this.dataTransfer.dropEffect = this.currentDragOperation;
 
-            var dropEvt = Util.CreateDragEventFromTouch( this.lastTouchEvent, "drop", false, this.doc.defaultView, this.dataTransfer, null );
+            var dropEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "drop", false, this.doc.defaultView, this.dataTransfer, null );
             var cancelled = !targetElement.dispatchEvent( dropEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
@@ -1844,26 +1844,25 @@ module MobileDragAndDropPolyfill {
 
         //TODO initMouseEvent is deprecated, replace by MouseEvent constructor?
         //TODO integrate feature detection to switch to MouseEvent constructor
-        public static CreateMouseEventFromTouch( e:TouchEvent, typeArg:string, cancelable:boolean = true, window:Window = document.defaultView, relatedTarget:Element = null ) {
-            var clickEvt = document.createEvent( "MouseEvents" );
+        public static CreateMouseEventFromTouch( targetElement:Element, e:TouchEvent, typeArg:string, cancelable:boolean = true, window:Window = document.defaultView, relatedTarget:Element = null ) {
+            var mouseEvent = document.createEvent( "MouseEvents" );
             var touch:Touch = e.changedTouches[ 0 ];
 
-            //var x = touch[ this.config.coordinateSystemForElementFromPoint + 'X' ];
-            //var y = touch[ this.config.coordinateSystemForElementFromPoint + 'Y' ];
-
-            //dropEvt.offsetX = x - target.x;
-            //dropEvt.offsetY = y - target.y;
-
-            clickEvt.initMouseEvent( typeArg, true, cancelable, window, 1,
+            mouseEvent.initMouseEvent( typeArg, true, cancelable, window, 1,
                 touch.screenX, touch.screenY, touch.clientX, touch.clientY,
                 e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget );
-            return clickEvt;
+
+            var targetRect = targetElement.getBoundingClientRect();
+            mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
+            mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
+
+            return mouseEvent;
         }
 
         //TODO integrate feature detection to switch to MouseEvent/DragEvent constructor if makes sense for simulating drag events and event constructors work
         // at all for our usecase
-        // TODO is offsetX offsetY a MUST for drag events?
-        public static CreateDragEventFromTouch( e:TouchEvent, typeArg:string, cancelable:boolean, window:Window, dataTransfer:DataTransfer, relatedTarget:Element = null ) {
+        // TODO implement offsetX offsetY a for drag
+        public static CreateDragEventFromTouch( targetElement:Element, e:TouchEvent, typeArg:string, cancelable:boolean, window:Window, dataTransfer:DataTransfer, relatedTarget:Element = null ) {
 
             var touch:Touch = e.changedTouches[ 0 ];
 
@@ -1889,10 +1888,12 @@ module MobileDragAndDropPolyfill {
             //    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
             //    false, false, false, false, 0, relatedTarget, <any>dataTransfer );
 
+            var targetRect = targetElement.getBoundingClientRect();
+            dndEvent.offsetX = dndEvent.clientX - targetRect.left;
+            dndEvent.offsetY = dndEvent.clientY - targetRect.top;
             //var x = touch[ this.config.coordinateSystemForElementFromPoint + 'X' ];
             //var y = touch[ this.config.coordinateSystemForElementFromPoint + 'Y' ];
-            //dndEvent.offsetX = x - target.x;
-            //dndEvent.offsetY = y - target.y;
+
 
             return dndEvent;
         }
