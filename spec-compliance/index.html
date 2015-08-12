@@ -78,7 +78,7 @@
             <li></li>
         </ul>
         <hr/>
-        <h4>flex-box</h4>
+        <h4>flex-box children</h4>
         <ul class="flex-boxed">
             <li><a href="#"><span style="display: inline-block; background: lightblue">eleven</span></a></li>
             <li><a href="#">twelve</a></li>
@@ -88,10 +88,31 @@
             <li>not explicitly draggable</li>
         </ul>
         <hr/>
+        <h4>nested flex-box</h4>
+        <ul class="flex-boxed">
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+        </ul>
+        <hr/>
         <h4>Notes</h4>
         <ol>
             <li>The blue bordered item ('one') is a child inside a draggable element. If you drag the child, we should still drag the whole element.</li>
         </ol>
+        <hr/>
+        <div>
+            <h3>New Elements</h3>
+            <ul>
+                <!-- The toolbox only allows to copy objects, not move it. After a new
+                     element was created, dnd-copied is invoked and we generate the next id -->
+                <li class="test" draggable="true">
+                    <button type="button" class="btn btn-default btn-lg" disabled="disabled">some content</button>
+                </li>
+            </ul>
+        </div>
     </article>
     <script>
 
@@ -122,7 +143,8 @@
 
                 e.dataTransfer.effectAllowed = 'copyLink';
 
-                this.style.display = "none";
+                //TODO fails on desktop safari because drag is immediately aborted
+//                this.style.display = "none";
 
                 console.log('setting data: ' + this.id);
 
@@ -135,7 +157,7 @@
 
             addEvent(el, 'dragend', function (e) {
 
-                this.style.display = "block";
+//                this.style.display = "block";
 
                 console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
             });
@@ -144,22 +166,6 @@
                 console.log('clicked on draggable');
             });
         }
-
-        addEvent(document.body, 'dragover', function (e) {
-            console.log('body dragover');
-        });
-
-        addEvent(document.body, 'dragexit', function (e) {
-            console.log('body dragexit');
-        });
-
-        addEvent(document.body, 'drop', function (e) {
-            console.log('body drop');
-        });
-
-        addEvent(document.body, 'dragleave', function (e) {
-            console.log('body dragleave');
-        });
 
         var bin = document.querySelector('#bin');
 
@@ -170,6 +176,7 @@
             e.stopPropagation(); // stop it here to prevent it bubble up
 
             bin.classList.add('over');
+
         });
 
         addEvent(bin, 'dragover', function (e) {

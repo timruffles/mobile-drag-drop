@@ -800,16 +800,16 @@ module MobileDragAndDropPolyfill {
             // if pointer-events is not none or a browser does behave in an unexpected way than the hit test will break
             this.dragImage.style[ "pointer-events" ] = "none";
 
-            // extract transform css
+            // set transform css
             DragOperationController.transform_css_vendor_prefixes.forEach( ( vendor )=> {
-                var prefixedCssProperty = vendor + "transform";
-                var transform = this.dragImage.style[ prefixedCssProperty ];
+                var transformProp = vendor + "transform";
+                var transform = this.dragImage.style[ transformProp ];
                 if( typeof transform !== "undefined" ) {
                     if( transform !== "none" ) {
-                        this.transformStyleMixins[ prefixedCssProperty ] = transform.replace( DragOperationController.transform_css_regex, '' );
+                        this.transformStyleMixins[ transformProp ] = transform.replace( DragOperationController.transform_css_regex, '' );
                     }
                     else {
-                        this.transformStyleMixins[ prefixedCssProperty ] = "";
+                        this.transformStyleMixins[ transformProp ] = "";
                     }
                 }
             } );
@@ -844,7 +844,6 @@ module MobileDragAndDropPolyfill {
             // using translate3d for best performance
             var translate = " translate3d(" + x + "px," + y + "px, 0)";
 
-            // apply css property
             Util.ForIn( this.transformStyleMixins, ( value, key )=> {
                 this.dragImage.style[ key ] = value + translate;
             } );
@@ -863,7 +862,6 @@ module MobileDragAndDropPolyfill {
 
             if(visiblity === 'hidden' || display === 'none') {
                 this.config.log( "source node is not visible. skipping snapback transition." );
-
                 // shortcut to end the drag operation
                 this.snapbackTransitionEnded();
                 return;

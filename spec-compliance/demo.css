@@ -456,8 +456,3 @@ ul.flex-boxed {
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
 }
-
-.flex-boxed li {
-    height: 100px;
-    width: 100px;
-}
