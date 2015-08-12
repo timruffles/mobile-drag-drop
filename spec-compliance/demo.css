@@ -424,7 +424,7 @@ li.over {
 }
 
 .zoom.in {
-    transform: scale(2);
+    transform: scale(1.2);
 }
 
 .fadeout {
@@ -442,4 +442,22 @@ li.over {
     -webkit-box-sizing: inherit;
     -moz-box-sizing: inherit;
     box-sizing: inherit;
+}
+
+ul.flex-boxed {
+    margin: auto;
+    min-height: initial;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+
+.flex-boxed li {
+    height: 100px;
+    width: 100px;
 }

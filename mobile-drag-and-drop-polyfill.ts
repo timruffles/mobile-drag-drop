@@ -752,8 +752,17 @@ module MobileDragAndDropPolyfill {
             // Is this node an element?
             if( srcNode.nodeType === 1 ) {
                 // Remove any potential conflict attributes
-                dstNode.removeAttribute( "id" );
-                dstNode.removeAttribute( "draggable" );
+                dstNode.removeAttribute("id");
+                dstNode.removeAttribute("class");
+                dstNode.removeAttribute("style");
+                dstNode.removeAttribute("draggable");
+
+                // Clone the style
+                var cs = window.getComputedStyle(srcNode);
+                for (var i = 0; i < cs.length; i++) {
+                    var csName = cs[i];
+                    dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
+                }
             }
 
             // Do the same for the children
@@ -822,9 +831,7 @@ module MobileDragAndDropPolyfill {
             // apply the translate
             this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
-            // append the dragImage as sibling to the source node, this enables to leave styling to existing css classes
-            this.sourceNode.parentNode.insertBefore( this.dragImage, this.sourceNode.nextSibling );
-            //this.doc.body.appendChild( this.dragImage ); //fallback to above
+            this.doc.body.appendChild( this.dragImage );
         }
 
         private translateDragImage( x:number, y:number, centerOnCoordinates:boolean = true ) {
@@ -848,6 +855,17 @@ module MobileDragAndDropPolyfill {
          * and cleanup after transition has ended.
          */
         private snapbackDragImage() {
+
+            var sourceEl = (<HTMLElement>this.sourceNode);
+
+            if(sourceEl.style.visibility === 'hidden' || sourceEl.style.display === 'none') {
+                this.config.log( "source node is not visible. skipping snapback transition." );
+
+                // shortcut to end the drag operation
+                this.snapbackTransitionEnded();
+                return;
+            }
+
             this.config.log( "starting dragimage snap back" );
 
             // setup transitionend listeners
@@ -859,7 +877,7 @@ module MobileDragAndDropPolyfill {
 
             // calc source node position
             //TODO refactor, test layout with different css source node styling, put in method?
-            var rect = (<HTMLElement>this.sourceNode).getBoundingClientRect();
+            var rect = sourceEl.getBoundingClientRect();
             var elementLeft, elementTop; //x and y
             var scrollTop = document.documentElement.scrollTop ?
                 document.documentElement.scrollTop : document.body.scrollTop;
@@ -968,6 +986,7 @@ module MobileDragAndDropPolyfill {
                 // Otherwise
                 else {
                     // Fire a DND event named dragenter at the immediate user selection.
+                    //TODO we cannot determine if a handler even exists as browsers do to silently allow drop when no listener existed, what do we do now?
                     if( this.dragenter( this.immediateUserSelection ) ) {
                         this.config.log( "dragenter default prevented" );
                         // If the event is canceled, then set the current target element to the immediate user selection.
@@ -1002,7 +1021,7 @@ module MobileDragAndDropPolyfill {
 
                             // If the immediate user selection is new target, then leave the current target element unchanged.
 
-                            // Otherwise, fire a DND event named dragenter at new target, with the current current target element
+                            // Otherwise, fire a DND event named dragenter at new target, with the current target element
                             // as the specific related target. Then, set the current target element to new target,
                             // regardless of whether that event was canceled or not.
                             this.dragenter( newTarget, this.currentDropTarget );

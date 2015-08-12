@@ -1,5 +1,5 @@
 .mobile-dnd-poly-drag-image {
-    opacity: .5;
+    opacity: .5 !important;
 }
 
 .mobile-dnd-poly-drag-image.snapback {

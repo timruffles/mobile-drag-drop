@@ -78,6 +78,16 @@
             <li></li>
         </ul>
         <hr/>
+        <h4>flex-box</h4>
+        <ul class="flex-boxed">
+            <li><a href="#"><span style="display: inline-block; background: lightblue">eleven</span></a></li>
+            <li><a href="#">twelve</a></li>
+            <li><a href="#">thirteen</a></li>
+            <li><a href="#">fourteen</a></li>
+            <li><a href="#">fifteen</a></li>
+            <li>not explicitly draggable</li>
+        </ul>
+        <hr/>
         <h4>Notes</h4>
         <ol>
             <li>The blue bordered item ('one') is a child inside a draggable element. If you drag the child, we should still drag the whole element.</li>
@@ -112,6 +122,8 @@
 
                 e.dataTransfer.effectAllowed = 'copyLink';
 
+                this.style.display = "none";
+
                 console.log('setting data: ' + this.id);
 
                 e.dataTransfer.setData('Text', this.id); // required otherwise doesn't work
@@ -122,6 +134,9 @@
             });
 
             addEvent(el, 'dragend', function (e) {
+
+                this.style.display = "block";
+
                 console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
             });
 
@@ -130,9 +145,9 @@
             });
         }
 
-        addEvent(document.body, 'dragover', function (e) {
-            console.log('body dragover');
-        });
+//        addEvent(document.body, 'dragover', function (e) {
+//            console.log('body dragover');
+//        });
 
         addEvent(document.body, 'dragexit', function (e) {
             console.log('body dragexit');
@@ -148,23 +163,23 @@
 
         var bin = document.querySelector('#bin');
 
-        addEvent(bin, 'dragenter', function (e) {
-            console.log('bin dragenter');
+//        addEvent(bin, 'dragenter', function (e) {
+//            console.log('bin dragenter');
+//
+//            e.preventDefault();
+//            e.stopPropagation(); // stop it here to prevent it bubble up
+//
+//            bin.classList.add('over');
+//        });
 
-            e.preventDefault();
-            e.stopPropagation(); // stop it here to prevent it bubble up
-
-            bin.classList.add('over');
-        });
-
-        addEvent(bin, 'dragover', function (e) {
-            console.log('bin dragover');
-
-            e.preventDefault(); // allows us to drop
-            e.stopPropagation(); // stop it here to prevent it bubble up
-
-            e.dataTransfer.dropEffect = 'link'; // we have to set it for firefox to be happy
-        });
+//        addEvent(bin, 'dragover', function (e) {
+//            console.log('bin dragover');
+//
+//            e.preventDefault(); // allows us to drop
+//            e.stopPropagation(); // stop it here to prevent it bubble up
+//
+//            e.dataTransfer.dropEffect = 'link'; // we have to set it for firefox to be happy
+//        });
 
         addEvent(bin, 'dragexit', function (e) {
             console.log('bin dragexit');
@@ -203,10 +218,10 @@
         addEvent(innerBin, 'dragenter', function (e) {
             console.log('apperture dragenter');
 
-            e.preventDefault();
+//            e.preventDefault();
             e.stopPropagation(); // stop it here to prevent it bubble up
 
-            bin.classList.add('in');
+//            bin.classList.add('in');
         });
 
         addEvent(innerBin, 'dragover', function (e) {

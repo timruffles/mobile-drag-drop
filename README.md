@@ -153,23 +153,26 @@ No critical issues but UX suffers because of the constantly [scrolling location 
 | ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------------------------------- | ------------- | ------------ |
 | Firefox     | `event.dataTransfer.setData(type, data)` |          |             | [effectAllowed,dropEffect](#ff-quirk)            | [effectAllowed,dropEffect](#ff-quirk) |               |              |
 | IE11        |                                          |          |             | `event.preventDefault()` when registered on body |                                       |               |              |
-| Chrome      |                                          |          |             | `event.preventDefault()` or `dropzone` required  |                                       |               |              |
 | Polyfill    |                                          |          |             | `event.preventDefault()` or `dropzone` required  |                                       |               |              |
 
 _empty cells mean there is nothing special to take into account_
 
 **Further notices:**
 
-* <a name="ff-quirk"></a>If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also.
-* When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
-* IE11 and Chrome scroll automatically when dragging close to a viewport edge.
+*   If you don't have a `dragenter`-handler registered, drag operation is silently allowed. Browsers don't implement `dropzone`-attribute
+    according to [caniuse](http://caniuse.com/#search=drag) so they allow it by default, which violates the spec. 
+    If you have a handler set up you have to call `event.preventDefault()` to allow dropping.
+    This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
+    which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make the it work.
+*   FF:<a name="ff-quirk"></a> If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also.
+*   When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
+*   IE11 and Chrome scroll automatically when dragging close to a viewport edge.
 
 **Baseline recommendations for cross-browser support:**
 
 * Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`. This is the expected behavior defined by the spec.
-* Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`.
-* If you have a `dragenter`-listener on your `body`-element, call `event.preventDefault()` to ensure the drag operation is not aborted prematurely.
-* Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag operation is aborted and `drop` never emitted.
+* Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`. This is expected behavior defined by the spec.
+* Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag operation is aborted. This is expected behavior defined by the spec.
 
 
 ## Contribute
