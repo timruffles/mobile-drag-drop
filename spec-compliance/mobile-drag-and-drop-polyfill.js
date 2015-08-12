@@ -205,8 +205,8 @@ var MobileDragAndDropPolyfill;
             this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
             var touch = Util.GetTouchContainedInTouchEventByIdentifier(event, this.initialDragTouchIdentifier);
             this.calculateViewportScrollFactor(touch.clientX, touch.clientY);
-            if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) ||
-                DragOperationController.VerticalScrollEndReach(this.scrollIntention)) {
+            if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) === false
+                || DragOperationController.VerticalScrollEndReach(this.scrollIntention) === false) {
                 this.setupScrollAnimation();
             }
             else {
@@ -397,7 +397,9 @@ var MobileDragAndDropPolyfill;
         };
         DragOperationController.prototype.snapbackDragImage = function () {
             var sourceEl = this.sourceNode;
-            if (sourceEl.style.visibility === 'hidden' || sourceEl.style.display === 'none') {
+            var visiblity = window.getComputedStyle(sourceEl, null).getPropertyValue('visibility');
+            var display = window.getComputedStyle(sourceEl, null).getPropertyValue('display');
+            if (visiblity === 'hidden' || display === 'none') {
                 this.config.log("source node is not visible. skipping snapback transition.");
                 this.snapbackTransitionEnded();
                 return;
