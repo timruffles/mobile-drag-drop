@@ -202,9 +202,7 @@ var MobileDragAndDropPolyfill;
             this.lastTouchEvent = event;
             Util.SetCentroidCoordinatesOfTouchesInViewport(event, this.currentHotspotCoordinates);
             Util.SetCentroidCoordinatesOfTouchesInPage(event, this.dragImagePageCoordinates);
-            this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
-            var touch = Util.GetTouchContainedInTouchEventByIdentifier(event, this.initialDragTouchIdentifier);
-            this.calculateViewportScrollFactor(touch.clientX, touch.clientY);
+            this.calculateViewportScrollFactor(this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y);
             if (DragOperationController.HorizontalScrollEndReach(this.scrollIntention) === false
                 || DragOperationController.VerticalScrollEndReach(this.scrollIntention) === false) {
                 this.setupScrollAnimation();
@@ -212,6 +210,10 @@ var MobileDragAndDropPolyfill;
             else {
                 this.teardownScrollAnimation();
             }
+            if (this.scrollAnimationFrameId) {
+                return;
+            }
+            this.translateDragImage(this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
         };
         DragOperationController.prototype.onTouchEndOrCancel = function (event) {
             if (Util.IsTouchIdentifierContainedInTouchEvent(event, this.initialDragTouchIdentifier) === false) {
@@ -359,14 +361,14 @@ var MobileDragAndDropPolyfill;
             this.dragImage.style["z-index"] = "999999";
             this.dragImage.style["pointer-events"] = "none";
             DragOperationController.transform_css_vendor_prefixes.forEach(function (vendor) {
-                var prefixedCssProperty = vendor + "transform";
-                var transform = _this.dragImage.style[prefixedCssProperty];
+                var transformProp = vendor + "transform";
+                var transform = _this.dragImage.style[transformProp];
                 if (typeof transform !== "undefined") {
                     if (transform !== "none") {
-                        _this.transformStyleMixins[prefixedCssProperty] = transform.replace(DragOperationController.transform_css_regex, '');
+                        _this.transformStyleMixins[transformProp] = transform.replace(DragOperationController.transform_css_regex, '');
                     }
                     else {
-                        _this.transformStyleMixins[prefixedCssProperty] = "";
+                        _this.transformStyleMixins[transformProp] = "";
                     }
                 }
             });
@@ -544,7 +546,7 @@ var MobileDragAndDropPolyfill;
             }
             else if (dataTransfer.dropEffect === "move") {
                 if (dataTransfer.effectAllowed.indexOf("move") === 0 || dataTransfer.effectAllowed.indexOf("Move") > -1) {
-                    return "link";
+                    return "move";
                 }
             }
             return "none";
@@ -737,7 +739,7 @@ var MobileDragAndDropPolyfill;
             }
             this.dataStore.data[type] = data;
             var index = this.dataStore.types.indexOf(type);
-            if (index > -1) {
+            if (index === -1) {
                 this.dataStore.types.push(type);
             }
         };

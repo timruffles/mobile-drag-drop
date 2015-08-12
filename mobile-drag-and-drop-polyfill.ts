@@ -1263,7 +1263,7 @@ module MobileDragAndDropPolyfill {
             }
             else if( dataTransfer.dropEffect === "move" ) {
                 if( dataTransfer.effectAllowed.indexOf( "move" ) === 0 || dataTransfer.effectAllowed.indexOf( "Move" ) > -1 ) {
-                    return "link";
+                    return "move";
                 }
             }
 
