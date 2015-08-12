@@ -504,8 +504,8 @@ module MobileDragAndDropPolyfill {
             //TODO use initial touch or centroid?
             var touch = Util.GetTouchContainedInTouchEventByIdentifier( event, this.initialDragTouchIdentifier );
             this.calculateViewportScrollFactor( touch.clientX, touch.clientY );
-            if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) ||
-                DragOperationController.VerticalScrollEndReach( this.scrollIntention ) ) {
+            if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) === false
+                || DragOperationController.VerticalScrollEndReach( this.scrollIntention ) === false ) {
                 this.setupScrollAnimation();
             }
             else {
