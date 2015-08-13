@@ -89,13 +89,38 @@
         </ul>
         <hr/>
         <h4>nested flex-box</h4>
-        <ul class="flex-boxed">
+        <ul class="flex-boxed dropzone">
+            <ul draggable="true" class="dropzone">
+                <li><h3>DRAGGABLE CONTAINER</h3></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            </ul>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
             <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+        </ul>
+        <ul class="flex-boxed dropzone">
+            <ul class="flex-boxed dropzone">
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+                <li class="flex-boxed"><div draggable="true">DRAG ME!</div></li>
+            </ul>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
+            <li class="flex-boxed"><div>DRAG ME!</div></li>
         </ul>
         <hr/>
         <h4>Notes</h4>
@@ -125,12 +150,21 @@
                 }
 
                 console.log(msg);
-            }
+            },
+            debug: true
         });
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
 
         var missed = ['hey!', 'missed it :(', 'that was close..', 'ARRRR'];
         var eat = ['yum!', 'gulp', 'burp!', 'nom'];
         var yum = document.createElement('p');
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
 
         var links = document.querySelectorAll('li > a'), el = null;
         for (var i = 0; i < links.length; i++) {
@@ -168,6 +202,10 @@
                 console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
             });
         }
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
 
         var bin = document.querySelector('#bin');
 
@@ -230,6 +268,10 @@
             }, 250);
         });
 
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
         var innerBin = document.querySelector('#innerBin');
 
         bin.classList.add('zoom');
@@ -289,6 +331,86 @@
                 y.classList.add('fadeout');
             }, 250);
         });
+
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+
+        var flexboxedDraggables = document.querySelectorAll('ul > li.flex-boxed');
+        for (var k = 0; k < flexboxedDraggables.length; k++) {
+            var flexboxedDraggable = flexboxedDraggables[k];
+
+            if(flexboxedDraggable.hasAttribute('draggable') === false) {
+                console.log('setting flexboxed item draggable programmatically');
+
+                flexboxedDraggable.setAttribute('draggable', 'true');
+            }
+
+            addEvent(flexboxedDraggable, 'dragstart', function (e) {
+                console.log('dragstart');
+
+                e.dataTransfer.effectAllowed = 'copyMove';
+                e.dataTransfer.setData('Text', "Test"); // required otherwise doesn't work
+            });
+
+            addEvent(flexboxedDraggable, 'drag', function (e) {
+                console.log('drag');
+            });
+
+            addEvent(flexboxedDraggable, 'dragend', function (e) {
+                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
+            });
+
+            addEvent(el, 'click', function (e) {
+                console.log('clicked on draggable');
+
+                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY );
+            });
+        }
+
+
+        var flexboxedDropzones = document.querySelectorAll('.flex-boxed.dropzone');
+
+        for (var j = 0; j < flexboxedDropzones.length; j++) {
+            var flexboxedDropzone = flexboxedDropzones[j];
+
+            addEvent(flexboxedDropzone, 'dragenter', function (e) {
+                console.log('flexbox dropzone dragenter');
+
+                e.preventDefault();
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'dragover', function (e) {
+                console.log('flexbox dropzone dragover');
+
+                e.preventDefault(); // allows us to drop
+                e.stopPropagation(); // stop it here to prevent it bubble up
+
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            addEvent(flexboxedDropzone, 'dragexit', function (e) {
+                console.log('flexbox dropzone dragexit');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'dragleave', function (e) {
+                console.log('flexbox dropzone dragleave');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'drop', function (e) {
+                console.log('flexbox dropzone drop');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+        }
 
     </script>
     <footer>

@@ -13,6 +13,7 @@ module MobileDragAndDropPolyfill {
         dragImageClass?:string;         // add custom class to dragImage
         scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
         scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
+        debug?:boolean                  // debug mode
     }
 
     /**
@@ -84,7 +85,8 @@ module MobileDragAndDropPolyfill {
             dragImageClass: null,
             iterationInterval: 150,
             scrollThreshold: 50,
-            scrollVelocity: 10
+            scrollVelocity: 10,
+            debug: false
         };
 
         /**
@@ -278,6 +280,17 @@ module MobileDragAndDropPolyfill {
      * Any deviation should be marked with a comment that explains why it is either not needed or not possible to follow the spec.
      */
     class DragOperationController {
+
+        // css classes
+        private static class_prefix = "dnd-poly-";
+        private static class_drag_image = DragOperationController.class_prefix + "drag-image";
+        private static class_drag_image_snapback = DragOperationController.class_prefix + "snapback";
+        private static class_drag_operation_icon = DragOperationController.class_prefix + "icon";
+        private static debug_class = DragOperationController.class_prefix + "debug";
+        private static debug_class_user_selection = DragOperationController.class_prefix + "immediate-user-selection";
+        private static debug_class_drop_target = DragOperationController.class_prefix + "current-drop-target";
+        private static debug_class_event_target = DragOperationController.class_prefix + "event-target";
+        private static debug_class_event_related_target = DragOperationController.class_prefix + "event-related-target";
 
         // convenience reference to the DOM document
         private doc:Document = window.document;
@@ -509,7 +522,7 @@ module MobileDragAndDropPolyfill {
                 this.teardownScrollAnimation();
             }
 
-            if(this.scrollAnimationFrameId) {
+            if( this.scrollAnimationFrameId ) {
                 return;
             }
 
@@ -755,17 +768,22 @@ module MobileDragAndDropPolyfill {
             // Is this node an element?
             if( srcNode.nodeType === 1 ) {
                 // Remove any potential conflict attributes
-                dstNode.removeAttribute("id");
-                dstNode.removeAttribute("class");
-                dstNode.removeAttribute("style");
-                dstNode.removeAttribute("draggable");
+                dstNode.removeAttribute( "id" );
+                dstNode.removeAttribute( "class" );
+                dstNode.removeAttribute( "style" );
+                dstNode.removeAttribute( "draggable" );
 
                 // Clone the style
-                var cs = window.getComputedStyle(srcNode);
-                for (var i = 0; i < cs.length; i++) {
-                    var csName = cs[i];
-                    dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
+                var cs = window.getComputedStyle( srcNode );
+                for( var i = 0; i < cs.length; i++ ) {
+                    var csName = cs[ i ];
+                    dstNode.style.setProperty( csName, cs.getPropertyValue( csName ), cs.getPropertyPriority( csName ) );
                 }
+
+                // no interaction with the drag image, pls! this is also important to make the drag image transparent for hit-testing
+                // hit testing is done in the drag and drop iteration to find the element the user currently is hovering over while dragging
+                // if pointer-events is not none or a browser does behave in an unexpected way than the hit test will break
+                dstNode.style[ "pointer-events" ] = "none";
             }
 
             // Do the same for the children
@@ -798,10 +816,6 @@ module MobileDragAndDropPolyfill {
             this.dragImage.style[ "top" ] = "0px";
             // on top of all
             this.dragImage.style[ "z-index" ] = "999999";
-            // no interaction with the drag image, pls! this is also important to make the drag image transparent for hit-testing
-            // hit testing is done in the drag and drop iteration to find the element the user currently is hovering over while dragging
-            // if pointer-events is not none or a browser does behave in an unexpected way than the hit test will break
-            this.dragImage.style[ "pointer-events" ] = "none";
 
             // set transform css
             DragOperationController.transform_css_vendor_prefixes.forEach( ( vendor )=> {
@@ -818,8 +832,8 @@ module MobileDragAndDropPolyfill {
             } );
 
             // add polyfill class for default styling
-            this.dragImage.classList.add( "mobile-dnd-poly-drag-image" );
-            this.dragImage.classList.add( "mobile-dnd-poly-icon" );
+            this.dragImage.classList.add( DragOperationController.class_drag_image );
+            this.dragImage.classList.add( DragOperationController.class_drag_operation_icon );
             // add user config class
             if( this.config.dragImageClass ) {
                 this.dragImage.classList.add( this.config.dragImageClass );
@@ -860,10 +874,10 @@ module MobileDragAndDropPolyfill {
 
             var sourceEl = (<HTMLElement>this.sourceNode);
 
-            var visiblity = window.getComputedStyle(sourceEl, null).getPropertyValue('visibility');
-            var display = window.getComputedStyle(sourceEl, null).getPropertyValue('display');
+            var visiblity = window.getComputedStyle( sourceEl, null ).getPropertyValue( 'visibility' );
+            var display = window.getComputedStyle( sourceEl, null ).getPropertyValue( 'display' );
 
-            if(visiblity === 'hidden' || display === 'none') {
+            if( visiblity === 'hidden' || display === 'none' ) {
                 this.config.log( "source node is not visible. skipping snapback transition." );
                 // shortcut to end the drag operation
                 this.snapbackTransitionEnded();
@@ -877,7 +891,7 @@ module MobileDragAndDropPolyfill {
             this.dragImage.addEventListener( "webkitTransitionEnd", this.snapbackEndedCb );
 
             // add class containing transition rules
-            this.dragImage.classList.add( "snapback" );
+            this.dragImage.classList.add( DragOperationController.class_drag_image_snapback );
 
             // calc source node position
             //TODO refactor, test layout with different css source node styling, put in method?
@@ -908,9 +922,6 @@ module MobileDragAndDropPolyfill {
             // remove the previously applied listeners
             this.dragImage.removeEventListener( "transitionend", this.snapbackEndedCb );
             this.dragImage.removeEventListener( "webkitTransitionEnd", this.snapbackEndedCb );
-
-            // remove the class, basically not needed because the element will be removed anyway
-            //this.dragImage.classList.remove( "snapback" );
 
             // Fire a DND event named dragend at the source node.
             this.dragend( this.sourceNode );
@@ -968,7 +979,16 @@ module MobileDragAndDropPolyfill {
             // and then update the current target element as follows:
             if( newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget ) {
 
+                if( this.config.debug && this.immediateUserSelection ) {
+                    this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+                }
+
                 this.immediateUserSelection = newUserSelection;
+
+                if( this.config.debug && this.immediateUserSelection ) {
+                    this.immediateUserSelection.classList.add( DragOperationController.debug_class );
+                    this.immediateUserSelection.classList.add( DragOperationController.debug_class_user_selection );
+                }
 
                 if( this.currentDropTarget !== null ) {
                     this.dragexit( this.currentDropTarget );
@@ -1057,12 +1077,21 @@ module MobileDragAndDropPolyfill {
             // then fire a DND event named dragleave at the previous target element.
             if( previousTargetElement !== this.currentDropTarget && (Util.IsDOMElement( previousTargetElement ) ) ) {
 
+                if( this.config.debug ) {
+                    previousTargetElement.classList.remove( DragOperationController.debug_class_drop_target );
+                }
+
                 this.config.log( "current drop target changed." );
                 this.dragleave( previousTargetElement, this.currentDropTarget );
             }
 
             // If the current target element is a DOM element, then fire a DND event named dragover at this current target element.
             if( Util.IsDOMElement( this.currentDropTarget ) ) {
+
+                if( this.config.debug ) {
+                    this.currentDropTarget.classList.add( DragOperationController.debug_class );
+                    this.currentDropTarget.classList.add( DragOperationController.debug_class_drop_target );
+                }
 
                 // If the dragover event is not canceled, run the appropriate step from the following list:
                 if( this.dragover( this.currentDropTarget ) === false ) {
@@ -1109,12 +1138,11 @@ module MobileDragAndDropPolyfill {
             // "none"	        |  No operation allowed, dropping here will cancel the drag-and-drop operation.
             // ---------------------------------------------------------------------------------------------------------
 
-            this.dragImage.classList.remove( "copy" );
-            this.dragImage.classList.remove( "link" );
-            this.dragImage.classList.remove( "move" );
-            this.dragImage.classList.remove( "none" );
+            for( var i:number = 0; i < DataTransfer.DropEffects.length; i++ ) {
+                this.dragImage.classList.remove( DragOperationController.class_prefix + DataTransfer.DropEffects[ i ] );
+            }
 
-            this.dragImage.classList.add( this.currentDragOperation );
+            this.dragImage.classList.add( DragOperationController.class_prefix + this.currentDragOperation );
         }
 
         /**
@@ -1123,6 +1151,14 @@ module MobileDragAndDropPolyfill {
         private DragOperationEnded( state:DragOperationState ):boolean {
 
             this.config.log( "drag operation end detected. state: " + DragOperationState[ state ] );
+
+            if( this.config.debug && this.currentDropTarget ) {
+                this.currentDropTarget.classList.remove( DragOperationController.debug_class_drop_target );
+            }
+
+            if( this.config.debug && this.immediateUserSelection ) {
+                this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+            }
 
             //var dropped:boolean = undefined;
 
@@ -1459,6 +1495,11 @@ module MobileDragAndDropPolyfill {
         private dragstart( targetElement:Element ):boolean {
             this.config.log( "dragstart" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.READWRITE;
             this.dataTransfer.dropEffect = "none";
 
@@ -1466,6 +1507,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( evt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1479,6 +1524,11 @@ module MobileDragAndDropPolyfill {
         private drag( targetElement:Element ):boolean {
             this.config.log( "drag" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
 
@@ -1486,6 +1536,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( evt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1495,9 +1549,18 @@ module MobileDragAndDropPolyfill {
          *
          * @param targetElement
          * @returns {boolean}
+         * @param relatedTarget
          */
         private dragenter( targetElement:Element, relatedTarget:Element = null ):boolean {
             this.config.log( "dragenter" );
+
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+                if( relatedTarget ) {
+                    relatedTarget.classList.add( DragOperationController.debug_class_event_related_target );
+                }
+            }
 
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
@@ -1506,6 +1569,13 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( enterEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+                if( relatedTarget ) {
+                    relatedTarget.classList.remove( DragOperationController.debug_class_event_related_target );
+                }
+            }
 
             return cancelled;
         }
@@ -1519,6 +1589,11 @@ module MobileDragAndDropPolyfill {
         private dragover( targetElement:Element ):boolean {
             this.config.log( "dragover" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
 
@@ -1526,6 +1601,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( overEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1539,6 +1618,11 @@ module MobileDragAndDropPolyfill {
         private dragexit( targetElement:Element ):boolean {
             this.config.log( "dragexit" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
 
@@ -1546,6 +1630,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1555,9 +1643,19 @@ module MobileDragAndDropPolyfill {
          *
          * @param targetElement
          * @returns {boolean}
+         * @param relatedTarget
          */
         private dragleave( targetElement:Element, relatedTarget:Element = null ):boolean {
             this.config.log( "dragleave" );
+
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+                if( relatedTarget ) {
+                    relatedTarget.classList.add( DragOperationController.debug_class );
+                    relatedTarget.classList.add( DragOperationController.debug_class_event_related_target );
+                }
+            }
 
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
@@ -1566,6 +1664,13 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+                if( relatedTarget ) {
+                    relatedTarget.classList.remove( DragOperationController.debug_class_event_related_target );
+                }
+            }
 
             return cancelled;
         }
@@ -1579,6 +1684,11 @@ module MobileDragAndDropPolyfill {
         private dragend( targetElement:Element ):boolean {
             this.config.log( "dragend" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = this.currentDragOperation;
 
@@ -1586,6 +1696,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( endEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1599,6 +1713,11 @@ module MobileDragAndDropPolyfill {
         private drop( targetElement:Element ) {
             this.config.log( "drop" );
 
+            if( this.config.debug ) {
+                targetElement.classList.add( DragOperationController.debug_class );
+                targetElement.classList.add( DragOperationController.debug_class_event_target );
+            }
+
             this.dragDataStore.mode = DragDataStoreMode.READONLY;
             this.dataTransfer.dropEffect = this.currentDragOperation;
 
@@ -1606,6 +1725,10 @@ module MobileDragAndDropPolyfill {
             var cancelled = !targetElement.dispatchEvent( dropEvt );
 
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+
+            if( this.config.debug ) {
+                targetElement.classList.remove( DragOperationController.debug_class_event_target );
+            }
 
             return cancelled;
         }
@@ -1630,7 +1753,7 @@ module MobileDragAndDropPolyfill {
     class DataTransfer {
 
         private static AllowedEffects = [ "none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all" ];
-        private static DropEffects = [ "none", "copy", "move", "link" ];
+        public static DropEffects = [ "none", "copy", "move", "link" ];
 
         private _dropEffect:string = "none";
 
@@ -1891,9 +2014,6 @@ module MobileDragAndDropPolyfill {
             var targetRect = targetElement.getBoundingClientRect();
             dndEvent.offsetX = dndEvent.clientX - targetRect.left;
             dndEvent.offsetY = dndEvent.clientY - targetRect.top;
-            //var x = touch[ this.config.coordinateSystemForElementFromPoint + 'X' ];
-            //var y = touch[ this.config.coordinateSystemForElementFromPoint + 'Y' ];
-
 
             return dndEvent;
         }

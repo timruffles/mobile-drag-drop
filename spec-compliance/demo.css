@@ -445,7 +445,6 @@ li.over {
 }
 
 ul.flex-boxed {
-    margin: auto;
     min-height: initial;
     display: -webkit-flex;
     display: flex;
@@ -455,4 +454,27 @@ ul.flex-boxed {
     justify-content: space-between;
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
+    border-radius: 5px;
+    border: 2px solid gray;
+    margin: 10px;
+    padding: 10px;
+}
+
+ul[draggable=true] {
+    border-radius: 5px;
+    border: 2px solid gray;
+    margin: 10px;
+    padding: 10px;
+}
+
+ul[draggable=true] > li:first-child {
+    display: block;
+    width: 100%;
+    background-color: gray;
+    color:white;
+}
+
+div[draggable] {
+    padding: 10px;
+    background-color: rgba(0,0,0,0.3);
 }

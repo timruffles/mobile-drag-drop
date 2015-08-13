@@ -98,7 +98,8 @@ var MobileDragAndDropPolyfill;
             dragImageClass: null,
             iterationInterval: 150,
             scrollThreshold: 50,
-            scrollVelocity: 10
+            scrollVelocity: 10,
+            debug: false
         };
         return DragAndDropInitializer;
     })();
@@ -344,6 +345,7 @@ var MobileDragAndDropPolyfill;
                     var csName = cs[i];
                     dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
                 }
+                dstNode.style["pointer-events"] = "none";
             }
             if (srcNode.hasChildNodes()) {
                 for (var i = 0; i < srcNode.childNodes.length; i++) {
@@ -359,7 +361,6 @@ var MobileDragAndDropPolyfill;
             this.dragImage.style["left"] = "0px";
             this.dragImage.style["top"] = "0px";
             this.dragImage.style["z-index"] = "999999";
-            this.dragImage.style["pointer-events"] = "none";
             DragOperationController.transform_css_vendor_prefixes.forEach(function (vendor) {
                 var transformProp = vendor + "transform";
                 var transform = _this.dragImage.style[transformProp];
@@ -372,8 +373,8 @@ var MobileDragAndDropPolyfill;
                     }
                 }
             });
-            this.dragImage.classList.add("mobile-dnd-poly-drag-image");
-            this.dragImage.classList.add("mobile-dnd-poly-icon");
+            this.dragImage.classList.add(DragOperationController.class_drag_image);
+            this.dragImage.classList.add(DragOperationController.class_drag_operation_icon);
             if (this.config.dragImageClass) {
                 this.dragImage.classList.add(this.config.dragImageClass);
             }
@@ -409,7 +410,7 @@ var MobileDragAndDropPolyfill;
             this.config.log("starting dragimage snap back");
             this.dragImage.addEventListener("transitionend", this.snapbackEndedCb);
             this.dragImage.addEventListener("webkitTransitionEnd", this.snapbackEndedCb);
-            this.dragImage.classList.add("snapback");
+            this.dragImage.classList.add(DragOperationController.class_drag_image_snapback);
             var rect = sourceEl.getBoundingClientRect();
             var elementLeft, elementTop;
             var scrollTop = document.documentElement.scrollTop ?
@@ -453,7 +454,14 @@ var MobileDragAndDropPolyfill;
             var newUserSelection = this.doc.elementFromPoint(this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y);
             var previousTargetElement = this.currentDropTarget;
             if (newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget) {
+                if (this.config.debug && this.immediateUserSelection) {
+                    this.immediateUserSelection.classList.remove(DragOperationController.debug_class_user_selection);
+                }
                 this.immediateUserSelection = newUserSelection;
+                if (this.config.debug && this.immediateUserSelection) {
+                    this.immediateUserSelection.classList.add(DragOperationController.debug_class);
+                    this.immediateUserSelection.classList.add(DragOperationController.debug_class_user_selection);
+                }
                 if (this.currentDropTarget !== null) {
                     this.dragexit(this.currentDropTarget);
                 }
@@ -487,10 +495,17 @@ var MobileDragAndDropPolyfill;
                 }
             }
             if (previousTargetElement !== this.currentDropTarget && (Util.IsDOMElement(previousTargetElement))) {
+                if (this.config.debug) {
+                    previousTargetElement.classList.remove(DragOperationController.debug_class_drop_target);
+                }
                 this.config.log("current drop target changed.");
                 this.dragleave(previousTargetElement, this.currentDropTarget);
             }
             if (Util.IsDOMElement(this.currentDropTarget)) {
+                if (this.config.debug) {
+                    this.currentDropTarget.classList.add(DragOperationController.debug_class);
+                    this.currentDropTarget.classList.add(DragOperationController.debug_class_drop_target);
+                }
                 if (this.dragover(this.currentDropTarget) === false) {
                     this.config.log("dragover not prevented. checking for dom element with dropzone-attr");
                     this.currentDragOperation = DragOperationController.GetOperationForMatchingDropzone(this.currentDropTarget, this.dragDataStore);
@@ -502,14 +517,19 @@ var MobileDragAndDropPolyfill;
                 }
             }
             this.config.log("d'n'd iteration ended. current drag operation: " + this.currentDragOperation);
-            this.dragImage.classList.remove("copy");
-            this.dragImage.classList.remove("link");
-            this.dragImage.classList.remove("move");
-            this.dragImage.classList.remove("none");
-            this.dragImage.classList.add(this.currentDragOperation);
+            for (var i = 0; i < DataTransfer.DropEffects.length; i++) {
+                this.dragImage.classList.remove(DragOperationController.class_prefix + DataTransfer.DropEffects[i]);
+            }
+            this.dragImage.classList.add(DragOperationController.class_prefix + this.currentDragOperation);
         };
         DragOperationController.prototype.DragOperationEnded = function (state) {
             this.config.log("drag operation end detected. state: " + DragOperationState[state]);
+            if (this.config.debug && this.currentDropTarget) {
+                this.currentDropTarget.classList.remove(DragOperationController.debug_class_drop_target);
+            }
+            if (this.config.debug && this.immediateUserSelection) {
+                this.immediateUserSelection.classList.remove(DragOperationController.debug_class_user_selection);
+            }
             var dragFailed = (this.currentDragOperation === "none"
                 || this.currentDropTarget === null
                 || state === DragOperationState.CANCELLED);
@@ -619,78 +639,156 @@ var MobileDragAndDropPolyfill;
         };
         DragOperationController.prototype.dragstart = function (targetElement) {
             this.config.log("dragstart");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.READWRITE;
             this.dataTransfer.dropEffect = "none";
             var evt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragstart", true, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(evt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
         DragOperationController.prototype.drag = function (targetElement) {
             this.config.log("drag");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
             var evt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "drag", true, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(evt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
         DragOperationController.prototype.dragenter = function (targetElement, relatedTarget) {
             if (relatedTarget === void 0) { relatedTarget = null; }
             this.config.log("dragenter");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+                if (relatedTarget) {
+                    relatedTarget.classList.add(DragOperationController.debug_class_event_related_target);
+                }
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect(this.dragDataStore.effectAllowed, this.sourceNode);
             var enterEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, relatedTarget);
             var cancelled = !targetElement.dispatchEvent(enterEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+                if (relatedTarget) {
+                    relatedTarget.classList.remove(DragOperationController.debug_class_event_related_target);
+                }
+            }
             return cancelled;
         };
         DragOperationController.prototype.dragover = function (targetElement) {
             this.config.log("dragover");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect(this.dragDataStore.effectAllowed, this.sourceNode);
             var overEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragover", true, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(overEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
         DragOperationController.prototype.dragexit = function (targetElement) {
             this.config.log("dragexit");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
             var leaveEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(leaveEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
         DragOperationController.prototype.dragleave = function (targetElement, relatedTarget) {
             if (relatedTarget === void 0) { relatedTarget = null; }
             this.config.log("dragleave");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+                if (relatedTarget) {
+                    relatedTarget.classList.add(DragOperationController.debug_class);
+                    relatedTarget.classList.add(DragOperationController.debug_class_event_related_target);
+                }
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = "none";
             var leaveEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, relatedTarget);
             var cancelled = !targetElement.dispatchEvent(leaveEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+                if (relatedTarget) {
+                    relatedTarget.classList.remove(DragOperationController.debug_class_event_related_target);
+                }
+            }
             return cancelled;
         };
         DragOperationController.prototype.dragend = function (targetElement) {
             this.config.log("dragend");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this.dataTransfer.dropEffect = this.currentDragOperation;
             var endEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "dragend", false, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(endEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
         DragOperationController.prototype.drop = function (targetElement) {
             this.config.log("drop");
+            if (this.config.debug) {
+                targetElement.classList.add(DragOperationController.debug_class);
+                targetElement.classList.add(DragOperationController.debug_class_event_target);
+            }
             this.dragDataStore.mode = DragDataStoreMode.READONLY;
             this.dataTransfer.dropEffect = this.currentDragOperation;
             var dropEvt = Util.CreateDragEventFromTouch(targetElement, this.lastTouchEvent, "drop", false, this.doc.defaultView, this.dataTransfer, null);
             var cancelled = !targetElement.dispatchEvent(dropEvt);
             this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            if (this.config.debug) {
+                targetElement.classList.remove(DragOperationController.debug_class_event_target);
+            }
             return cancelled;
         };
+        DragOperationController.class_prefix = "dnd-poly-";
+        DragOperationController.class_drag_image = DragOperationController.class_prefix + "drag-image";
+        DragOperationController.class_drag_image_snapback = DragOperationController.class_prefix + "snapback";
+        DragOperationController.class_drag_operation_icon = DragOperationController.class_prefix + "icon";
+        DragOperationController.debug_class = DragOperationController.class_prefix + "debug";
+        DragOperationController.debug_class_user_selection = DragOperationController.class_prefix + "immediate-user-selection";
+        DragOperationController.debug_class_drop_target = DragOperationController.class_prefix + "current-drop-target";
+        DragOperationController.debug_class_event_target = DragOperationController.class_prefix + "event-target";
+        DragOperationController.debug_class_event_related_target = DragOperationController.class_prefix + "event-related-target";
         DragOperationController.transform_css_vendor_prefixes = ["", "-webkit-"];
         DragOperationController.transform_css_regex = /translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g;
         return DragOperationController;

@@ -3,6 +3,7 @@
 
 node_modules/
 .tscache/
+tscommand*.txt
 
 /mobile-drag-and-drop-polyfill.js
 /mobile-drag-and-drop-polyfill.js.map
