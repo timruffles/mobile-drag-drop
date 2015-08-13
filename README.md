@@ -43,8 +43,14 @@ _You can try it out yourself and see what suits your application best ;)_
 var options = {
     log: function() {
         // activate logging by implementing this method
+        var msg = "dnd-poly: ";
+        for (var i = 0; i < arguments.length; i++) {
+            msg += arguments[i];
+        }
+        console.log(msg);
     },
-    dragImageClass: "my-custom-drag-image-style"
+    dragImageClass: "my-custom-drag-image-style",
+    debug: false
 }
 // options are optional ;)
 MobileDragAndDropPolyfill.Initialize(options);
@@ -62,6 +68,7 @@ declare module MobileDragAndDropPolyfill {
         dragImageClass?:string;         // add custom class to dragImage
         scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
         scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
+        debug?:boolean                  // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
     }
     /**
     * The polyfill must be actively initialized.
