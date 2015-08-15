@@ -16,7 +16,9 @@
     var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
-    if(!needsPatch) return;
+    if(!needsPatch) {
+        return;
+    }
 
     if(!config.enableEnterLeave) {
       DragDrop.prototype.synthesizeEnterLeave = noop;
@@ -307,8 +309,9 @@
   }
 
   function onEvt(el, event, handler, context) {
-    if(context)
+    if(context) {
       handler = handler.bind(context);
+    }
     el.addEventListener(event, handler);
     return {
       off: function() {
@@ -318,8 +321,9 @@
   }
 
   function once(el, event, handler, context) {
-    if(context)
+    if(context) {
       handler = handler.bind(context);
+    }
     function listener(evt) {
       handler(evt);
       return el.removeEventListener(event,listener);
