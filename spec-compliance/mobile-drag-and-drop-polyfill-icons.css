@@ -15,14 +15,14 @@ Icons by Font Awesome extracted with http://fontello.com
 
 .dnd-poly-icon::after {
     position: absolute;
-    right: -1em;
-    top: -1em;
+    right: -16px;
+    top: -16px;
 
     font-size: 1em;
     width: 1em;
     line-height: 1em;
     border-radius: 1em;
-    padding: 5px 5px 5px 5px;
+    padding: 5px;
 
     font-family: "dnd-poly-icons";
     font-style: normal;

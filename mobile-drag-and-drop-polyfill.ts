@@ -1,6 +1,4 @@
-/**
- * Created by stefansteinhart on 05.08.15.
- */
+
 module MobileDragAndDropPolyfill {
 
     //<editor-fold desc="public api">
@@ -9,7 +7,6 @@ module MobileDragAndDropPolyfill {
      * polyfill config
      */
     export interface Config {
-        log?:( ...args:any[] ) => void; // switch on/off logging by providing log fn
         dragImageClass?:string;         // add custom class to dragImage
         scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
         scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
@@ -30,19 +27,19 @@ module MobileDragAndDropPolyfill {
 
     /**
      * Interface for collecting information
-     * about the current user agent.
+     * about the current user agent feature support.
      */
     interface FeatureDetection {
         draggable:boolean;
         dragEvents:boolean;
         touchEvents:boolean;
-        eventConstructor:boolean;
-        mouseEventConstructor:boolean;
-        dragEventConstructor:boolean;
-        customEventConstructor:boolean;
+        //eventConstructor:boolean;
+        //mouseEventConstructor:boolean;
+        //dragEventConstructor:boolean;
+        //customEventConstructor:boolean;
         userAgentNotSupportingNativeDnD:boolean;
         isBlinkEngine:boolean;
-        isGeckoEngine:boolean;
+        //isGeckoEngine:boolean;
     }
 
     /**
@@ -71,17 +68,15 @@ module MobileDragAndDropPolyfill {
     class DragAndDropInitializer {
 
         /**
-         * flag for allowing only one drag operation at a time.
-         * @type {boolean}
+         * reference to a currently active drag operation.
+         * used to restrict concurrent drag operations.
          */
-        private static dragOperationActive:boolean = false;
+        private static activeDragOperation:DragOperationController;
 
         /**
          * internally used drag operation config
          */
         private static config:InternalConfig = {
-            log: function() {
-            },
             dragImageClass: null,
             iterationInterval: 150,
             scrollThreshold: 50,
@@ -99,16 +94,25 @@ module MobileDragAndDropPolyfill {
          */
         public static Initialize( config?:Config ) {
 
-            // overwrite default config with user config
-            Util.Merge( DragAndDropInitializer.config, config );
-
-            var featureDetection:FeatureDetection = <any>{};
             // feature/browser detection
-            if( DragAndDropInitializer.IsDragAndDropSupportedNatively( featureDetection ) ) {
+            var detectedFeatures = DragAndDropInitializer.DetectFeatures();
+
+            // check if native drag and drop support is there
+            if( detectedFeatures.userAgentNotSupportingNativeDnD === false
+                && detectedFeatures.draggable
+                && detectedFeatures.dragEvents ) {
+                // no polyfilling required
                 return;
             }
 
-            DragAndDropInitializer.config.log( "Applying mobile drag and drop polyfill." );
+            if( config ) {
+                // overwrite default config with user config
+                Object.keys( config ).forEach( function( key ) {
+                    DragAndDropInitializer.config[ key ] = config[ key ];
+                } );
+            }
+
+            console.log( "Applying mobile drag and drop polyfill." );
 
             // add listeners suitable for detecting a potential drag operation
             window.document.addEventListener( "touchstart", DragAndDropInitializer.OnTouchstart );
@@ -118,33 +122,27 @@ module MobileDragAndDropPolyfill {
          * Checking if environment supports drag and drop or we have to apply polyfill.
          * Also used to detect features to device on which implementations we can use.
          */
-        private static IsDragAndDropSupportedNatively( featureDetection:FeatureDetection ):boolean {
+        private static DetectFeatures():FeatureDetection {
 
-            featureDetection.draggable = 'draggable' in window.document.documentElement;
-            featureDetection.dragEvents = ('ondragstart' in window.document.documentElement);
-            featureDetection.touchEvents = ('ontouchstart' in window.document.documentElement);
-            featureDetection.mouseEventConstructor = ('MouseEvent' in window);
-            featureDetection.dragEventConstructor = ('DragEvent' in window);
-            featureDetection.customEventConstructor = ('CustomEvent' in window);
-            featureDetection.isBlinkEngine = !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent );
-            featureDetection.isGeckoEngine = /firefox/i.test( navigator.userAgent );
-
-            featureDetection.userAgentNotSupportingNativeDnD =
-                (
-                    // if is mobile safari or android browser
-                    /iPad|iPhone|iPod|Android/.test( navigator.userAgent )
-                    || // OR
-                    //if is blink(chrome/opera) with touch events enabled no native dnd
-                    featureDetection.touchEvents && (featureDetection.isBlinkEngine)
-                );
-
-            Util.ForIn( featureDetection, function( value, key ) {
-                DragAndDropInitializer.config.log( "feature '" + key + "' is '" + value + "'" );
-            } );
-
-            return (featureDetection.userAgentNotSupportingNativeDnD === false
-                    && featureDetection.draggable
-                    && featureDetection.dragEvents);
+            var featureDetection:FeatureDetection = {
+                draggable: ('draggable' in window.document.documentElement),
+                dragEvents: ('ondragstart' in window.document.documentElement),
+                touchEvents: ('ontouchstart' in window.document.documentElement),
+                //mouseEventConstructor: ('MouseEvent' in window),
+                //dragEventConstructor: ('DragEvent' in window),
+                //customEventConstructor: ('CustomEvent' in window),
+                //isGeckoEngine: /firefox/i.test( navigator.userAgent ),
+                isBlinkEngine: !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent ),
+                userAgentNotSupportingNativeDnD: false
+            };
+            featureDetection.userAgentNotSupportingNativeDnD = (
+                // if is mobile safari or android browser
+                /iPad|iPhone|iPod|Android/.test( navigator.userAgent )
+                || // OR
+                //if is blink(chrome/opera) with touch events enabled -> no native dnd
+                featureDetection.touchEvents && (featureDetection.isBlinkEngine)
+            );
+            return featureDetection;
         }
 
         /**
@@ -156,17 +154,17 @@ module MobileDragAndDropPolyfill {
          */
         private static OnTouchstart( e:TouchEvent ) {
 
-            DragAndDropInitializer.config.log( "global touchstart" );
+            console.log( "global touchstart" );
 
             // only allow one drag operation at a time
             // From the moment that the user agent is to initiate the drag-and-drop operation,
             // until the end of the drag-and-drop operation, device input events (e.g. mouse and keyboard events) must be suppressed.
-            if( DragAndDropInitializer.dragOperationActive ) {
-                DragAndDropInitializer.config.log( "drag operation already active" );
+            if( DragAndDropInitializer.activeDragOperation ) {
+                console.log( "drag operation already active" );
                 return;
             }
 
-            var dragTarget = DragAndDropInitializer.TryFindDraggableTarget( e, DragAndDropInitializer.config );
+            var dragTarget = DragAndDropInitializer.TryFindDraggableTarget( e );
             // If there is no such element, then nothing is being dragged; abort these
             // steps, the drag-and-drop operation is never started.
             if( !dragTarget ) {
@@ -174,22 +172,28 @@ module MobileDragAndDropPolyfill {
             }
 
             e.preventDefault();
-            //TODO stop event propagation?
-
-            DragAndDropInitializer.dragOperationActive = true;
 
             try {
-                new DragOperationController( DragAndDropInitializer.config, dragTarget, e, DragAndDropInitializer.DragOperationEnded );
+                DragAndDropInitializer.activeDragOperation = new DragOperationController( DragAndDropInitializer.config, dragTarget, e, DragAndDropInitializer.DragOperationEnded );
             }
             catch( err ) {
-                DragAndDropInitializer.config.log( err );
                 DragAndDropInitializer.DragOperationEnded( e, DragOperationState.CANCELLED );
+                // rethrow exception after cleanup
+                throw err;
             }
         }
 
-        // NO drag operation because not enough movement was applied?
-        public static TryFindDraggableTarget( event:TouchEvent, config:InternalConfig ):Element {
+        /**
+         * Search for a possible draggable item upon an
+         * event that can initialize a drag operation.
+         *
+         * @param event
+         * @returns {HTMLElement}
+         * @constructor
+         */
+        private static TryFindDraggableTarget( event:TouchEvent ):Element {
 
+            //<spec>
             //1. Determine what is being dragged, as follows:
 
             // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
@@ -202,6 +206,7 @@ module MobileDragAndDropPolyfill {
             //Otherwise, if the drag operation was invoked on a Document, it is the first element, going up the ancestor chain, starting at the node that the
             // user tried to drag, that has the IDL attribute draggable set to true.
             //else {
+            //</spec>
 
             var el = <HTMLElement>event.target;
 
@@ -209,25 +214,23 @@ module MobileDragAndDropPolyfill {
                 if( el.draggable === false ) {
                     continue;
                 }
-                if( !el.getAttribute ) {
-                    continue;
-                }
-                if( el.getAttribute( "draggable" ) === "true" ) {
+                if( el.getAttribute && el.getAttribute( "draggable" ) === "true" ) {
                     return el;
                 }
             } while( (el = <HTMLElement>el.parentNode) && el !== window.document.body );
-            //}
         }
 
         /**
          * Implements callback invoked when a drag operation has ended or crashed.
          * Do global cleanup logic for a single drag operation here.
+         * Execute default behavior if the drag operation never started.
          */
         private static DragOperationEnded( event:TouchEvent, state:DragOperationState ) {
 
-            DragAndDropInitializer.dragOperationActive = false;
+            DragAndDropInitializer.activeDragOperation = null;
 
             //TODO do we need support/detection for single-click, double-click, right-click?
+            // this means the drag operation was not started so the "default action" of the original event should be applied
             if( state === DragOperationState.POTENTIAL ) {
 
                 //TODO different target elements need different default actions
@@ -247,10 +250,10 @@ module MobileDragAndDropPolyfill {
                         mouseEventType = "click";
                 }
 
-                DragAndDropInitializer.config.log( "No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
+                console.log( "No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
 
-                var clickEvt = Util.CreateMouseEventFromTouch( target, event, mouseEventType );
-                target.dispatchEvent( clickEvt );
+                var defaultEvent = Util.CreateMouseEventFromTouch( target, event, mouseEventType );
+                target.dispatchEvent( defaultEvent );
             }
         }
     }
@@ -260,10 +263,9 @@ module MobileDragAndDropPolyfill {
     //<editor-fold desc="drag operation">
 
     /**
-     * Enum for tracking the different states a drag and drop controller
-     * can be in.
+     * Enum for tracking the different states of a drag operation.
      */
-    enum DragOperationState {
+    const enum DragOperationState {
         POTENTIAL, // initial state of a controller, if no movement is detected the operation ends with this state
         STARTED, // after movement is detected the drag operation starts and keeps this state until it ends
         ENDED, // when the drag operation ended normally
@@ -286,58 +288,67 @@ module MobileDragAndDropPolyfill {
         private static class_drag_image = DragOperationController.class_prefix + "drag-image";
         private static class_drag_image_snapback = DragOperationController.class_prefix + "snapback";
         private static class_drag_operation_icon = DragOperationController.class_prefix + "icon";
-        private static debug_class = DragOperationController.class_prefix + "debug";
-        private static debug_class_user_selection = DragOperationController.class_prefix + "immediate-user-selection";
-        private static debug_class_drop_target = DragOperationController.class_prefix + "current-drop-target";
-        private static debug_class_event_target = DragOperationController.class_prefix + "event-target";
-        private static debug_class_event_related_target = DragOperationController.class_prefix + "event-related-target";
 
-        // convenience reference to the DOM document
-        private doc:Document = window.document;
+        //<debug>
+        private static debug_class:string;
+        private static debug_class_user_selection:string;
+        private static debug_class_drop_target:string;
+        private static debug_class_event_target:string;
+        private static debug_class_event_related_target:string;
+        //</debug>
 
         // reference to the element that is used as drag image
-        private dragImage:HTMLElement = null;
-        // container for the cross-browser transform style properties
-        private transformStyleMixins = {};
+        private dragImage:HTMLElement;
         // the current page coordinates of the dragImage
         private dragImagePageCoordinates:Point;
-        // bound callback for transitionend on drag image "snapback" transition.
+        // bound callback for `transitionend` on drag image "snapback" transition.
         private snapbackEndedCb:EventListener;
-        // the point relative to viewport that is used to determine the drop target
-        private currentHotspotCoordinates:Point = null;
 
+        // the point relative to viewport that is used to determine the immediate user selection
+        private currentHotspotCoordinates:Point;
         // the element the user currently hovers while dragging
         private immediateUserSelection:HTMLElement = null;
         // the element that was selected as a valid drop target by the d'n'd operation
         private currentDropTarget:HTMLElement = null;
 
         // the drag data store for this drag operation
-        private dragDataStore:DragDataStore = null;
+        private dragDataStore:DragDataStore;
         // the data transfer object used on the drag events
-        private dataTransfer:DataTransfer = null;
+        private dataTransfer:DataTransfer;
         // the current drag operation set according to the d'n'd processing model
-        private currentDragOperation:string = "none";
+        private currentDragOperation:string;
 
         // helper flag for preventing the d'n'd iteration to run when the previous iteration did not yet finish
-        private iterationLock:boolean = false;
+        private iterationLock:boolean;
         // reference obtained from setInterval() for being able to stop the d'n'd iteration
-        private intervalId:number = null;
+        private iterationIntervalId:number;
 
+        // the identifier for the touch that initiated the drag operation
+        private initialDragTouchIdentifier:number;
         // bound callback for `touchmove`
         private touchMoveHandler:EventListener;
         // bound callback for `touchend touchcancel`
         private touchEndOrCancelHandler:EventListener;
         // the last touch event that contained the original touch that started the drag operation
-        private lastTouchEvent:TouchEvent = null;
-
-        // the identifier for the touch that initiated the drag operation
-        private initialDragTouchIdentifier:number = null;
+        private lastTouchEvent:TouchEvent;
 
         // the state of the drag operation
         private dragOperationState:DragOperationState = DragOperationState.POTENTIAL;
 
         constructor( private config:InternalConfig, private sourceNode:Element, initialEvent:TouchEvent, private dragOperationEndedCb:( event:TouchEvent, state:DragOperationState )=>void ) {
-            config.log( "setting up potential drag operation.." );
+
+            console.log( "setting up potential drag operation.." );
+
+            //<debug>
+            // removed on minification, exists just for debug purposes
+            if( this.config.debug ) {
+                DragOperationController.debug_class = DragOperationController.class_prefix + "debug";
+                DragOperationController.debug_class_user_selection = DragOperationController.class_prefix + "immediate-user-selection";
+                DragOperationController.debug_class_drop_target = DragOperationController.class_prefix + "current-drop-target";
+                DragOperationController.debug_class_event_target = DragOperationController.class_prefix + "event-target";
+                DragOperationController.debug_class_event_related_target = DragOperationController.class_prefix + "event-related-target";
+            }
+            //</debug>
 
             // create bound event listeners
             this.touchMoveHandler = this.onTouchMove.bind( this );
@@ -350,6 +361,7 @@ module MobileDragAndDropPolyfill {
             document.addEventListener( "touchend", this.touchEndOrCancelHandler );
             document.addEventListener( "touchcancel", this.touchEndOrCancelHandler );
 
+            //<spec>
             // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
             // 3. Establish which DOM node is the source node, as follows:
             // If it is a selection that is being dragged, then the source node is the text node that the user started the drag on (typically the text node
@@ -390,6 +402,7 @@ module MobileDragAndDropPolyfill {
             // being dragged, honoring platform conventions where appropriate; however, if the platform conventions do not use MIME types to label dragged
             // data, the user agent must make a best-effort attempt to map the types to MIME types, and, in any case, all the drag data item type strings must
             // be converted to ASCII lowercase.  Perform drag-and-drop initialization steps defined in any other applicable specifications.
+            //</spec>
         }
 
         //<editor-fold desc="setup/teardown">
@@ -399,9 +412,11 @@ module MobileDragAndDropPolyfill {
          * and drop process model iteration interval.
          */
         private setupDragAndDropOperation() {
-            this.config.log( "starting drag and drop operation" );
+            console.log( "starting drag and drop operation" );
 
             this.dragOperationState = DragOperationState.STARTED;
+
+            this.currentDragOperation = "none";
 
             this.dragDataStore = new DragDataStore();
             this.dataTransfer = new DataTransfer( this.dragDataStore );
@@ -418,8 +433,10 @@ module MobileDragAndDropPolyfill {
             this.createDragImage( this.lastTouchEvent );
 
             // 9. Fire a DND event named dragstart at the source node.
-            if( this.dragstart( this.sourceNode ) ) {
-                this.config.log( "dragstart cancelled" );
+            this.dragDataStore.mode = DragDataStoreMode.READWRITE;
+            this.dataTransfer.dropEffect = "none";
+            if( this.dispatchDragEvent( "dragstart", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer ) ) {
+                console.log( "dragstart cancelled" );
                 // dragstart has been prevented -> cancel d'n'd
                 this.dragOperationState = DragOperationState.CANCELLED;
                 this.cleanup();
@@ -429,12 +446,12 @@ module MobileDragAndDropPolyfill {
             this.snapbackEndedCb = this.snapbackTransitionEnded.bind( this );
 
             // 10. Initiate the drag-and-drop operation in a manner consistent with platform conventions, and as described below.
-            this.intervalId = setInterval( ()=> {
+            this.iterationIntervalId = setInterval( ()=> {
 
                 // If the user agent is still performing the previous iteration of the sequence (if any) when the next iteration becomes due,
                 // abort these steps for this iteration (effectively "skipping missed frames" of the drag-and-drop operation).
                 if( this.iterationLock ) {
-                    this.config.log( 'iteration skipped because previous iteration hast not yet finished.' );
+                    console.log( 'iteration skipped because previous iteration hast not yet finished.' );
                     return;
                 }
                 this.iterationLock = true;
@@ -453,35 +470,23 @@ module MobileDragAndDropPolyfill {
          * Tells the global drag and drop initializer that this operation finished, which enables enforcing only one drag operation at a time.
          */
         private cleanup() {
-            this.config.log( "cleanup" );
+            console.log( "cleanup" );
 
-            if( this.intervalId ) {
-                clearInterval( this.intervalId );
-                this.intervalId = null;
+            if( this.iterationIntervalId ) {
+                clearInterval( this.iterationIntervalId );
+                this.iterationIntervalId = null;
             }
 
             document.removeEventListener( "touchmove", this.touchMoveHandler );
             document.removeEventListener( "touchend", this.touchEndOrCancelHandler );
             document.removeEventListener( "touchcancel", this.touchEndOrCancelHandler );
 
-            if( this.dragImage != null ) {
+            if( this.dragImage ) {
                 this.dragImage.parentNode.removeChild( this.dragImage );
                 this.dragImage = null;
             }
 
-            this.currentHotspotCoordinates = null;
-            this.dataTransfer = null;
-            this.dragDataStore = null;
-            this.immediateUserSelection = null;
-            this.currentDropTarget = null;
-
-            this.touchEndOrCancelHandler = null;
-            this.touchMoveHandler = null;
-            this.snapbackEndedCb = null;
-
             this.dragOperationEndedCb( this.lastTouchEvent, this.dragOperationState );
-
-            this.lastTouchEvent = null;
         }
 
         //</editor-fold>
@@ -510,20 +515,19 @@ module MobileDragAndDropPolyfill {
             this.lastTouchEvent = event;
 
             // populate shared coordinates from touch event
-            Util.SetCentroidCoordinatesOfTouchesInViewport( event, this.currentHotspotCoordinates );
-            Util.SetCentroidCoordinatesOfTouchesInPage( event, this.dragImagePageCoordinates );
+            Util.UpdateCentroidCoordinatesOfTouchesIn( "client", event, this.currentHotspotCoordinates );
+            Util.UpdateCentroidCoordinatesOfTouchesIn( "page", event, this.dragImagePageCoordinates );
 
-            this.calculateViewportScrollFactor( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
+            this.determineScrollIntention( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
             if( DragOperationController.HorizontalScrollEndReach( this.scrollIntention ) === false
                 || DragOperationController.VerticalScrollEndReach( this.scrollIntention ) === false ) {
                 this.setupScrollAnimation();
+
+                // early exit because scroll animation will take over drag image translation
+                return;
             }
             else {
                 this.teardownScrollAnimation();
-            }
-
-            if( this.scrollAnimationFrameId ) {
-                return;
             }
 
             this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
@@ -559,7 +563,7 @@ module MobileDragAndDropPolyfill {
 
         private scrollIntention:Point;
 
-        private calculateViewportScrollFactor( x:number, y:number ) {
+        private determineScrollIntention( x:number, y:number ):void {
             if( !this.scrollIntention ) {
                 this.scrollIntention = <any>{};
             }
@@ -569,7 +573,7 @@ module MobileDragAndDropPolyfill {
                 this.scrollIntention.x = -1;
             }
             // RIGHT
-            else if( this.doc.documentElement.clientWidth - x < this.config.scrollThreshold ) {
+            else if( window.document.documentElement.clientWidth - x < this.config.scrollThreshold ) {
                 this.scrollIntention.x = 1;
             }
             // NONE
@@ -582,7 +586,7 @@ module MobileDragAndDropPolyfill {
                 this.scrollIntention.y = -1;
             }
             // BOTTOM
-            else if( this.doc.documentElement.clientHeight - y < this.config.scrollThreshold ) {
+            else if( window.document.documentElement.clientHeight - y < this.config.scrollThreshold ) {
                 this.scrollIntention.y = 1;
             }
             // NONE
@@ -599,7 +603,7 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
-            this.config.log( "setting up scroll animation" );
+            console.log( "setting up scroll animation" );
 
             this.scrollAnimationCb = this.performScroll.bind( this );
             this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
@@ -610,42 +614,45 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
-            this.config.log( "tearing down scroll animation" );
+            console.log( "tearing down scroll animation" );
 
             window.cancelAnimationFrame( this.scrollAnimationFrameId );
             this.scrollAnimationFrameId = null;
             this.scrollAnimationCb = null;
         }
 
-        private performScroll( timestamp ) {
+        private performScroll() {
 
             // indicates that a teardown took place
             if( !this.scrollAnimationCb || !this.scrollAnimationFrameId ) {
                 return;
             }
 
-            // check wether the current scroll has reached a limit
+            // check whether the current scroll has reached a limit
             var horizontalScrollEndReached = DragOperationController.HorizontalScrollEndReach( this.scrollIntention );
             var verticalScrollEndReached = DragOperationController.VerticalScrollEndReach( this.scrollIntention );
+
+            // both scroll limits reached -> stop scroll
             if( horizontalScrollEndReached && verticalScrollEndReached ) {
-                this.config.log( "scroll end reached" );
+                console.log( "scroll end reached" );
                 this.teardownScrollAnimation();
                 return;
             }
 
-            // update dragImage position
+            // update dragImage position according to scroll direction
             if( !horizontalScrollEndReached ) {
                 var horizontalScroll = this.scrollIntention.x * this.config.scrollVelocity;
-                DragOperationController.GetSetHorizontalScroll( this.doc, horizontalScroll );
+                DragOperationController.GetSetHorizontalScroll( window.document, horizontalScroll );
                 this.dragImagePageCoordinates.x += horizontalScroll;
             }
             if( !verticalScrollEndReached ) {
                 var verticalScroll = this.scrollIntention.y * this.config.scrollVelocity;
-                DragOperationController.GetSetVerticalScroll( this.doc, verticalScroll );
+                DragOperationController.GetSetVerticalScroll( window.document, verticalScroll );
                 this.dragImagePageCoordinates.y += verticalScroll;
             }
             this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
+            // re-schedule animation frame callback
             this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
         }
 
@@ -715,12 +722,10 @@ module MobileDragAndDropPolyfill {
             else if( scrollIntention.x < 0 ) {
 
                 // is already at left edge
-                return scrollLeft <= 0;
+                return (scrollLeft <= 0);
             }
             // no scroll
-            else {
-                return true;
-            }
+            return true;
         }
 
         /**
@@ -740,18 +745,16 @@ module MobileDragAndDropPolyfill {
                 var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
 
                 // is already at the bottom
-                return (scrollTop + document.documentElement.clientHeight) >= scrollHeight;
+                return (scrollTop + document.documentElement.clientHeight) >= (scrollHeight);
             }
             // wants to scroll to the top
             else if( scrollIntention.y < 0 ) {
 
                 // is already at top edge
-                return scrollTop <= 0;
+                return (scrollTop <= 0);
             }
             // no scroll
-            else {
-                return true;
-            }
+            return true;
         }
 
         //</editor-fold>
@@ -796,7 +799,6 @@ module MobileDragAndDropPolyfill {
 
         // css related stuff for applying a cross-browser working transform property to the drag image.
         private static transform_css_vendor_prefixes = [ "", "-webkit-" ];
-        private static transform_css_regex = /translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g;
 
         /**
          * Create a copy of the source node to be used as drag image.
@@ -817,20 +819,6 @@ module MobileDragAndDropPolyfill {
             // on top of all
             this.dragImage.style[ "z-index" ] = "999999";
 
-            // set transform css
-            DragOperationController.transform_css_vendor_prefixes.forEach( ( vendor )=> {
-                var transformProp = vendor + "transform";
-                var transform = this.dragImage.style[ transformProp ];
-                if( typeof transform !== "undefined" ) {
-                    if( transform !== "none" ) {
-                        this.transformStyleMixins[ transformProp ] = transform.replace( DragOperationController.transform_css_regex, '' );
-                    }
-                    else {
-                        this.transformStyleMixins[ transformProp ] = "";
-                    }
-                }
-            } );
-
             // add polyfill class for default styling
             this.dragImage.classList.add( DragOperationController.class_drag_image );
             this.dragImage.classList.add( DragOperationController.class_drag_operation_icon );
@@ -843,15 +831,15 @@ module MobileDragAndDropPolyfill {
                 x: null,
                 y: null
             };
-            Util.SetCentroidCoordinatesOfTouchesInPage( event, this.dragImagePageCoordinates );
+            Util.UpdateCentroidCoordinatesOfTouchesIn( "page", event, this.dragImagePageCoordinates );
 
             // apply the translate
             this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
-            this.doc.body.appendChild( this.dragImage );
+            window.document.body.appendChild( this.dragImage );
         }
 
-        private translateDragImage( x:number, y:number, centerOnCoordinates:boolean = true ) {
+        private translateDragImage( x:number, y:number, centerOnCoordinates:boolean = true ):void {
 
             if( centerOnCoordinates ) {
                 x -= (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
@@ -859,18 +847,19 @@ module MobileDragAndDropPolyfill {
             }
 
             // using translate3d for best performance
-            var translate = " translate3d(" + x + "px," + y + "px, 0)";
+            var translate = "translate3d(" + x + "px," + y + "px, 0)";
 
-            Util.ForIn( this.transformStyleMixins, ( value, key )=> {
-                this.dragImage.style[ key ] = value + translate;
-            } );
+            for( var i:number = 0; i < DragOperationController.transform_css_vendor_prefixes.length; i++ ) {
+                var transformProp = DragOperationController.transform_css_vendor_prefixes[ i ] + "transform";
+                this.dragImage.style[ transformProp ] = translate;
+            }
         }
 
         /**
          * Create snapback effect by applying css with transition
          * and cleanup after transition has ended.
          */
-        private snapbackDragImage() {
+        private snapbackDragImage():void {
 
             var sourceEl = (<HTMLElement>this.sourceNode);
 
@@ -878,15 +867,16 @@ module MobileDragAndDropPolyfill {
             var display = window.getComputedStyle( sourceEl, null ).getPropertyValue( 'display' );
 
             if( visiblity === 'hidden' || display === 'none' ) {
-                this.config.log( "source node is not visible. skipping snapback transition." );
+                console.log( "source node is not visible. skipping snapback transition." );
                 // shortcut to end the drag operation
                 this.snapbackTransitionEnded();
                 return;
             }
 
-            this.config.log( "starting dragimage snap back" );
+            console.log( "starting dragimage snap back" );
 
             // setup transitionend listeners
+            //TODO use feature detection to get the right event instead of handling two?
             this.dragImage.addEventListener( "transitionend", this.snapbackEndedCb );
             this.dragImage.addEventListener( "webkitTransitionEnd", this.snapbackEndedCb );
 
@@ -916,15 +906,19 @@ module MobileDragAndDropPolyfill {
         /**
          * logic for snapback transition end, does finish the drag operation
          */
-        private snapbackTransitionEnded() {
-            this.config.log( "dragimage snap back transition ended" );
+        private snapbackTransitionEnded():void {
+            console.log( "dragimage snap back transition ended" );
 
             // remove the previously applied listeners
+            //TODO use feature detection to get the right event instead of handling two or
+            // just wait until iOS9 has enough market share because then no prefixes are needed anymore
             this.dragImage.removeEventListener( "transitionend", this.snapbackEndedCb );
             this.dragImage.removeEventListener( "webkitTransitionEnd", this.snapbackEndedCb );
 
             // Fire a DND event named dragend at the source node.
-            this.dragend( this.sourceNode );
+            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+            this.dataTransfer.dropEffect = this.currentDragOperation;
+            this.dispatchDragEvent( "dragend", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false );
             this.dragOperationState = DragOperationState.ENDED;
             // drag operation over and out
             this.cleanup();
@@ -940,9 +934,11 @@ module MobileDragAndDropPolyfill {
         private dragAndDropProcessModelIteration():void {
 
             // Fire a DND event named drag event at the source node.
-            var dragCancelled = this.drag( this.sourceNode );
+            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+            this.dataTransfer.dropEffect = "none";
+            var dragCancelled = this.dispatchDragEvent( "drag", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer );
             if( dragCancelled ) {
-                this.config.log( "drag event cancelled." );
+                console.log( "drag event cancelled." );
                 // If this event is canceled, the user agent must set the current drag operation to "none" (no drag operation).
                 this.currentDragOperation = "none";
             }
@@ -961,7 +957,9 @@ module MobileDragAndDropPolyfill {
 
                 // Otherwise immediately
                 // Fire a DND event named dragend at the source node.
-                this.dragend( this.sourceNode );
+                this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                this.dataTransfer.dropEffect = this.currentDragOperation;
+                this.dispatchDragEvent( "dragend", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false );
                 this.dragOperationState = DragOperationState.ENDED;
                 this.cleanup();
                 return;
@@ -969,7 +967,9 @@ module MobileDragAndDropPolyfill {
 
             // If the drag event was not canceled and the user has not ended the drag-and-drop operation,
             // check the state of the drag-and-drop operation, as follows:
-            var newUserSelection:HTMLElement = <HTMLElement>this.doc.elementFromPoint( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
+            var newUserSelection:HTMLElement = <HTMLElement>window.document.elementFromPoint( this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y );
+
+            console.log("new immediate user selection is: " + newUserSelection);
 
             var previousTargetElement = this.currentDropTarget;
 
@@ -979,27 +979,35 @@ module MobileDragAndDropPolyfill {
             // and then update the current target element as follows:
             if( newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget ) {
 
-                if( this.config.debug && this.immediateUserSelection ) {
-                    this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+                //<debug>
+                if( this.config.debug ) {
+                    if( this.immediateUserSelection ) {
+                        this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+                    }
+
+                    if( newUserSelection ) {
+                        newUserSelection.classList.add( DragOperationController.debug_class );
+                        newUserSelection.classList.add( DragOperationController.debug_class_user_selection );
+                    }
                 }
+                //</debug>
 
                 this.immediateUserSelection = newUserSelection;
 
-                if( this.config.debug && this.immediateUserSelection ) {
-                    this.immediateUserSelection.classList.add( DragOperationController.debug_class );
-                    this.immediateUserSelection.classList.add( DragOperationController.debug_class_user_selection );
-                }
-
                 if( this.currentDropTarget !== null ) {
-                    this.dragexit( this.currentDropTarget );
+                    this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                    this.dataTransfer.dropEffect = "none";
+                    this.dispatchDragEvent( "dragexit", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false );
                 }
 
                 // If the new immediate user selection is null
                 if( this.immediateUserSelection === null ) {
                     //Set the current target element to null also.
                     this.currentDropTarget = this.immediateUserSelection;
-                    this.config.log( "current drop target changed to null" );
+
+                    console.log( "current drop target changed to null" );
                 }
+                //<spec>
                 // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
                 // If the new immediate user selection is in a non-DOM document or application
                 // else if() {
@@ -1008,11 +1016,15 @@ module MobileDragAndDropPolyfill {
                 //      return;
                 // }
                 // Otherwise
+                //</spec>
                 else {
                     // Fire a DND event named dragenter at the immediate user selection.
-                    //TODO we cannot determine if a handler even exists as browsers do to silently allow drop when no listener existed, what do we do now?
-                    if( this.dragenter( this.immediateUserSelection ) ) {
-                        this.config.log( "dragenter default prevented" );
+                    //the polyfill cannot determine if a handler even exists as browsers do to silently
+                    // allow drop when no listener existed, so this event MUST be handled by the client
+                    this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                    this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
+                    if( this.dispatchDragEvent( "dragenter", this.immediateUserSelection, this.lastTouchEvent, this.dragDataStore, this.dataTransfer ) ) {
+                        console.log( "dragenter default prevented" );
                         // If the event is canceled, then set the current target element to the immediate user selection.
                         this.currentDropTarget = this.immediateUserSelection;
                         this.currentDragOperation = DragOperationController.DetermineDragOperation( this.dataTransfer );
@@ -1020,9 +1032,10 @@ module MobileDragAndDropPolyfill {
                     // Otherwise, run the appropriate step from the following list:
                     else {
 
-                        this.config.log( "dragenter not prevented, searching for dropzone.." );
-
-                        var newTarget = DragOperationController.FindDropzoneElement( this.immediateUserSelection );
+                        //<spec>
+                        // NO DROPZONE SUPPORT SINCE NATIVE IMPLEMENTATIONS IN BROWSERS ALSO DO NOT
+                        //console.log( "dragenter not prevented, searching for dropzone.." );
+                        //var newTarget = DragOperationController.FindDropzoneElement( this.immediateUserSelection );
 
                         // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
                         // If the current target element is a text field (e.g. textarea, or an input element whose type attribute is in the Text state) or an
@@ -1034,29 +1047,33 @@ module MobileDragAndDropPolyfill {
                         //}
                         //else
                         // If the current target element is an element with a dropzone attribute that matches the drag data store
-                        if( newTarget === this.immediateUserSelection &&
-                            DragOperationController.GetOperationForMatchingDropzone( this.immediateUserSelection, this.dragDataStore ) !== "none" ) {
-                            // Set the current target element to the immediate user selection anyway.
-                            this.currentDropTarget = this.immediateUserSelection;
-                        }
+                        //if( newTarget === this.immediateUserSelection &&
+                        //    DragOperationController.GetOperationForMatchingDropzone( this.immediateUserSelection, this.dragDataStore ) !== "none" ) {
+                        // Set the current target element to the immediate user selection anyway.
+                        //    this.currentDropTarget = this.immediateUserSelection;
+                        //}
                         // If the immediate user selection is an element that itself has an ancestor element
                         // with a dropzone attribute that matches the drag data store
-                        else if( newTarget !== null && DragOperationController.GetOperationForMatchingDropzone( newTarget, this.dragDataStore ) ) {
+                        // NO DROPZONE SUPPORT SINCE NATIVE IMPLEMENTATIONS IN BROWSERS ALSO DO NOT
+                        //else if( newTarget !== null && DragOperationController.GetOperationForMatchingDropzone( newTarget, this.dragDataStore ) ) {
 
-                            // If the immediate user selection is new target, then leave the current target element unchanged.
+                        // If the immediate user selection is new target, then leave the current target element unchanged.
 
-                            // Otherwise, fire a DND event named dragenter at new target, with the current target element
-                            // as the specific related target. Then, set the current target element to new target,
-                            // regardless of whether that event was canceled or not.
-                            this.dragenter( newTarget, this.currentDropTarget );
-                            this.currentDropTarget = newTarget;
-                        }
+                        // Otherwise, fire a DND event named dragenter at new target, with the current target element
+                        // as the specific related target. Then, set the current target element to new target,
+                        // regardless of whether that event was canceled or not.
+                        //this.dragenter( newTarget, this.currentDropTarget );
+                        //this.currentDropTarget = newTarget;
+                        //}
                         // If the current target element is the body element
-                        else if( this.immediateUserSelection === this.doc.body ) {
+                        //else
+                        //</spec>
+                        if( this.immediateUserSelection === window.document.body ) {
                             // Leave the current target element unchanged.
                         }
                         // Otherwise
                         else {
+                            //<spec>
                             // Fire a DND event named dragenter at the body element, and set the current target element to the body element, regardless of
                             // whether that event was canceled or not.
                             // Note: If the body element is null, then the event will be fired at the Document object (as
@@ -1064,9 +1081,10 @@ module MobileDragAndDropPolyfill {
 
                             // We do not listen to what the spec says here because this results in doubled events on the body/document because if the first one
                             // was not cancelled it will have bubbled up to the body already ;)
-                            //  this.dragenter( this.doc.body );
+                            //  this.dragenter( window.document.body );
+                            //</spec>
 
-                            this.currentDropTarget = this.doc.body;
+                            this.currentDropTarget = window.document.body;
                         }
                     }
                 }
@@ -1077,26 +1095,37 @@ module MobileDragAndDropPolyfill {
             // then fire a DND event named dragleave at the previous target element.
             if( previousTargetElement !== this.currentDropTarget && (Util.IsDOMElement( previousTargetElement ) ) ) {
 
+                //<debug>
                 if( this.config.debug ) {
                     previousTargetElement.classList.remove( DragOperationController.debug_class_drop_target );
                 }
+                //</debug>
 
-                this.config.log( "current drop target changed." );
-                this.dragleave( previousTargetElement, this.currentDropTarget );
+                console.log( "current drop target changed." );
+
+                this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                this.dataTransfer.dropEffect = "none";
+                this.dispatchDragEvent( "dragleave", previousTargetElement, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false, this.currentDropTarget );
             }
 
             // If the current target element is a DOM element, then fire a DND event named dragover at this current target element.
             if( Util.IsDOMElement( this.currentDropTarget ) ) {
 
+                //<debug>
                 if( this.config.debug ) {
                     this.currentDropTarget.classList.add( DragOperationController.debug_class );
                     this.currentDropTarget.classList.add( DragOperationController.debug_class_drop_target );
                 }
+                //</debug>
 
                 // If the dragover event is not canceled, run the appropriate step from the following list:
-                if( this.dragover( this.currentDropTarget ) === false ) {
+                this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
+                if( this.dispatchDragEvent( "dragover", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer ) === false ) {
 
-                    this.config.log( "dragover not prevented. checking for dom element with dropzone-attr" );
+                    console.log( "dragover not prevented on possible drop-target." );
+                    //<spec>
+                    // NO DROPZONE SUPPORT SINCE NATIVE IMPLEMENTATIONS IN BROWSERS ALSO DO NOT
 
                     // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
                     // If the current target element is a text field (e.g. textarea, or an input element whose type attribute is in the Text state) or
@@ -1108,23 +1137,25 @@ module MobileDragAndDropPolyfill {
                     //}
                     //else {
                     // If the current target element is an element with a dropzone attribute that matches the drag data store
-                    this.currentDragOperation = DragOperationController.GetOperationForMatchingDropzone( this.currentDropTarget, this.dragDataStore );
+                    //this.currentDragOperation = DragOperationController.GetOperationForMatchingDropzone( this.currentDropTarget, this.dragDataStore );
                     //}
+                    //</spec>
+                    // when dragover is not prevented and no dropzones are there, no drag operation
+                    this.currentDragOperation = "none";
                 }
                 // Otherwise (if the dragover event is canceled), set the current drag operation based on the values of the effectAllowed and
                 // dropEffect attributes of the DragEvent object's dataTransfer object as they stood after the event dispatch finished
                 else {
 
-                    this.config.log( "dragover prevented -> valid drop target?" );
+                    console.log( "dragover prevented." );
 
                     this.currentDragOperation = DragOperationController.DetermineDragOperation( this.dataTransfer );
-
-                    this.config.log( "current drag operation after dragover: " + this.currentDragOperation );
                 }
             }
 
-            this.config.log( "d'n'd iteration ended. current drag operation: " + this.currentDragOperation );
+            console.log( "d'n'd iteration ended. current drag operation: " + this.currentDragOperation );
 
+            //<spec>
             // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
             // Otherwise, if the current target element is not a DOM element, use platform-specific mechanisms to determine what drag operation is
             // being performed (none, copy, link, or move), and set the current drag operation accordingly.
@@ -1137,6 +1168,7 @@ module MobileDragAndDropPolyfill {
             // "move"	        |  Data will be moved if dropped here.
             // "none"	        |  No operation allowed, dropping here will cancel the drag-and-drop operation.
             // ---------------------------------------------------------------------------------------------------------
+            //</spec>
 
             for( var i:number = 0; i < DataTransfer.DropEffects.length; i++ ) {
                 this.dragImage.classList.remove( DragOperationController.class_prefix + DataTransfer.DropEffects[ i ] );
@@ -1150,15 +1182,19 @@ module MobileDragAndDropPolyfill {
          */
         private DragOperationEnded( state:DragOperationState ):boolean {
 
-            this.config.log( "drag operation end detected. state: " + DragOperationState[ state ] );
+            console.log( "drag operation end detected with " + this.currentDragOperation );
 
-            if( this.config.debug && this.currentDropTarget ) {
-                this.currentDropTarget.classList.remove( DragOperationController.debug_class_drop_target );
-            }
+            //<debug>
+            if( this.config.debug ) {
+                if( this.currentDropTarget ) {
+                    this.currentDropTarget.classList.remove( DragOperationController.debug_class_drop_target );
 
-            if( this.config.debug && this.immediateUserSelection ) {
-                this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+                }
+                if( this.immediateUserSelection ) {
+                    this.immediateUserSelection.classList.remove( DragOperationController.debug_class_user_selection );
+                }
             }
+            //</debug>
 
             //var dropped:boolean = undefined;
 
@@ -1179,7 +1215,9 @@ module MobileDragAndDropPolyfill {
 
                 // If the current target element is a DOM element, fire a DND event named dragleave at it;
                 if( Util.IsDOMElement( this.currentDropTarget ) ) {
-                    this.dragleave( this.currentDropTarget );
+                    this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                    this.dataTransfer.dropEffect = "none";
+                    this.dispatchDragEvent( "dragleave", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false );
                 }
 
                 // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
@@ -1198,13 +1236,18 @@ module MobileDragAndDropPolyfill {
 
                     // If the event is canceled, set the current drag operation to the value of the dropEffect attribute of the
                     // DragEvent object's dataTransfer object as it stood after the event dispatch finished.
-                    if( this.drop( this.currentDropTarget ) === true ) {
+
+                    this.dragDataStore.mode = DragDataStoreMode.READONLY;
+                    this.dataTransfer.dropEffect = this.currentDragOperation;
+                    if( this.dispatchDragEvent( "drop", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer ) ===
+                        true ) {
 
                         this.currentDragOperation = this.dataTransfer.dropEffect;
                     }
                     // Otherwise, the event is not canceled; perform the event's default action, which depends on the exact target as follows:
                     else {
 
+                        //<spec>
                         // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
                         // If the current target element is a text field (e.g. textarea, or an input element whose type attribute is in the Text state)
                         // or an editable element,
@@ -1216,6 +1259,7 @@ module MobileDragAndDropPolyfill {
                         // consistent with platform-specific conventions (e.g. inserting it at the current mouse cursor position, or inserting it at
                         // the end of the field).
                         //}
+                        //</spec>
                         // Otherwise
                         //else {
                         // Reset the current drag operation to "none".
@@ -1223,14 +1267,17 @@ module MobileDragAndDropPolyfill {
                         //}
                     }
                 }
+                //<spec>
                 // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
                 // otherwise, use platform-specific conventions for indicating a drop.
                 //else {
                 //}
+                //</spec>
             }
 
             return dragFailed;
 
+            //<spec>
             // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
             //if( this.dragend( this.sourceNode ) ) {
             //    return;
@@ -1262,6 +1309,7 @@ module MobileDragAndDropPolyfill {
             //    // The user agent should delete the dragged selection from the relevant text field.
             //}
             //// Otherwise, The event has no default action.
+            //</spec>
         }
 
         /**
@@ -1364,6 +1412,7 @@ module MobileDragAndDropPolyfill {
             return "copy";
         }
 
+        //<spec>
         /**
          * // THIS IS SKIPPED SINCE SUPPORT IS ONLY AVAILABLE FOR DOM ELEMENTS
          * @param element
@@ -1395,6 +1444,8 @@ module MobileDragAndDropPolyfill {
         //}
 
         /**
+         * NO DROPZONE SUPPORT SINCE NATIVE IMPLEMENTATIONS IN BROWSERS ALSO DO NOT
+         *
          * Helper method for recursively go from a nested element up the ancestor chain
          * to see if any element has a dropzone.
          *
@@ -1402,24 +1453,26 @@ module MobileDragAndDropPolyfill {
          * @returns {any}
          * @constructor
          */
-        private static FindDropzoneElement( element:HTMLElement ):HTMLElement {
-
-            if( !element || !element.hasAttribute || typeof element.hasAttribute !== "function" ) {
-                return null;
-            }
-
-            if( element.hasAttribute( "dropzone" ) ) {
-                return element;
-            }
-
-            if( element === window.document.body ) {
-                return null;
-            }
-
-            return DragOperationController.FindDropzoneElement( element.parentElement );
-        }
+        //private static FindDropzoneElement( element:HTMLElement ):HTMLElement {
+        //
+        //    if( !element || !element.hasAttribute || typeof element.hasAttribute !== "function" ) {
+        //        return null;
+        //    }
+        //
+        //    if( element.hasAttribute( "dropzone" ) ) {
+        //        return element;
+        //    }
+        //
+        //    if( element === window.document.body ) {
+        //        return null;
+        //    }
+        //
+        //    return DragOperationController.FindDropzoneElement( element.parentElement );
+        //}
 
         /**
+         * NO DROPZONE SUPPORT SINCE NATIVE IMPLEMENTATIONS IN BROWSERS ALSO DO NOT
+         *
          * Polyfills https://html.spec.whatwg.org/multipage/interaction.html#the-dropzone-attribute
          * by implementing the dropzone processing steps.
          *
@@ -1430,224 +1483,78 @@ module MobileDragAndDropPolyfill {
          * @returns {any}
          * @constructor
          */
-        private static GetOperationForMatchingDropzone( element:HTMLElement, dragDataStore:DragDataStore ):string {
+        //private static GetOperationForMatchingDropzone( element:HTMLElement, dragDataStore:DragDataStore ):string {
 
-            // If the current target element is an element with a dropzone attribute that matches the drag data store and specifies an operation
-            //      Set the current drag operation to the operation specified by the dropzone attribute of the current target element.
-            // If the current target element is an element with a dropzone attribute that matches the drag data store and does not specify an operation
-            //      Set the current drag operation to "copy".
-            // Otherwise
-            //      Reset the current drag operation to "none".
-            var value = element.getAttribute( "dropzone" );
-            if( !value ) {
-
-                return "none";
-            }
-
-            var matched = false;
-            var operation;
-            var keywords = value.split( " " );
-
-            for( var i:number = 0; i < keywords.length; i++ ) {
-                var keyword = keywords[ i ];
-
-                if( keyword === "copy" || keyword === "move" || keyword === "link" ) {
-                    if( !operation ) {
-                        operation = keyword;
-                    }
-                    continue;
-                }
-
-                if( keyword.length < 3 || keyword[ 1 ] !== ":" ) {
-                    continue;
-                }
-
-                var splitKeyword = keyword.split( ":" );
-                var kind = splitKeyword[ 0 ].toLowerCase();
-                var type = splitKeyword[ 1 ].toLowerCase();
-
-                if( dragDataStore.types.indexOf( type ) > -1 ) {
-                    matched = true;
-                }
-            }
-
-            if( !matched ) {
-                return "none";
-            }
-
-            if( !operation ) {
-                return "copy";
-            }
-
-            return operation;
-        }
+        // If the current target element is an element with a dropzone attribute that matches the drag data store and specifies an operation
+        //      Set the current drag operation to the operation specified by the dropzone attribute of the current target element.
+        // If the current target element is an element with a dropzone attribute that matches the drag data store and does not specify an operation
+        //      Set the current drag operation to "copy".
+        // Otherwise
+        //      Reset the current drag operation to "none".
+        //var value = element.getAttribute( "dropzone" );
+        //if( !value ) {
+        //
+        //    return "none";
+        //}
+        //
+        //var matched = false;
+        //var operation;
+        //var keywords = value.split( " " );
+        //
+        //for( var i:number = 0; i < keywords.length; i++ ) {
+        //    var keyword = keywords[ i ];
+        //
+        //    if( keyword === "copy" || keyword === "move" || keyword === "link" ) {
+        //        if( !operation ) {
+        //            operation = keyword;
+        //        }
+        //        continue;
+        //    }
+        //
+        //    if( keyword.length < 3 || keyword[ 1 ] !== ":" ) {
+        //        continue;
+        //    }
+        //
+        //    var splitKeyword = keyword.split( ":" );
+        //    var kind = splitKeyword[ 0 ].toLowerCase();
+        //    var type = splitKeyword[ 1 ].toLowerCase();
+        //
+        //    if( dragDataStore.types.indexOf( type ) > -1 ) {
+        //        matched = true;
+        //    }
+        //}
+        //
+        //if( !matched ) {
+        //    return "none";
+        //}
+        //
+        //if( !operation ) {
+        //    return "copy";
+        //}
+        //
+        //return operation;
+        //}
+        //</spec>
 
         //</editor-fold>
 
-        //<editor-fold desc="dnd events">
+        //<editor-fold desc="dnd event dispatching">
 
         /**
          * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
          *
-         * @param targetElement
-         * @returns {boolean}
+         * @param dragEvent         The event name for the dispatched drag event
+         * @param targetElement     The element on which the event is dispatched
+         * @param touchEvent        The touch event containing the coordinates for the drag event
+         * @param dataStore         The drag operation's drag data store
+         * @param dataTransfer      The drag events dataTransfer item.
+         * @param cancelable        Set the event cancelable.
+         * @param relatedTarget     The related target if any
          */
-        private dragstart( targetElement:Element ):boolean {
-            this.config.log( "dragstart" );
+        private dispatchDragEvent( dragEvent:string, targetElement:Element, touchEvent:TouchEvent, dataStore:DragDataStore, dataTransfer:DataTransfer, cancelable:boolean = true, relatedTarget:Element = null ):boolean {
+            console.log( dragEvent );
 
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.READWRITE;
-            this.dataTransfer.dropEffect = "none";
-
-            var evt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragstart", true, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( evt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private drag( targetElement:Element ):boolean {
-            this.config.log( "drag" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = "none";
-
-            var evt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "drag", true, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( evt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         * @param relatedTarget
-         */
-        private dragenter( targetElement:Element, relatedTarget:Element = null ):boolean {
-            this.config.log( "dragenter" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-                if( relatedTarget ) {
-                    relatedTarget.classList.add( DragOperationController.debug_class_event_related_target );
-                }
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
-
-            var enterEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragenter", true, this.doc.defaultView, this.dataTransfer, relatedTarget );
-            var cancelled = !targetElement.dispatchEvent( enterEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-                if( relatedTarget ) {
-                    relatedTarget.classList.remove( DragOperationController.debug_class_event_related_target );
-                }
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private dragover( targetElement:Element ):boolean {
-            this.config.log( "dragover" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = DragOperationController.DetermineDropEffect( this.dragDataStore.effectAllowed, this.sourceNode );
-
-            var overEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragover", true, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( overEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private dragexit( targetElement:Element ):boolean {
-            this.config.log( "dragexit" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = "none";
-
-            var leaveEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragexit", false, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( leaveEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         * @param relatedTarget
-         */
-        private dragleave( targetElement:Element, relatedTarget:Element = null ):boolean {
-            this.config.log( "dragleave" );
-
+            //<debug>
             if( this.config.debug ) {
                 targetElement.classList.add( DragOperationController.debug_class );
                 targetElement.classList.add( DragOperationController.debug_class_event_target );
@@ -1656,79 +1563,21 @@ module MobileDragAndDropPolyfill {
                     relatedTarget.classList.add( DragOperationController.debug_class_event_related_target );
                 }
             }
+            //</debug>
 
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = "none";
-
-            var leaveEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragleave", false, this.doc.defaultView, this.dataTransfer, relatedTarget );
+            var leaveEvt = Util.CreateDragEventFromTouch( targetElement, touchEvent, dragEvent, cancelable, window.document.defaultView, dataTransfer, relatedTarget );
             var cancelled = !targetElement.dispatchEvent( leaveEvt );
 
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
+            dataStore.mode = DragDataStoreMode._DISCONNECTED;
 
+            //<debug>
             if( this.config.debug ) {
                 targetElement.classList.remove( DragOperationController.debug_class_event_target );
                 if( relatedTarget ) {
                     relatedTarget.classList.remove( DragOperationController.debug_class_event_related_target );
                 }
             }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private dragend( targetElement:Element ):boolean {
-            this.config.log( "dragend" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.PROTECTED;
-            this.dataTransfer.dropEffect = this.currentDragOperation;
-
-            var endEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "dragend", false, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( endEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
-
-            return cancelled;
-        }
-
-        /**
-         * Reference https://html.spec.whatwg.org/multipage/interaction.html#dndevents
-         *
-         * @param targetElement
-         * @returns {boolean}
-         */
-        private drop( targetElement:Element ) {
-            this.config.log( "drop" );
-
-            if( this.config.debug ) {
-                targetElement.classList.add( DragOperationController.debug_class );
-                targetElement.classList.add( DragOperationController.debug_class_event_target );
-            }
-
-            this.dragDataStore.mode = DragDataStoreMode.READONLY;
-            this.dataTransfer.dropEffect = this.currentDragOperation;
-
-            var dropEvt = Util.CreateDragEventFromTouch( targetElement, this.lastTouchEvent, "drop", false, this.doc.defaultView, this.dataTransfer, null );
-            var cancelled = !targetElement.dispatchEvent( dropEvt );
-
-            this.dragDataStore.mode = DragDataStoreMode._DISCONNECTED;
-
-            if( this.config.debug ) {
-                targetElement.classList.remove( DragOperationController.debug_class_event_target );
-            }
+            //</debug>
 
             return cancelled;
         }
@@ -1761,10 +1610,6 @@ module MobileDragAndDropPolyfill {
         }
 
         public get files():FileList {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
-                return null;
-            }
-            //throw new Error( 'mobile-drag-and-drop-polyfill does not support file drag and drop' );
             return null;
         }
 
@@ -1782,10 +1627,6 @@ module MobileDragAndDropPolyfill {
         }
 
         public setData( type:string, data:string ):void {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
-                return;
-            }
-
             if( this.dataStore.mode !== DragDataStoreMode.READWRITE ) {
                 return;
             }
@@ -1795,18 +1636,14 @@ module MobileDragAndDropPolyfill {
             }
 
             this.dataStore.data[ type ] = data;
-            var index = this.dataStore.types.indexOf( type );
-            if( index === -1 ) {
+            if( this.dataStore.types.indexOf( type ) === -1 ) {
                 this.dataStore.types.push( type );
             }
         }
 
         public getData( type:string ):string {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
-                return null;
-            }
-
-            if( this.dataStore.mode === DragDataStoreMode.PROTECTED ) {
+            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED
+                || this.dataStore.mode === DragDataStoreMode.PROTECTED ) {
                 return null;
             }
 
@@ -1814,10 +1651,9 @@ module MobileDragAndDropPolyfill {
         }
 
         public clearData( format?:string ):void {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
+            if( this.dataStore.mode !== DragDataStoreMode.READWRITE ) {
                 return;
             }
-
             // delete data for format
             if( format && this.dataStore.data[ format ] ) {
                 delete this.dataStore.data[ format ];
@@ -1834,7 +1670,7 @@ module MobileDragAndDropPolyfill {
 
         public setDragImage( image:Element, x:number, y:number ):void {
             if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
-                return null;
+                return;
             }
 
             //TODO setdragimage support for setting dragimage to some custom element
@@ -1847,11 +1683,8 @@ module MobileDragAndDropPolyfill {
 
         //TODO effectAllowed can be set only on dragstart?
         public set effectAllowed( value ) {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
-                return;
-            }
-
-            if( DataTransfer.AllowedEffects.indexOf( value ) === -1 ) {
+            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED
+                || DataTransfer.AllowedEffects.indexOf( value ) === -1 ) {
                 return;
             }
 
@@ -1864,13 +1697,11 @@ module MobileDragAndDropPolyfill {
         }
 
         public set dropEffect( value ) {
-            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED ) {
+            if( this.dataStore.mode === DragDataStoreMode._DISCONNECTED
+                || DataTransfer.DropEffects.indexOf( value ) === -1 ) {
                 return;
             }
 
-            if( DataTransfer.DropEffects.indexOf( value ) === -1 ) {
-                return;
-            }
             this._dropEffect = value;
         }
     }
@@ -1881,7 +1712,7 @@ module MobileDragAndDropPolyfill {
      * DataStore mode enum with an extra mode that acts as helper for
      * disconnecting the data store from a data transfer item.
      */
-    enum DragDataStoreMode {
+    const enum DragDataStoreMode {
         // adding a disabled here because we need a special state in the data transfer when there is no event dispatched
         _DISCONNECTED,
         READONLY,
@@ -1910,28 +1741,6 @@ module MobileDragAndDropPolyfill {
 
     class Util {
 
-        public static ForIn( obj:Object, cb:( value, key )=>void ) {
-            for( var key in obj ) {
-                if( obj.hasOwnProperty( key ) === false ) {
-                    continue;
-                }
-                cb( obj[ key ], key );
-            }
-        }
-
-        public static Merge( target:Object, obj:Object ) {
-            if( !obj ) {
-                return;
-            }
-
-            for( var key in obj ) {
-                if( obj.hasOwnProperty( key ) === false ) {
-                    continue;
-                }
-                target[ key ] = obj[ key ];
-            }
-        }
-
         public static Average( array:Array<number> ) {
             if( array.length === 0 ) {
                 return 0;
@@ -1955,16 +1764,6 @@ module MobileDragAndDropPolyfill {
             return false;
         }
 
-        public static GetTouchContainedInTouchEventByIdentifier( newTouch:TouchEvent, touchIdentifier:number ) {
-            for( var i:number = 0; i < newTouch.changedTouches.length; i++ ) {
-                var touch = newTouch.changedTouches[ i ];
-                if( touch.identifier === touchIdentifier ) {
-                    return touch;
-                }
-            }
-            return null;
-        }
-
         //TODO initMouseEvent is deprecated, replace by MouseEvent constructor?
         //TODO integrate feature detection to switch to MouseEvent constructor
         public static CreateMouseEventFromTouch( targetElement:Element, e:TouchEvent, typeArg:string, cancelable:boolean = true, window:Window = document.defaultView, relatedTarget:Element = null ) {
@@ -1976,6 +1775,7 @@ module MobileDragAndDropPolyfill {
                 e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget );
 
             var targetRect = targetElement.getBoundingClientRect();
+            //TODO is this working or are mouse event instances immutable?
             mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
             mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
 
@@ -1984,7 +1784,6 @@ module MobileDragAndDropPolyfill {
 
         //TODO integrate feature detection to switch to MouseEvent/DragEvent constructor if makes sense for simulating drag events and event constructors work
         // at all for our usecase
-        // TODO implement offsetX offsetY a for drag
         public static CreateDragEventFromTouch( targetElement:Element, e:TouchEvent, typeArg:string, cancelable:boolean, window:Window, dataTransfer:DataTransfer, relatedTarget:Element = null ) {
 
             var touch:Touch = e.changedTouches[ 0 ];
@@ -2000,6 +1799,7 @@ module MobileDragAndDropPolyfill {
             dndEvent.clientX = touch.clientX;
             dndEvent.clientY = touch.clientY;
 
+            //<debug>
             //var dndEvent:DragEvent = <any>document.createEvent( "MouseEvents" );
             //dndEvent.initMouseEvent( typeArg, true, cancelable,window, 1,
             //    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
@@ -2010,6 +1810,7 @@ module MobileDragAndDropPolyfill {
             //dndEvent.initDragEvent( typeArg, true, cancelable, window, 1,
             //    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
             //    false, false, false, false, 0, relatedTarget, <any>dataTransfer );
+            //</debug>
 
             var targetRect = targetElement.getBoundingClientRect();
             dndEvent.offsetX = dndEvent.clientX - targetRect.left;
@@ -2019,61 +1820,24 @@ module MobileDragAndDropPolyfill {
         }
 
         /**
-         * Using elementFromPoint to detect the element under the users finger.
+         * Calc center of polygon spanned by multiple touches in page (full page size, with hidden scrollable area) coordinates
+         * or in viewport (screen coordinates) coordinates.
          *
-         * @param doc
-         * @param touch
-         * @returns {Element}
-         * @constructor
-         */
-        public static ElementFromTouch( doc:Document, touch:Touch ):Element {
-
-            var target = doc.elementFromPoint(
-                touch.clientX,
-                touch.clientY
-            );
-
-            return target
-        }
-
-        /**
-         * Calc center of polygon spanned by multiple touches in page (full page size, with hidden scrollable area) coordinates.
-         *
+         * @param coordinateProp
          * @param event
          * @param outPoint
          * @returns {{x: (number|number), y: (number|number)}}
          * @constructor
          */
-        public static SetCentroidCoordinatesOfTouchesInPage( event:TouchEvent, outPoint:Point ):void {
-
+        public static UpdateCentroidCoordinatesOfTouchesIn( coordinateProp:string, event:TouchEvent, outPoint:Point ):void {
             var pageXs = [], pageYs = [];
-            [].forEach.call( event.touches, function( touch ) {
-                pageXs.push( touch.pageX );
-                pageYs.push( touch.pageY );
-            } );
-
+            for( var i:number = 0; i < event.touches.length; i++ ) {
+                var touch = event.touches[ i ];
+                pageXs.push( touch[ coordinateProp + "X" ] );
+                pageYs.push( touch[ coordinateProp + "Y" ] );
+            }
             outPoint.x = Util.Average( pageXs );
             outPoint.y = Util.Average( pageYs )
-        }
-
-        /**
-         * Calc center of polygon spanned by multiple touches in viewport (screen coordinates) coordinates.
-         *
-         * @param event
-         * @param outPoint
-         * @returns {{x: (number|number), y: (number|number)}}
-         * @constructor
-         */
-        public static SetCentroidCoordinatesOfTouchesInViewport( event:TouchEvent, outPoint:Point ):void {
-
-            var clientXs = [], clientYs = [];
-            [].forEach.call( event.touches, function( touch ) {
-                clientXs.push( touch.clientX );
-                clientYs.push( touch.clientY );
-            } );
-
-            outPoint.x = Util.Average( clientXs );
-            outPoint.y = Util.Average( clientYs )
         }
     }
 

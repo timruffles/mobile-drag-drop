@@ -8,7 +8,9 @@
     <script src="demo.js"></script>
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-icons.css">
-    <script src="mobile-drag-and-drop-polyfill.js"></script>
+    <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-debug.css">
+    <!--<script src="mobile-drag-and-drop-polyfill.js"></script>-->
+    <script src="mobile-drag-and-drop-polyfill.min.js"></script>
 </head>
 <body>
 <section id="wrapper">
@@ -142,15 +144,6 @@
     <script>
 
         MobileDragAndDropPolyfill.Initialize({
-            log: function () {
-
-                var msg = "dnd-poly: ";
-                for (var i = 0; i < arguments.length; i++) {
-                    msg += arguments[i];
-                }
-
-                console.log(msg);
-            },
             debug: true
         });
 
