@@ -508,7 +508,7 @@ module MobileDragAndDropPolyfill {
                 this.teardownScrollAnimation();
             }
 
-            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
+            translateDragImage( this.dragImage,  this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
         }
 
         private onTouchEndOrCancel( event:TouchEvent ) {
@@ -628,7 +628,7 @@ module MobileDragAndDropPolyfill {
                 GetSetVerticalScroll( window.document, verticalScroll );
                 this.dragImagePageCoordinates.y += verticalScroll;
             }
-            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
+            translateDragImage( this.dragImage,  this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
 
             // re-schedule animation frame callback
             this.scrollAnimationFrameId = window.requestAnimationFrame( this.scrollAnimationCb );
@@ -636,21 +636,6 @@ module MobileDragAndDropPolyfill {
 
       
 
-        private translateDragImage( x:number, y:number, centerOnCoordinates:boolean = true ):void {
-
-            if( centerOnCoordinates ) {
-                x -= (parseInt( <any>this.dragImage.offsetWidth, 10 ) / 2);
-                y -= (parseInt( <any>this.dragImage.offsetHeight, 10 ) / 2);
-            }
-
-            // using translate3d for best performance
-            var translate = "translate3d(" + x + "px," + y + "px, 0)";
-
-            for( var i:number = 0; i < transform_css_vendor_prefixes.length; i++ ) {
-                var transformProp = transform_css_vendor_prefixes[ i ] + "transform";
-                this.dragImage.style[ transformProp ] = translate;
-            }
-        }
 
         /**
          * Create snapback effect by applying css with transition
@@ -697,7 +682,7 @@ module MobileDragAndDropPolyfill {
             elementTop -= topPadding;
 
             // apply the translate
-            this.translateDragImage( elementLeft, elementTop, false );
+            translateDragImage( this.dragImage,  elementLeft, elementTop, false );
         }
 
         /**
@@ -824,7 +809,7 @@ module MobileDragAndDropPolyfill {
                         console.log( "dragenter default prevented" );
                         // If the event is canceled, then set the current target element to the immediate user selection.
                         this.currentDropTarget = this.immediateUserSelection;
-                        this.currentDragOperation = DragOperationController.DetermineDragOperation( this.dataTransfer );
+                        this.currentDragOperation = DetermineDragOperation( this.dataTransfer );
                     }
                     // Otherwise, run the appropriate step from the following list:
                     else {
@@ -946,7 +931,7 @@ module MobileDragAndDropPolyfill {
 
                     console.log( "dragover prevented." );
 
-                    this.currentDragOperation = DragOperationController.DetermineDragOperation( this.dataTransfer );
+                    this.currentDragOperation = DetermineDragOperation( this.dataTransfer );
                 }
             }
 
@@ -1008,7 +993,7 @@ module MobileDragAndDropPolyfill {
             UpdateCentroidCoordinatesOfTouchesIn( "page", event, this.dragImagePageCoordinates );
     
             // apply the translate
-            this.translateDragImage( this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
+            translateDragImage( this.dragImage,  this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y );
     
             window.document.body.appendChild( this.dragImage );
         }
@@ -1148,47 +1133,6 @@ module MobileDragAndDropPolyfill {
             //</spec>
         }
 
-        /**
-         * according to https://html.spec.whatwg.org/multipage/interaction.html#drag-and-drop-processing-model
-         *
-         * as per the following table:
-         * ---------------------------------------------------------------------------------------------------------
-         * effectAllowed                                                    |   dropEffect  |   Drag operation
-         * ---------------------------------------------------------------------------------------------------------
-         * "uninitialized", "copy", "copyLink", "copyMove", or "all"        |   "copy"        |   "copy"
-         * "uninitialized", "link", "copyLink", "linkMove", or "all"        |   "link"        |   "link"
-         * "uninitialized", "move", "copyMove", "linkMove", or "all"        |   "move"        |   "move"
-         * Any other case                                                                   |   "none"
-         * ---------------------------------------------------------------------------------------------------------
-         *
-         * @param dataTransfer
-         * @returns {any}
-         * @constructor
-         */
-        public static DetermineDragOperation( dataTransfer:DataTransfer ):string {
-
-            if( dataTransfer.effectAllowed === "uninitialized" || dataTransfer.effectAllowed === "all" ) {
-                return dataTransfer.dropEffect;
-            }
-
-            if( dataTransfer.dropEffect === "copy" ) {
-                if( dataTransfer.effectAllowed.indexOf( "copy" ) === 0 ) {
-                    return "copy";
-                }
-            }
-            else if( dataTransfer.dropEffect === "link" ) {
-                if( dataTransfer.effectAllowed.indexOf( "link" ) === 0 || dataTransfer.effectAllowed.indexOf( "Link" ) > -1 ) {
-                    return "link";
-                }
-            }
-            else if( dataTransfer.dropEffect === "move" ) {
-                if( dataTransfer.effectAllowed.indexOf( "move" ) === 0 || dataTransfer.effectAllowed.indexOf( "Move" ) > -1 ) {
-                    return "move";
-                }
-            }
-
-            return "none";
-        }
 
 
 
@@ -1821,6 +1765,64 @@ module MobileDragAndDropPolyfill {
     }
 
 
+    /**
+        * according to https://html.spec.whatwg.org/multipage/interaction.html#drag-and-drop-processing-model
+        *
+        * as per the following table:
+        * ---------------------------------------------------------------------------------------------------------
+        * effectAllowed                                                    |   dropEffect  |   Drag operation
+        * ---------------------------------------------------------------------------------------------------------
+        * "uninitialized", "copy", "copyLink", "copyMove", or "all"        |   "copy"        |   "copy"
+        * "uninitialized", "link", "copyLink", "linkMove", or "all"        |   "link"        |   "link"
+        * "uninitialized", "move", "copyMove", "linkMove", or "all"        |   "move"        |   "move"
+        * Any other case                                                                   |   "none"
+        * ---------------------------------------------------------------------------------------------------------
+        *
+        * @param dataTransfer
+        * @returns {any}
+        * @constructor
+        */
+    function DetermineDragOperation( dataTransfer:DataTransfer ):string {
+
+        if( dataTransfer.effectAllowed === "uninitialized" || dataTransfer.effectAllowed === "all" ) {
+            return dataTransfer.dropEffect;
+        }
+
+        if( dataTransfer.dropEffect === "copy" ) {
+            if( dataTransfer.effectAllowed.indexOf( "copy" ) === 0 ) {
+                return "copy";
+            }
+        }
+        else if( dataTransfer.dropEffect === "link" ) {
+            if( dataTransfer.effectAllowed.indexOf( "link" ) === 0 || dataTransfer.effectAllowed.indexOf( "Link" ) > -1 ) {
+                return "link";
+            }
+        }
+        else if( dataTransfer.dropEffect === "move" ) {
+            if( dataTransfer.effectAllowed.indexOf( "move" ) === 0 || dataTransfer.effectAllowed.indexOf( "Move" ) > -1 ) {
+                return "move";
+            }
+        }
+
+        return "none";
+    }
+
+
+    function translateDragImage(dragImage: HTMLElement, x:number, y:number, centerOnCoordinates:boolean = true ):void {
+
+        if( centerOnCoordinates ) {
+            x -= (parseInt( <any>dragImage.offsetWidth, 10 ) / 2);
+            y -= (parseInt( <any>dragImage.offsetHeight, 10 ) / 2);
+        }
+
+        // using translate3d for best performance
+        var translate = "translate3d(" + x + "px," + y + "px, 0)";
+
+        for( var i:number = 0; i < transform_css_vendor_prefixes.length; i++ ) {
+            var transformProp = transform_css_vendor_prefixes[ i ] + "transform";
+            dragImage.style[ transformProp ] = translate;
+        }
+    }
 
     //</editor-fold>
 }
