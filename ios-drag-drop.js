@@ -81,17 +81,6 @@
 
       this.synthesizeEnterLeave(event);
     },
-    hideDragImage: function() {
-      if (this.dragImage && this.dragImage.style["display"] != "none") {
-        this.dragImageDisplay = this.dragImage.style["display"];
-        this.dragImage.style["display"] = "none";
-      }
-    },
-    showDragImage: function() {
-      if (this.dragImage) {
-        this.dragImage.style["display"] = this.dragImageDisplay ? this.dragImageDisplay : "block";
-      }
-    },
     // We use translate instead of top/left because of sub-pixel rendering and for the hope of better performance
     // http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
     translateDragImage: function(x, y) {
@@ -105,9 +94,7 @@
       }
     },
     synthesizeEnterLeave: function(event) {
-      this.hideDragImage();
       var target = elementFromTouchEvent(this.el,event)
-      this.showDragImage();
       if (target != this.lastEnter) {
         if (this.lastEnter) {
           this.dispatchLeave(event);
@@ -131,10 +118,7 @@
         this.dispatchLeave(event);
       }
 
-      this.hideDragImage();
       var target = elementFromTouchEvent(this.el,event)
-      this.showDragImage();
-
       if (target) {
         log("found drop target " + target.tagName);
         this.dispatchDrop(target, event)
@@ -249,7 +233,6 @@
       this.dragImage.style["left"] = "0px";
       this.dragImage.style["top"] = "0px";
       this.dragImage.style["z-index"] = "999999";
-      this.dragImage.style["pointer-events"] = "none";
 
       var transform = this.dragImage.style["transform"];
       if (typeof transform !== "undefined") {
@@ -340,6 +323,9 @@
         var csName = cs[i];
         dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
       }
+
+      // Pointer events as none makes the drag image transparent to document.elementFromPoint()
+      dstNode.style.pointerEvents = "none";
     }
 
     // Do the same for the children
