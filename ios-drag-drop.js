@@ -16,7 +16,9 @@
     var needsPatch = !(dragDiv || evts) || /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
-    if(!needsPatch) return;
+    if(!needsPatch) {
+        return;
+    }
 
     if(!config.enableEnterLeave) {
       DragDrop.prototype.synthesizeEnterLeave = noop;
@@ -32,14 +34,14 @@
     this.dragImage = null;
     this.dragImageTransform = null;
     this.dragImageWebKitTransform = null;
-    this.el = el || event.target
+    this.el = el || event.target;
 
     log("dragstart");
 
-    this.dispatchDragStart()
+    this.dispatchDragStart();
     this.createDragImage();
 
-    this.listen()
+    this.listen();
 
   }
 
@@ -56,7 +58,7 @@
       function cleanup() {
         log("cleanup");
         this.dragDataTypes = [];
-        if (this.dragImage != null) {
+        if (this.dragImage !== null) {
           this.dragImage.parentNode.removeChild(this.dragImage);
           this.dragImage = null;
           this.dragImageTransform = null;
@@ -70,7 +72,7 @@
     },
     move: function(event) {
       var pageXs = [], pageYs = [];
-      [].forEach.call(event.changedTouches, function(touch, index) {
+      [].forEach.call(event.changedTouches, function(touch) {
         pageXs.push(touch.pageX);
         pageYs.push(touch.pageY);
       });
@@ -90,7 +92,7 @@
         this.dragImage.style["-webkit-transform"] = this.dragImageWebKitTransform + translate;
       }
       if (this.dragImageTransform !== null) {
-        this.dragImage.style["transform"] = this.dragImageTransform + translate;
+        this.dragImage.style.transform = this.dragImageTransform + translate;
       }
     },
     synthesizeEnterLeave: function(event) {
@@ -121,9 +123,9 @@
       var target = elementFromTouchEvent(this.el,event)
       if (target) {
         log("found drop target " + target.tagName);
-        this.dispatchDrop(target, event)
+        this.dispatchDrop(target, event);
       } else {
-        log("no drop target")
+        log("no drop target");
       }
 
       var dragendEvt = doc.createEvent("Event");
@@ -228,13 +230,14 @@
       
       duplicateStyle(this.el, this.dragImage);
       
-      this.dragImage.style["opacity"] = "0.5";
-      this.dragImage.style["position"] = "absolute";
-      this.dragImage.style["left"] = "0px";
-      this.dragImage.style["top"] = "0px";
-      this.dragImage.style["z-index"] = "999999";
+      this.dragImage.style.opacity = "0.5";
+      this.dragImage.style.position = "absolute";
+      this.dragImage.style.left = "0px";
+      this.dragImage.style.top = "0px";
+      this.dragImage.style.zIndex = "999999";
 
-      var transform = this.dragImage.style["transform"];
+
+      var transform = this.dragImage.style.transform;
       if (typeof transform !== "undefined") {
         this.dragImageTransform = "";
         if (transform != "none") {
@@ -254,7 +257,7 @@
 
       doc.body.appendChild(this.dragImage);
     }
-  }
+  };
 
   // event listeners
   function touchstart(evt) {
@@ -275,7 +278,7 @@
         evt.preventDefault();
         new DragDrop(evt,el);
       }
-    } while((el = el.parentNode) && el !== doc.body)
+    } while((el = el.parentNode) && el !== doc.body);
   }
 
   // DOM helpers
@@ -285,11 +288,13 @@
       touch[coordinateSystemForElementFromPoint + "X"],
       touch[coordinateSystemForElementFromPoint + "Y"]
     );
-    return target
+    return target;
   }
 
   function onEvt(el, event, handler, context) {
-    if(context) handler = handler.bind(context)
+    if(context) {
+      handler = handler.bind(context);
+    }
     el.addEventListener(event, handler);
     return {
       off: function() {
@@ -299,7 +304,9 @@
   }
 
   function once(el, event, handler, context) {
-    if(context) handler = handler.bind(context)
+    if(context) {
+      handler = handler.bind(context);
+    }
     function listener(evt) {
       handler(evt);
       return el.removeEventListener(event,listener);
@@ -330,8 +337,8 @@
 
     // Do the same for the children
     if (srcNode.hasChildNodes()) {
-      for (var i = 0; i < srcNode.childNodes.length; i++) {
-        duplicateStyle(srcNode.childNodes[i], dstNode.childNodes[i]);
+      for (var j = 0; j < srcNode.childNodes.length; j++) {
+        duplicateStyle(srcNode.childNodes[j], dstNode.childNodes[j]);
       }
     }
   }
