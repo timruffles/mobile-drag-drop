@@ -5,5 +5,5 @@ declare module MobileDragAndDropPolyfill {
         scrollVelocity?: number;
         debug?: boolean;
     }
-    var Initialize: (config?: Config) => void;
+    function Initialize(override?: Config): void;
 }
