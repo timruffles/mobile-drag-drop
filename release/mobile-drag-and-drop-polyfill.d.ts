@@ -1,9 +1,9 @@
+declare var DEBUG: boolean;
 declare module MobileDragAndDropPolyfill {
     interface Config {
-        dragImageClass?: string;
+        iterationInterval?: number;
         scrollThreshold?: number;
         scrollVelocity?: number;
-        debug?: boolean;
     }
     function Initialize(override?: Config): void;
 }

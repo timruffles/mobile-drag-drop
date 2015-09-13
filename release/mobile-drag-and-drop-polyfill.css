@@ -3,8 +3,7 @@
 }
 
 .dnd-poly-drag-image.dnd-poly-snapback {
-    -webkit-transition: -webkit-transform 250ms ease-out !important;
-    -moz-transition: -moz-transform 250ms ease-out !important;
-    -o-transition: -o-transform 250ms ease-out !important;
-    transition: transform 250ms ease-out !important;
+    transition-property: transform, -webkit-transform !important;
+    transition-duration: 250ms !important;
+    transition-timing-function: ease-out !important;
 }

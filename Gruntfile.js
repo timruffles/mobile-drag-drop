@@ -4,38 +4,36 @@
 module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
-    groundskeeper: {
-      release_min: {
-        files: {
-          "mobile-drag-and-drop-polyfill.min.tmp.js": "mobile-drag-and-drop-polyfill.tmp.js"
-        },
-        options: {
-          console: true, // keep console statements
-          debugger: false,
-          pragmas: ["editor-fold"]
-        }
-      }
-    },
     uglify: {
       options: {
         banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */"
       },
-      release_min: {
+      release: {
         options: {
+          mangle: true, // mangle var names
+          mangleProperties: true, // mangle props
+          reserveDOMProperties: true, // do not mangle DOM or js props
+          mangleRegex: /^_/,  // mangle all props starting with an `_`
           compress: {
+            global_defs: {
+              "DEBUG": false
+            },
             drop_console: true, // remove console log statements
-            dead_code: true, // removes unreachable code,
             drop_debugger: true, // remove debugger statements
+            dead_code: true, // removes unreachable code
             unused: true, // remove unused code
             sequences: true,
+            if_return: true,
             join_vars: true,
-            keep_fargs: true
+            keep_fargs: true,
+            conditionals: true,
+            evaluate: true
           },
           sourceMap: true,
-          sourceMapIn: "mobile-drag-and-drop-polyfill.tmp.js.map",
+          sourceMapIn: "mobile-drag-and-drop-polyfill.js.map",
           report: "min"
         },
-        src: "mobile-drag-and-drop-polyfill.min.tmp.js",
+        src: "mobile-drag-and-drop-polyfill.js",
         dest: "release/mobile-drag-and-drop-polyfill.min.js"
       }
     },
@@ -69,16 +67,10 @@ module.exports = function (grunt) {
         src: ["*.ts", "!node_modules/**/*.ts"],
         outDir: './release/',
         options: {
+          noImplicitAny: true,
+          suppressImplicitAnyIndexErrors: true,
+          removeComments: true,
           declaration: true,
-          fast: "never",
-          target: "es5"
-        }
-      },
-      release_min: {
-        src: ["*.ts", "!node_modules/**/*.ts"],
-        out: "mobile-drag-and-drop-polyfill.tmp.js",
-        options: {
-          removeComments: false,
           fast: "never",
           target: "es5"
         }
@@ -106,24 +98,15 @@ module.exports = function (grunt) {
           {expand: true, cwd: 'release', src: ['*.map', '*.js', '*.css'], dest: 'spec-compliance/', filter: 'isFile', flatten: true}
         ]
       }
-    },
-    clean: {
-      release_min: {
-        files: [
-          {expand: false, src: ['*.tmp.js*'], filter: 'isFile'}
-        ]
-      }
     }
   });
 
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-contrib-connect");
   grunt.loadNpmTasks("grunt-contrib-copy");
-  grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-ts");
-  grunt.loadNpmTasks('grunt-groundskeeper');
 
-  grunt.registerTask("release", ["ts:release_min", "groundskeeper:release_min", "uglify:release_min", "clean:release_min", "ts:release", "copy:release", "copy:demoPage"]);
+  grunt.registerTask("release", ["ts:release", "uglify:release", "copy:release", "copy:demoPage"]);
 
   grunt.registerTask("default", ["connect:dev", "ts:dev"]);
 };

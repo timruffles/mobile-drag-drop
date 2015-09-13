@@ -2,7 +2,7 @@ var MobileDragAndDropPolyfill;
 (function (MobileDragAndDropPolyfill) {
     var detectedFeatures;
     function detectFeatures() {
-        var featureDetection = {
+        var detectedFeatures = {
             draggable: ('draggable' in document.documentElement),
             dragEvents: ('ondragstart' in document.documentElement),
             touchEvents: ('ontouchstart' in document.documentElement),
@@ -10,20 +10,20 @@ var MobileDragAndDropPolyfill;
             userAgentNotSupportingNativeDnD: false,
             transitionEnd: ('WebkitTransition' in document.documentElement.style) ? 'webkitTransitionEnd' : 'transitionend'
         };
-        featureDetection.userAgentNotSupportingNativeDnD = (/iPad|iPhone|iPod|Android/.test(navigator.userAgent)
+        detectedFeatures.userAgentNotSupportingNativeDnD = (/iPad|iPhone|iPod|Android/.test(navigator.userAgent)
             ||
-                featureDetection.touchEvents && (featureDetection.isBlinkEngine));
-        Object.keys(featureDetection).forEach(function (key) {
-            console.log("dnd-poly: detected feature '" + key + " = " + featureDetection[key] + "'");
-        });
-        return featureDetection;
+                detectedFeatures.touchEvents && (detectedFeatures.isBlinkEngine));
+        if (DEBUG) {
+            Object.keys(detectedFeatures).forEach(function (key) {
+                console.log("dnd-poly: detected feature '" + key + " = " + detectedFeatures[key] + "'");
+            });
+        }
+        return detectedFeatures;
     }
     var config = {
-        dragImageClass: null,
         iterationInterval: 150,
         scrollThreshold: 50,
-        scrollVelocity: 10,
-        debug: false
+        scrollVelocity: 10
     };
     function Initialize(override) {
         detectedFeatures = detectFeatures();
@@ -62,7 +62,6 @@ var MobileDragAndDropPolyfill;
         }
     }
     function tryFindDraggableTarget(event) {
-        //<spec>
         //1. Determine what is being dragged, as follows:
         var el = event.target;
         do {
@@ -97,307 +96,297 @@ var MobileDragAndDropPolyfill;
     }
     var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all"];
     var DROP_EFFECTS = ["none", "copy", "move", "link"];
-    var transform_css_vendor_prefixes = ["", "-webkit-"];
-    var class_prefix = "dnd-poly-";
-    var class_drag_image = class_prefix + "drag-image";
-    var class_drag_image_snapback = class_prefix + "snapback";
-    var class_drag_operation_icon = class_prefix + "icon";
-    var debug_class;
-    var debug_class_user_selection;
-    var debug_class_drop_target;
-    var debug_class_event_target;
-    var debug_class_event_related_target;
+    var TRANSFORM_CSS_VENDOR_PREFIXES = ["", "-webkit-"];
+    var CLASS_PREFIX = "dnd-poly-";
+    var CLASS_DRAG_IMAGE = CLASS_PREFIX + "drag-image";
+    var CLASS_DRAG_IMAGE_SNAPBACK = CLASS_PREFIX + "snapback";
+    var CLASS_DRAG_OPERATION_ICON = CLASS_PREFIX + "icon";
     var DragOperationController = (function () {
-        function DragOperationController(config, sourceNode, initialEvent, dragOperationEndedCb) {
-            this.config = config;
-            this.sourceNode = sourceNode;
-            this.dragOperationEndedCb = dragOperationEndedCb;
-            this.dragOperationState = 0;
-            this.immediateUserSelection = null;
-            this.currentDropTarget = null;
+        function DragOperationController(_config, _sourceNode, _initialEvent, _dragOperationEndedCb) {
+            this._config = _config;
+            this._sourceNode = _sourceNode;
+            this._dragOperationEndedCb = _dragOperationEndedCb;
+            this._dragOperationState = 0;
+            this._immediateUserSelection = null;
+            this._currentDropTarget = null;
             console.log("dnd-poly: setting up potential drag operation..");
-            if (this.config.debug) {
-                debug_class = class_prefix + "debug";
-                debug_class_user_selection = class_prefix + "immediate-user-selection";
-                debug_class_drop_target = class_prefix + "current-drop-target";
-                debug_class_event_target = class_prefix + "event-target";
-                debug_class_event_related_target = class_prefix + "event-related-target";
-            }
-            this.lastTouchEvent = initialEvent;
-            this.initialTouchId = initialEvent.changedTouches[0].identifier;
-            this.touchMoveHandler = this.onTouchMove.bind(this);
-            this.touchEndOrCancelHandler = this.onTouchEndOrCancel.bind(this);
-            document.addEventListener("touchmove", this.touchMoveHandler);
-            document.addEventListener("touchend", this.touchEndOrCancelHandler);
-            document.addEventListener("touchcancel", this.touchEndOrCancelHandler);
+            this._lastTouchEvent = _initialEvent;
+            this._initialTouchId = _initialEvent.changedTouches[0].identifier;
+            this._touchMoveHandler = this._onTouchMove.bind(this);
+            this._touchEndOrCancelHandler = this._onTouchEndOrCancel.bind(this);
+            document.addEventListener("touchmove", this._touchMoveHandler);
+            document.addEventListener("touchend", this._touchEndOrCancelHandler);
+            document.addEventListener("touchcancel", this._touchEndOrCancelHandler);
         }
-        DragOperationController.prototype.setup = function () {
+        DragOperationController.prototype._setup = function () {
             var _this = this;
             console.log("dnd-poly: starting drag and drop operation");
-            this.dragOperationState = 1;
-            this.currentDragOperation = "none";
-            this.dragDataStore = new DragDataStore();
-            this.dataTransfer = new DataTransfer(this.dragDataStore);
-            this.currentHotspotCoordinates = {
+            this._dragOperationState = 1;
+            this._currentDragOperation = DROP_EFFECTS[0];
+            this._dragDataStore = new DragDataStore();
+            this._dataTransfer = new DataTransfer(this._dragDataStore);
+            this._currentHotspotCoordinates = {
                 x: null,
                 y: null
             };
-            this.dragImagePageCoordinates = {
+            this._dragImagePageCoordinates = {
                 x: null,
                 y: null
             };
-            updateCentroidCoordinatesOfTouchesIn("page", this.lastTouchEvent, this.dragImagePageCoordinates);
-            this.dragImage = createDragImage(this.sourceNode, this.config.dragImageClass);
-            translateDragImage(this.dragImage, this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
-            document.body.appendChild(this.dragImage);
-            this.dragDataStore.mode = 2;
-            this.dataTransfer.dropEffect = "none";
-            if (dispatchDragEvent("dragstart", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer)) {
+            updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
+            this._dragImage = createDragImage(this._sourceNode);
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates);
+            document.body.appendChild(this._dragImage);
+            this._dragDataStore._mode = 2;
+            this._dataTransfer.dropEffect = DROP_EFFECTS[0];
+            if (dispatchDragEvent("dragstart", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer)) {
                 console.log("dnd-poly: dragstart cancelled");
-                this.dragOperationState = 3;
-                this.cleanup();
+                this._dragOperationState = 3;
+                this._cleanup();
                 return;
             }
-            this.scrollIntention = {
+            this._scrollIntention = {
                 x: null,
                 y: null
             };
-            this.scrollAnimationFrameHandler = this.scrollAnimation.bind(this);
-            this.iterationIntervalId = setInterval(function () {
-                if (_this.iterationLock) {
+            this._scrollAnimationFrameHandler = this._scrollAnimation.bind(this);
+            this._iterationIntervalId = setInterval(function () {
+                if (_this._iterationLock) {
                     console.log("dnd-poly: iteration skipped because previous iteration hast not yet finished.");
                     return;
                 }
-                _this.iterationLock = true;
-                _this.dragAndDropProcessModelIteration();
-                _this.iterationLock = false;
-            }, this.config.iterationInterval);
+                _this._iterationLock = true;
+                _this._dragAndDropProcessModelIteration();
+                _this._iterationLock = false;
+            }, this._config.iterationInterval);
         };
-        DragOperationController.prototype.cleanup = function () {
+        DragOperationController.prototype._cleanup = function () {
             console.log("dnd-poly: cleanup");
-            if (this.iterationIntervalId) {
-                clearInterval(this.iterationIntervalId);
-                this.iterationIntervalId = null;
+            if (this._iterationIntervalId) {
+                clearInterval(this._iterationIntervalId);
+                this._iterationIntervalId = null;
             }
-            document.removeEventListener("touchmove", this.touchMoveHandler);
-            document.removeEventListener("touchend", this.touchEndOrCancelHandler);
-            document.removeEventListener("touchcancel", this.touchEndOrCancelHandler);
-            if (this.dragImage) {
-                this.dragImage.parentNode.removeChild(this.dragImage);
-                this.dragImage = null;
+            document.removeEventListener("touchmove", this._touchMoveHandler);
+            document.removeEventListener("touchend", this._touchEndOrCancelHandler);
+            document.removeEventListener("touchcancel", this._touchEndOrCancelHandler);
+            if (this._dragImage) {
+                this._dragImage.parentNode.removeChild(this._dragImage);
+                this._dragImage = null;
             }
-            this.dragOperationEndedCb(this.lastTouchEvent, this.dragOperationState);
+            this._dragOperationEndedCb(this._lastTouchEvent, this._dragOperationState);
         };
-        DragOperationController.prototype.onTouchMove = function (event) {
-            if (isTouchIdentifierContainedInTouchEvent(event, this.initialTouchId) === false) {
+        DragOperationController.prototype._onTouchMove = function (event) {
+            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouchId) === false) {
                 return;
             }
-            if (this.dragOperationState === 0) {
-                this.setup();
+            if (this._dragOperationState === 0) {
+                this._setup();
                 return;
             }
             event.preventDefault();
             event.stopImmediatePropagation();
-            this.lastTouchEvent = event;
-            updateCentroidCoordinatesOfTouchesIn("client", event, this.currentHotspotCoordinates);
-            updateCentroidCoordinatesOfTouchesIn("page", event, this.dragImagePageCoordinates);
-            this.scrollIntention.x = determineScrollIntention(this.currentHotspotCoordinates.x, document.documentElement.clientWidth, this.config.scrollThreshold);
-            this.scrollIntention.y = determineScrollIntention(this.currentHotspotCoordinates.y, document.documentElement.clientHeight, this.config.scrollThreshold);
-            var horizontalScrollEndReached = scrollEndReached(0, this.scrollIntention.x);
-            var verticalScrollEndReached = scrollEndReached(1, this.scrollIntention.y);
+            this._lastTouchEvent = event;
+            updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
+            updateCentroidCoordinatesOfTouchesIn("page", event, this._dragImagePageCoordinates);
+            this._scrollIntention.x = determineScrollIntention(this._currentHotspotCoordinates.x, document.documentElement.clientWidth, this._config.scrollThreshold);
+            this._scrollIntention.y = determineScrollIntention(this._currentHotspotCoordinates.y, document.documentElement.clientHeight, this._config.scrollThreshold);
+            var horizontalScrollEndReached = scrollEndReached(0, this._scrollIntention.x);
+            var verticalScrollEndReached = scrollEndReached(1, this._scrollIntention.y);
             if (!horizontalScrollEndReached || !verticalScrollEndReached) {
-                if (!this.scrollAnimationId) {
-                    this.scrollAnimationId = window.requestAnimationFrame(this.scrollAnimationFrameHandler);
+                if (!this._scrollAnimationId) {
+                    this._scrollAnimationId = window.requestAnimationFrame(this._scrollAnimationFrameHandler);
                 }
             }
             else {
-                translateDragImage(this.dragImage, this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
+                translateDragImage(this._dragImage, this._dragImagePageCoordinates);
             }
         };
-        DragOperationController.prototype.onTouchEndOrCancel = function (event) {
-            if (isTouchIdentifierContainedInTouchEvent(event, this.initialTouchId) === false) {
+        DragOperationController.prototype._onTouchEndOrCancel = function (event) {
+            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouchId) === false) {
                 return;
             }
-            this.scrollIntention.x = this.scrollIntention.y = 0;
-            if (this.dragOperationState === 0) {
-                this.cleanup();
+            this._scrollIntention.x = this._scrollIntention.y = 0;
+            if (this._dragOperationState === 0) {
+                this._cleanup();
                 return;
             }
             event.preventDefault();
             event.stopImmediatePropagation();
-            this.lastTouchEvent = event;
-            this.dragOperationState = (event.type === "touchcancel") ? 3 : 2;
+            this._lastTouchEvent = event;
+            this._dragOperationState = (event.type === "touchcancel") ? 3 : 2;
         };
-        DragOperationController.prototype.scrollAnimation = function () {
-            var horizontalScrollEndReached = scrollEndReached(0, this.scrollIntention.x);
-            var verticalScrollEndReached = scrollEndReached(1, this.scrollIntention.y);
+        DragOperationController.prototype._scrollAnimation = function () {
+            var horizontalScrollEndReached = scrollEndReached(0, this._scrollIntention.x);
+            var verticalScrollEndReached = scrollEndReached(1, this._scrollIntention.y);
             if (horizontalScrollEndReached && verticalScrollEndReached) {
                 console.log("dnd-poly: scroll end reached");
-                this.scrollAnimationId = null;
+                this._scrollAnimationId = null;
                 return;
             }
             if (!horizontalScrollEndReached) {
-                var horizontalScroll = this.scrollIntention.x * this.config.scrollVelocity;
+                var horizontalScroll = this._scrollIntention.x * this._config.scrollVelocity;
                 getSetScroll(0, horizontalScroll);
-                this.dragImagePageCoordinates.x += horizontalScroll;
+                this._dragImagePageCoordinates.x += horizontalScroll;
             }
             if (!verticalScrollEndReached) {
-                var verticalScroll = this.scrollIntention.y * this.config.scrollVelocity;
+                var verticalScroll = this._scrollIntention.y * this._config.scrollVelocity;
                 getSetScroll(1, verticalScroll);
-                this.dragImagePageCoordinates.y += verticalScroll;
+                this._dragImagePageCoordinates.y += verticalScroll;
             }
-            translateDragImage(this.dragImage, this.dragImagePageCoordinates.x, this.dragImagePageCoordinates.y);
-            this.scrollAnimationId = window.requestAnimationFrame(this.scrollAnimationFrameHandler);
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates);
+            this._scrollAnimationId = window.requestAnimationFrame(this._scrollAnimationFrameHandler);
         };
-        DragOperationController.prototype.dragAndDropProcessModelIteration = function () {
+        DragOperationController.prototype._dragAndDropProcessModelIteration = function () {
             var _this = this;
-            this.dragDataStore.mode = 3;
-            this.dataTransfer.dropEffect = "none";
-            var dragCancelled = dispatchDragEvent("drag", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer);
+            if (DEBUG) {
+                var debug_class = CLASS_PREFIX + "debug", debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection", debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
+            }
+            this._dragDataStore._mode = 3;
+            this._dataTransfer.dropEffect = DROP_EFFECTS[0];
+            var dragCancelled = dispatchDragEvent("drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer);
             if (dragCancelled) {
                 console.log("dnd-poly: drag event cancelled.");
-                this.currentDragOperation = "none";
+                this._currentDragOperation = DROP_EFFECTS[0];
             }
-            if (dragCancelled || this.dragOperationState === 2 || this.dragOperationState === 3) {
-                var dragFailed = this.dragOperationEnded(this.dragOperationState);
+            if (dragCancelled || this._dragOperationState === 2 || this._dragOperationState === 3) {
+                var dragFailed = this._dragOperationEnded(this._dragOperationState);
                 if (dragFailed) {
-                    var sourceNodeComputedStyle = window.getComputedStyle(this.sourceNode, null);
-                    var visiblity = sourceNodeComputedStyle.getPropertyValue('visibility');
-                    var display = sourceNodeComputedStyle.getPropertyValue('display');
-                    if (visiblity === 'hidden' || display === 'none') {
+                    var sourceNodeComputedStyle = window.getComputedStyle(this._sourceNode, null);
+                    var visiblity = sourceNodeComputedStyle.getPropertyValue("visibility");
+                    var display = sourceNodeComputedStyle.getPropertyValue("display");
+                    if (visiblity === "hidden" || display === "none") {
                         console.log("dnd-poly: source node is not visible. skipping snapback transition.");
-                        this.finishDragOperation();
+                        this._finishDragOperation();
                     }
                     else {
-                        triggerDragImageSnapback(detectedFeatures.transitionEnd, this.sourceNode, this.dragImage, function () {
-                            _this.finishDragOperation();
+                        triggerDragImageSnapback(detectedFeatures.transitionEnd, this._sourceNode, this._dragImage, function () {
+                            _this._finishDragOperation();
                         });
                     }
                     return;
                 }
-                this.finishDragOperation();
+                this._finishDragOperation();
                 return;
             }
-            var newUserSelection = document.elementFromPoint(this.currentHotspotCoordinates.x, this.currentHotspotCoordinates.y);
+            var newUserSelection = document.elementFromPoint(this._currentHotspotCoordinates.x, this._currentHotspotCoordinates.y);
             console.log("dnd-poly: new immediate user selection is: " + newUserSelection);
-            var previousTargetElement = this.currentDropTarget;
-            if (newUserSelection !== this.immediateUserSelection && newUserSelection !== this.currentDropTarget) {
-                if (this.config.debug) {
-                    if (this.immediateUserSelection) {
-                        this.immediateUserSelection.classList.remove(debug_class_user_selection);
+            var previousTargetElement = this._currentDropTarget;
+            if (newUserSelection !== this._immediateUserSelection && newUserSelection !== this._currentDropTarget) {
+                if (DEBUG) {
+                    if (this._immediateUserSelection) {
+                        this._immediateUserSelection.classList.remove(debug_class_user_selection);
                     }
                     if (newUserSelection) {
                         newUserSelection.classList.add(debug_class);
                         newUserSelection.classList.add(debug_class_user_selection);
                     }
                 }
-                this.immediateUserSelection = newUserSelection;
-                if (this.currentDropTarget !== null) {
-                    this.dragDataStore.mode = 3;
-                    this.dataTransfer.dropEffect = "none";
-                    dispatchDragEvent("dragexit", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false);
+                this._immediateUserSelection = newUserSelection;
+                if (this._currentDropTarget !== null) {
+                    this._dragDataStore._mode = 3;
+                    this._dataTransfer.dropEffect = DROP_EFFECTS[0];
+                    dispatchDragEvent("dragexit", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
                 }
-                if (this.immediateUserSelection === null) {
-                    this.currentDropTarget = this.immediateUserSelection;
+                if (this._immediateUserSelection === null) {
+                    this._currentDropTarget = this._immediateUserSelection;
                     console.log("dnd-poly: current drop target changed to null");
                 }
                 else {
-                    this.dragDataStore.mode = 3;
-                    this.dataTransfer.dropEffect = determineDropEffect(this.dragDataStore.effectAllowed, this.sourceNode);
-                    if (dispatchDragEvent("dragenter", this.immediateUserSelection, this.lastTouchEvent, this.dragDataStore, this.dataTransfer)) {
+                    this._dragDataStore._mode = 3;
+                    this._dataTransfer.dropEffect = determineDropEffect(this._dragDataStore._effectAllowed, this._sourceNode);
+                    if (dispatchDragEvent("dragenter", this._immediateUserSelection, this._lastTouchEvent, this._dragDataStore, this._dataTransfer)) {
                         console.log("dnd-poly: dragenter default prevented");
-                        this.currentDropTarget = this.immediateUserSelection;
-                        this.currentDragOperation = determineDragOperation(this.dataTransfer.effectAllowed, this.dataTransfer.dropEffect);
+                        this._currentDropTarget = this._immediateUserSelection;
+                        this._currentDragOperation = determineDragOperation(this._dataTransfer.effectAllowed, this._dataTransfer.dropEffect);
                     }
                     else {
-                        if (this.immediateUserSelection === document.body) {
-                        }
-                        else {
-                            this.currentDropTarget = document.body;
+                        if (this._immediateUserSelection !== document.body) {
+                            this._currentDropTarget = document.body;
                         }
                     }
                 }
             }
-            if (previousTargetElement !== this.currentDropTarget && (isDOMElement(previousTargetElement))) {
-                if (this.config.debug) {
+            if (previousTargetElement !== this._currentDropTarget && (isDOMElement(previousTargetElement))) {
+                if (DEBUG) {
                     previousTargetElement.classList.remove(debug_class_drop_target);
                 }
                 console.log("dnd-poly: current drop target changed.");
-                this.dragDataStore.mode = 3;
-                this.dataTransfer.dropEffect = "none";
-                dispatchDragEvent("dragleave", previousTargetElement, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false, this.currentDropTarget);
+                this._dragDataStore._mode = 3;
+                this._dataTransfer.dropEffect = DROP_EFFECTS[0];
+                dispatchDragEvent("dragleave", previousTargetElement, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false, this._currentDropTarget);
             }
-            if (isDOMElement(this.currentDropTarget)) {
-                if (this.config.debug) {
-                    this.currentDropTarget.classList.add(debug_class);
-                    this.currentDropTarget.classList.add(debug_class_drop_target);
+            if (isDOMElement(this._currentDropTarget)) {
+                if (DEBUG) {
+                    this._currentDropTarget.classList.add(debug_class);
+                    this._currentDropTarget.classList.add(debug_class_drop_target);
                 }
-                this.dragDataStore.mode = 3;
-                this.dataTransfer.dropEffect = determineDropEffect(this.dragDataStore.effectAllowed, this.sourceNode);
-                if (dispatchDragEvent("dragover", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer) === false) {
+                this._dragDataStore._mode = 3;
+                this._dataTransfer.dropEffect = determineDropEffect(this._dragDataStore._effectAllowed, this._sourceNode);
+                if (dispatchDragEvent("dragover", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer) === false) {
                     console.log("dnd-poly: dragover not prevented on possible drop-target.");
-                    this.currentDragOperation = "none";
+                    this._currentDragOperation = DROP_EFFECTS[0];
                 }
                 else {
                     console.log("dnd-poly: dragover prevented.");
-                    this.currentDragOperation = determineDragOperation(this.dataTransfer.effectAllowed, this.dataTransfer.dropEffect);
+                    this._currentDragOperation = determineDragOperation(this._dataTransfer.effectAllowed, this._dataTransfer.dropEffect);
                 }
             }
-            console.log("dnd-poly: d'n'd iteration ended. current drag operation: " + this.currentDragOperation);
+            console.log("dnd-poly: d'n'd iteration ended. current drag operation: " + this._currentDragOperation);
             for (var i = 0; i < DROP_EFFECTS.length; i++) {
-                this.dragImage.classList.remove(class_prefix + DROP_EFFECTS[i]);
+                this._dragImage.classList.remove(CLASS_PREFIX + DROP_EFFECTS[i]);
             }
-            this.dragImage.classList.add(class_prefix + this.currentDragOperation);
+            this._dragImage.classList.add(CLASS_PREFIX + this._currentDragOperation);
         };
-        DragOperationController.prototype.dragOperationEnded = function (state) {
-            console.log("dnd-poly: drag operation end detected with " + this.currentDragOperation);
-            if (this.config.debug) {
-                if (this.currentDropTarget) {
-                    this.currentDropTarget.classList.remove(debug_class_drop_target);
+        DragOperationController.prototype._dragOperationEnded = function (state) {
+            console.log("dnd-poly: drag operation end detected with " + this._currentDragOperation);
+            if (DEBUG) {
+                var debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection", debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
+                if (this._currentDropTarget) {
+                    this._currentDropTarget.classList.remove(debug_class_drop_target);
                 }
-                if (this.immediateUserSelection) {
-                    this.immediateUserSelection.classList.remove(debug_class_user_selection);
+                if (this._immediateUserSelection) {
+                    this._immediateUserSelection.classList.remove(debug_class_user_selection);
                 }
             }
-            var dragFailed = (this.currentDragOperation === "none"
-                || this.currentDropTarget === null
+            var dragFailed = (this._currentDragOperation === DROP_EFFECTS[0]
+                || this._currentDropTarget === null
                 || state === 3);
             if (dragFailed) {
-                if (isDOMElement(this.currentDropTarget)) {
-                    this.dragDataStore.mode = 3;
-                    this.dataTransfer.dropEffect = "none";
-                    dispatchDragEvent("dragleave", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false);
+                if (isDOMElement(this._currentDropTarget)) {
+                    this._dragDataStore._mode = 3;
+                    this._dataTransfer.dropEffect = DROP_EFFECTS[0];
+                    dispatchDragEvent("dragleave", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
                 }
             }
             else {
-                if (isDOMElement(this.currentDropTarget)) {
-                    this.dragDataStore.mode = 1;
-                    this.dataTransfer.dropEffect = this.currentDragOperation;
-                    if (dispatchDragEvent("drop", this.currentDropTarget, this.lastTouchEvent, this.dragDataStore, this.dataTransfer) ===
+                if (isDOMElement(this._currentDropTarget)) {
+                    this._dragDataStore._mode = 1;
+                    this._dataTransfer.dropEffect = this._currentDragOperation;
+                    if (dispatchDragEvent("drop", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer) ===
                         true) {
-                        this.currentDragOperation = this.dataTransfer.dropEffect;
+                        this._currentDragOperation = this._dataTransfer.dropEffect;
                     }
                     else {
-                        this.currentDragOperation = "none";
+                        this._currentDragOperation = DROP_EFFECTS[0];
                     }
                 }
             }
             return dragFailed;
         };
-        DragOperationController.prototype.finishDragOperation = function () {
+        DragOperationController.prototype._finishDragOperation = function () {
             console.log("dnd-poly: dragimage snap back transition ended");
-            this.dragDataStore.mode = 3;
-            this.dataTransfer.dropEffect = this.currentDragOperation;
-            dispatchDragEvent("dragend", this.sourceNode, this.lastTouchEvent, this.dragDataStore, this.dataTransfer, false);
-            this.dragOperationState = 2;
-            this.cleanup();
+            this._dragDataStore._mode = 3;
+            this._dataTransfer.dropEffect = this._currentDragOperation;
+            dispatchDragEvent("dragend", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
+            this._dragOperationState = 2;
+            this._cleanup();
         };
         return DragOperationController;
     })();
     var DataTransfer = (function () {
-        function DataTransfer(dataStore) {
-            this.dataStore = dataStore;
-            this._dropEffect = "none";
+        function DataTransfer(_dataStore) {
+            this._dataStore = _dataStore;
+            this._dropEffect = DROP_EFFECTS[0];
         }
         Object.defineProperty(DataTransfer.prototype, "files", {
             get: function () {
@@ -415,63 +404,63 @@ var MobileDragAndDropPolyfill;
         });
         Object.defineProperty(DataTransfer.prototype, "types", {
             get: function () {
-                if (this.dataStore.mode === 0) {
+                if (this._dataStore._mode === 0) {
                     return null;
                 }
-                return Object.freeze(this.dataStore.types);
+                return Object.freeze(this._dataStore._types);
             },
             enumerable: true,
             configurable: true
         });
         DataTransfer.prototype.setData = function (type, data) {
-            if (this.dataStore.mode !== 2) {
+            if (this._dataStore._mode !== 2) {
                 return;
             }
             if (type.indexOf(" ") > -1) {
-                throw new Error("Space character not allowed in drag data item type string");
+                throw new Error("illegal arg: type contains space");
             }
-            this.dataStore.data[type] = data;
-            if (this.dataStore.types.indexOf(type) === -1) {
-                this.dataStore.types.push(type);
+            this._dataStore._data[type] = data;
+            if (this._dataStore._types.indexOf(type) === -1) {
+                this._dataStore._types.push(type);
             }
         };
         DataTransfer.prototype.getData = function (type) {
-            if (this.dataStore.mode === 0
-                || this.dataStore.mode === 3) {
+            if (this._dataStore._mode === 0
+                || this._dataStore._mode === 3) {
                 return null;
             }
-            return this.dataStore.data[type] || "";
+            return this._dataStore._data[type] || "";
         };
         DataTransfer.prototype.clearData = function (format) {
-            if (this.dataStore.mode !== 2) {
+            if (this._dataStore._mode !== 2) {
                 return;
             }
-            if (format && this.dataStore.data[format]) {
-                delete this.dataStore.data[format];
-                var index = this.dataStore.types.indexOf(format);
+            if (format && this._dataStore._data[format]) {
+                delete this._dataStore._data[format];
+                var index = this._dataStore._types.indexOf(format);
                 if (index > -1) {
-                    this.dataStore.types.splice(index, 1);
+                    this._dataStore._types.splice(index, 1);
                 }
                 return;
             }
-            this.dataStore.data = {};
-            this.dataStore.types = [];
+            this._dataStore._data = {};
+            this._dataStore._types = [];
         };
         DataTransfer.prototype.setDragImage = function (image, x, y) {
-            if (this.dataStore.mode === 0) {
+            if (this._dataStore._mode === 0) {
                 return;
             }
         };
         Object.defineProperty(DataTransfer.prototype, "effectAllowed", {
             get: function () {
-                return this.dataStore.effectAllowed;
+                return this._dataStore._effectAllowed;
             },
             set: function (value) {
-                if (this.dataStore.mode === 0
+                if (this._dataStore._mode === 0
                     || ALLOWED_EFFECTS.indexOf(value) === -1) {
                     return;
                 }
-                this.dataStore.effectAllowed = value;
+                this._dataStore._effectAllowed = value;
             },
             enumerable: true,
             configurable: true
@@ -481,7 +470,7 @@ var MobileDragAndDropPolyfill;
                 return this._dropEffect;
             },
             set: function (value) {
-                if (this.dataStore.mode === 0
+                if (this._dataStore._mode === 0
                     || ALLOWED_EFFECTS.indexOf(value) === -1) {
                     return;
                 }
@@ -494,10 +483,9 @@ var MobileDragAndDropPolyfill;
     })();
     var DragDataStore = (function () {
         function DragDataStore() {
-            this.mode = 3;
-            this.data = {};
-            this.types = [];
-            this.effectAllowed = "uninitialized";
+            this._mode = 3;
+            this._data = {};
+            this._types = [];
         }
         return DragDataStore;
     })();
@@ -567,16 +555,15 @@ var MobileDragAndDropPolyfill;
     }
     function prepareNodeCopyAsDragImage(srcNode, dstNode) {
         if (srcNode.nodeType === 1) {
-            dstNode.removeAttribute("id");
-            dstNode.removeAttribute("class");
-            dstNode.removeAttribute("style");
-            dstNode.removeAttribute("draggable");
             var cs = window.getComputedStyle(srcNode);
             for (var i = 0; i < cs.length; i++) {
                 var csName = cs[i];
                 dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
             }
             dstNode.style["pointer-events"] = "none";
+            dstNode.removeAttribute("id");
+            dstNode.removeAttribute("class");
+            dstNode.removeAttribute("draggable");
         }
         if (srcNode.hasChildNodes()) {
             for (var i = 0; i < srcNode.childNodes.length; i++) {
@@ -584,50 +571,49 @@ var MobileDragAndDropPolyfill;
             }
         }
     }
-    function createDragImage(sourceNode, customClass) {
+    function createDragImage(sourceNode) {
         var dragImage = sourceNode.cloneNode(true);
         prepareNodeCopyAsDragImage(sourceNode, dragImage);
         dragImage.style["position"] = "absolute";
         dragImage.style["left"] = "0px";
         dragImage.style["top"] = "0px";
         dragImage.style["z-index"] = "999999";
-        dragImage.classList.add(class_drag_image);
-        dragImage.classList.add(class_drag_operation_icon);
-        if (customClass) {
-            dragImage.classList.add(customClass);
-        }
+        dragImage.classList.add(CLASS_DRAG_IMAGE);
+        dragImage.classList.add(CLASS_DRAG_OPERATION_ICON);
         return dragImage;
     }
-    function translateDragImage(dragImage, x, y, centerOnCoordinates) {
+    function translateDragImage(dragImage, pnt, centerOnCoordinates) {
         if (centerOnCoordinates === void 0) { centerOnCoordinates = true; }
+        var x = pnt.x, y = pnt.y;
         if (centerOnCoordinates) {
             x -= (parseInt(dragImage.offsetWidth, 10) / 2);
             y -= (parseInt(dragImage.offsetHeight, 10) / 2);
         }
         var translate = "translate3d(" + x + "px," + y + "px, 0)";
-        for (var i = 0; i < transform_css_vendor_prefixes.length; i++) {
-            var transformProp = transform_css_vendor_prefixes[i] + "transform";
+        for (var i = 0; i < TRANSFORM_CSS_VENDOR_PREFIXES.length; i++) {
+            var transformProp = TRANSFORM_CSS_VENDOR_PREFIXES[i] + "transform";
             dragImage.style[transformProp] = translate;
         }
     }
     function triggerDragImageSnapback(transitionEndEvent, sourceEl, dragImage, transitionEndCb) {
         console.log("dnd-poly: starting dragimage snap back");
-        once(dragImage, transitionEndEvent, transitionEndCb);
-        dragImage.classList.add(class_drag_image_snapback);
         var rect = sourceEl.getBoundingClientRect();
-        var elementLeft, elementTop;
-        var scrollTop = document.documentElement.scrollTop ?
-            document.documentElement.scrollTop : document.body.scrollTop;
-        var scrollLeft = document.documentElement.scrollLeft ?
-            document.documentElement.scrollLeft : document.body.scrollLeft;
-        elementTop = rect.top + scrollTop;
-        elementLeft = rect.left + scrollLeft;
+        var pnt = {
+            x: rect.left,
+            y: rect.top
+        };
+        var scrollLeft = getSetScroll(0);
+        var scrollTop = getSetScroll(1);
+        pnt.x += scrollLeft;
+        pnt.y += scrollTop;
         var cs = window.getComputedStyle(sourceEl, null);
         var leftPadding = parseInt(cs.getPropertyValue("padding-left"), 10);
         var topPadding = parseInt(cs.getPropertyValue("padding-top"), 10);
-        elementLeft -= leftPadding;
-        elementTop -= topPadding;
-        translateDragImage(dragImage, elementLeft, elementTop, false);
+        pnt.x -= leftPadding;
+        pnt.y -= topPadding;
+        once(dragImage, transitionEndEvent, transitionEndCb);
+        dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
+        translateDragImage(dragImage, pnt, false);
     }
     function determineScrollIntention(currentCoordinate, clientSize, threshold) {
         if (currentCoordinate < threshold) {
@@ -636,9 +622,7 @@ var MobileDragAndDropPolyfill;
         else if (clientSize - currentCoordinate < threshold) {
             return 1;
         }
-        else {
-            return 0;
-        }
+        return 0;
     }
     function getSetScroll(axis, scroll) {
         var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
@@ -649,16 +633,11 @@ var MobileDragAndDropPolyfill;
         document.body[prop] += scroll;
     }
     function scrollEndReached(axis, scrollIntention) {
-        var scrollSizeProp, clientSizeProp, scroll;
+        var scrollSizeProp = "scrollHeight", clientSizeProp = "clientHeight", scroll = getSetScroll(axis);
         if (axis === 0) {
             scrollSizeProp = "scrollWidth";
             clientSizeProp = "clientWidth";
         }
-        else {
-            scrollSizeProp = "scrollHeight";
-            clientSizeProp = "clientHeight";
-        }
-        scroll = getSetScroll(axis);
         if (scrollIntention > 0) {
             var scrollSize = document.documentElement[scrollSizeProp] || document.body[scrollSizeProp];
             return (scroll + document.documentElement[clientSizeProp]) >= (scrollSize);
@@ -669,30 +648,32 @@ var MobileDragAndDropPolyfill;
         return true;
     }
     function determineDropEffect(effectAllowed, sourceNode) {
-        if (effectAllowed === "none") {
-            return "none";
-        }
-        if (effectAllowed.indexOf("copy") === 0 || effectAllowed === "all") {
-            return "copy";
-        }
-        if (effectAllowed.indexOf("link") === 0) {
-            return "link";
-        }
-        if (effectAllowed === "move") {
-            return "move";
-        }
-        if (effectAllowed === "uninitialized") {
+        if (!effectAllowed) {
             if (sourceNode.nodeType === 3 && sourceNode.tagName === "A") {
-                return "link";
+                return DROP_EFFECTS[3];
             }
+            return DROP_EFFECTS[1];
         }
-        return "copy";
+        if (effectAllowed === ALLOWED_EFFECTS[0]) {
+            return DROP_EFFECTS[0];
+        }
+        if (effectAllowed.indexOf(ALLOWED_EFFECTS[1]) === 0 || effectAllowed === ALLOWED_EFFECTS[7]) {
+            return DROP_EFFECTS[1];
+        }
+        if (effectAllowed.indexOf(ALLOWED_EFFECTS[4]) === 0) {
+            return DROP_EFFECTS[3];
+        }
+        if (effectAllowed === ALLOWED_EFFECTS[6]) {
+            return DROP_EFFECTS[2];
+        }
+        return DROP_EFFECTS[1];
     }
     function dispatchDragEvent(dragEvent, targetElement, touchEvent, dataStore, dataTransfer, cancelable, relatedTarget) {
         if (cancelable === void 0) { cancelable = true; }
         if (relatedTarget === void 0) { relatedTarget = null; }
         console.log("dnd-poly: dispatching " + dragEvent);
-        if (config.debug) {
+        if (DEBUG) {
+            var debug_class = CLASS_PREFIX + "debug", debug_class_event_target = CLASS_PREFIX + "event-target", debug_class_event_related_target = CLASS_PREFIX + "event-related-target";
             targetElement.classList.add(debug_class);
             targetElement.classList.add(debug_class_event_target);
             if (relatedTarget) {
@@ -702,8 +683,8 @@ var MobileDragAndDropPolyfill;
         }
         var leaveEvt = createDragEventFromTouch(targetElement, touchEvent, dragEvent, cancelable, document.defaultView, dataTransfer, relatedTarget);
         var cancelled = !targetElement.dispatchEvent(leaveEvt);
-        dataStore.mode = 0;
-        if (config.debug) {
+        dataStore._mode = 0;
+        if (DEBUG) {
             targetElement.classList.remove(debug_class_event_target);
             if (relatedTarget) {
                 relatedTarget.classList.remove(debug_class_event_related_target);
@@ -712,25 +693,25 @@ var MobileDragAndDropPolyfill;
         return cancelled;
     }
     function determineDragOperation(effectAllowed, dropEffect) {
-        if (effectAllowed === "uninitialized" || effectAllowed === "all") {
+        if (!effectAllowed || effectAllowed === ALLOWED_EFFECTS[7]) {
             return dropEffect;
         }
-        if (dropEffect === "copy") {
-            if (effectAllowed.indexOf("copy") === 0) {
-                return "copy";
+        if (dropEffect === DROP_EFFECTS[1]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[1]) === 0) {
+                return DROP_EFFECTS[1];
             }
         }
-        else if (dropEffect === "link") {
-            if (effectAllowed.indexOf("link") === 0 || effectAllowed.indexOf("Link") > -1) {
-                return "link";
+        else if (dropEffect === DROP_EFFECTS[3]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[3]) === 0 || effectAllowed.indexOf("Link") > -1) {
+                return DROP_EFFECTS[3];
             }
         }
-        else if (dropEffect === "move") {
-            if (effectAllowed.indexOf("move") === 0 || effectAllowed.indexOf("Move") > -1) {
-                return "move";
+        else if (dropEffect === DROP_EFFECTS[2]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[2]) === 0 || effectAllowed.indexOf("Move") > -1) {
+                return DROP_EFFECTS[2];
             }
         }
-        return "none";
+        return DROP_EFFECTS[0];
     }
 })(MobileDragAndDropPolyfill || (MobileDragAndDropPolyfill = {}));
 //# sourceMappingURL=mobile-drag-and-drop-polyfill.js.map
