@@ -22,15 +22,15 @@ module MobileDragAndDropPolyfill {
     function detectFeatures():DetectedFeatures {
 
         var detectedFeatures:DetectedFeatures = {
-            draggable: ('draggable' in document.documentElement),
-            dragEvents: ('ondragstart' in document.documentElement),
-            touchEvents: ('ontouchstart' in document.documentElement),
-            //mouseEventConstructor: ('MouseEvent' in window),
-            //dragEventConstructor: ('DragEvent' in window),
-            //customEventConstructor: ('CustomEvent' in window),
+            draggable: ("draggable" in document.documentElement),
+            dragEvents: ("ondragstart" in document.documentElement),
+            touchEvents: ("ontouchstart" in document.documentElement),
+            //mouseEventConstructor: ("MouseEvent" in window),
+            //dragEventConstructor: ("DragEvent" in window),
+            //customEventConstructor: ("CustomEvent" in window),
             isBlinkEngine: !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent ),
             userAgentNotSupportingNativeDnD: false,
-            transitionEnd: ('WebkitTransition' in document.documentElement.style) ? 'webkitTransitionEnd' : 'transitionend'
+            transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend"
         };
 
         detectedFeatures.userAgentNotSupportingNativeDnD = (
@@ -173,31 +173,42 @@ module MobileDragAndDropPolyfill {
 
         activeDragOperation = null;
 
-        //TODO do we need support/detection for single-click, double-click, right-click?
         // this means the drag operation was not started so the "default action" of the original event should be applied
         if( state === DragOperationState.POTENTIAL ) {
 
-            //TODO different target elements need different default actions
             var target = (<HTMLElement>event.target);
             var targetTagName = target.tagName;
 
+            //TODO do we need support/detection for single-click, double-click, right-click?
             var mouseEventType:string;
-            //TODO test which event is needed on what element, input elements so far are a bit ugly because focus is needed on fields that need keyboard
             switch( targetTagName ) {
-                case "SELECT":
-                    mouseEventType = "mousedown";
-                    break;
                 case "INPUT":
+                    mouseEventType = mouseEventForInputType( target.getAttribute( "type" ) );
+                case "SELECT":
                 case "TEXTAREA":
                     target.focus();
+                    break;
                 default:
                     mouseEventType = "click";
             }
 
-            console.log( "dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
+            if( mouseEventType ) {
+                console.log( "dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
+                var defaultEvent = createMouseEventFromTouch( target, event, mouseEventType );
+                target.dispatchEvent( defaultEvent );
+            }
+        }
+    }
 
-            var defaultEvent = createMouseEventFromTouch( target, event, mouseEventType );
-            target.dispatchEvent( defaultEvent );
+    function mouseEventForInputType( inputType:string ):string {
+        switch( inputType ) {
+            case "button":
+            case "checkbox":
+            case "radio":
+            case "file":
+            case "reset":
+            case "submit":
+                return "click";
         }
     }
 
@@ -483,8 +494,10 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
-            // will cancel eventual programmatic scrolling
-            this._scrollIntention.x = this._scrollIntention.y = 0;
+            if( this._scrollIntention ) {
+                // will cancel eventual programmatic scrolling
+                this._scrollIntention.x = this._scrollIntention.y = 0;
+            }
 
             // drag operation did not even start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
@@ -706,7 +719,7 @@ module MobileDragAndDropPolyfill {
                         }
                         // Otherwise
                         //else {
-                            // leave the current drop target unchanged
+                        // leave the current drop target unchanged
                         //}
                     }
                 }
@@ -963,90 +976,75 @@ module MobileDragAndDropPolyfill {
         }
 
         public get types():Array<string> {
-            if( this._dataStore._mode === DragDataStoreMode._DISCONNECTED ) {
-                return null;
+            if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED ) {
+                return Object.freeze( this._dataStore._types );
             }
-
-            return Object.freeze( this._dataStore._types );
         }
 
         public setData( type:string, data:string ):void {
-            if( this._dataStore._mode !== DragDataStoreMode.READWRITE ) {
-                return;
-            }
+            if( this._dataStore._mode === DragDataStoreMode.READWRITE ) {
 
-            if( type.indexOf( " " ) > -1 ) {
-                throw new Error( "illegal arg: type contains space" );
-            }
+                if( type.indexOf( " " ) > -1 ) {
+                    throw new Error( "illegal arg: type contains space" );
+                }
 
-            this._dataStore._data[ type ] = data;
-            if( this._dataStore._types.indexOf( type ) === -1 ) {
-                this._dataStore._types.push( type );
+                this._dataStore._data[ type ] = data;
+
+                if( this._dataStore._types.indexOf( type ) === -1 ) {
+                    this._dataStore._types.push( type );
+                }
             }
         }
 
         public getData( type:string ):string {
-            if( this._dataStore._mode === DragDataStoreMode._DISCONNECTED
-                || this._dataStore._mode === DragDataStoreMode.PROTECTED ) {
-                return null;
+            if( this._dataStore._mode === DragDataStoreMode.READONLY
+                || this._dataStore._mode === DragDataStoreMode.READWRITE ) {
+                return this._dataStore._data[ type ] || "";
             }
-
-            return this._dataStore._data[ type ] || "";
         }
 
         public clearData( format?:string ):void {
-            if( this._dataStore._mode !== DragDataStoreMode.READWRITE ) {
-                return;
-            }
-            // delete data for format
-            if( format && this._dataStore._data[ format ] ) {
-                delete this._dataStore._data[ format ];
-                var index = this._dataStore._types.indexOf( format );
-                if( index > -1 ) {
-                    this._dataStore._types.splice( index, 1 );
+            if( this._dataStore._mode === DragDataStoreMode.READWRITE ) {
+                // delete data for format
+                if( format && this._dataStore._data[ format ] ) {
+                    delete this._dataStore._data[ format ];
+                    var index = this._dataStore._types.indexOf( format );
+                    if( index > -1 ) {
+                        this._dataStore._types.splice( index, 1 );
+                    }
+                    return;
                 }
-                return;
+                // delete all data
+                this._dataStore._data = {};
+                this._dataStore._types = [];
             }
-            // delete all data
-            this._dataStore._data = {};
-            this._dataStore._types = [];
         }
 
         public setDragImage( image:Element, x:number, y:number ):void {
-            if( this._dataStore._mode === DragDataStoreMode._DISCONNECTED ) {
-                return;
-            }
-
             //TODO setdragimage support for setting dragimage to some custom element
         }
 
         public get effectAllowed() {
-
             return this._dataStore._effectAllowed;
         }
 
         //TODO effectAllowed can be set only on dragstart?
         public set effectAllowed( value ) {
-            if( this._dataStore._mode === DragDataStoreMode._DISCONNECTED
-                || ALLOWED_EFFECTS.indexOf( value ) === -1 ) {
-                return;
+            if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
+                && ALLOWED_EFFECTS.indexOf( value ) > -1 ) {
+                this._dataStore._effectAllowed = value;
             }
-
-            this._dataStore._effectAllowed = value;
         }
 
         public get dropEffect() {
-
             return this._dropEffect;
         }
 
         public set dropEffect( value ) {
-            if( this._dataStore._mode === DragDataStoreMode._DISCONNECTED
-                || ALLOWED_EFFECTS.indexOf( value ) === -1 ) {
-                return;
+            if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
+                && ALLOWED_EFFECTS.indexOf( value ) > -1 ) {
+                this._dropEffect = value;
             }
-
-            this._dropEffect = value;
         }
     }
 
@@ -1269,13 +1267,16 @@ module MobileDragAndDropPolyfill {
         pnt.y -= topPadding;
 
         // setup one-time transitionend listener
-        once( dragImage, transitionEndEvent, transitionEndCb );
+        //once( dragImage, transitionEndEvent, transitionEndCb );
 
         // add class containing transition rules
         dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
 
         // apply the translate
         translateDragImage( dragImage, pnt, false );
+
+        //TODO hack for when transitionEnd event fails, can we do better?
+        setTimeout(transitionEndCb, 250);
     }
 
     function determineScrollIntention( currentCoordinate:number, clientSize:number, threshold:number ):number {

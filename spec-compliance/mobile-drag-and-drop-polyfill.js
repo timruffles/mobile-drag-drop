@@ -3,12 +3,12 @@ var MobileDragAndDropPolyfill;
     var detectedFeatures;
     function detectFeatures() {
         var detectedFeatures = {
-            draggable: ('draggable' in document.documentElement),
-            dragEvents: ('ondragstart' in document.documentElement),
-            touchEvents: ('ontouchstart' in document.documentElement),
+            draggable: ("draggable" in document.documentElement),
+            dragEvents: ("ondragstart" in document.documentElement),
+            touchEvents: ("ontouchstart" in document.documentElement),
             isBlinkEngine: !!(window.chrome) || /chrome/i.test(navigator.userAgent),
             userAgentNotSupportingNativeDnD: false,
-            transitionEnd: ('WebkitTransition' in document.documentElement.style) ? 'webkitTransitionEnd' : 'transitionend'
+            transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend"
         };
         detectedFeatures.userAgentNotSupportingNativeDnD = (/iPad|iPhone|iPod|Android/.test(navigator.userAgent)
             ||
@@ -80,18 +80,31 @@ var MobileDragAndDropPolyfill;
             var targetTagName = target.tagName;
             var mouseEventType;
             switch (targetTagName) {
-                case "SELECT":
-                    mouseEventType = "mousedown";
-                    break;
                 case "INPUT":
+                    mouseEventType = mouseEventForInputType(target.getAttribute("type"));
+                case "SELECT":
                 case "TEXTAREA":
                     target.focus();
+                    break;
                 default:
                     mouseEventType = "click";
             }
-            console.log("dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " ..");
-            var defaultEvent = createMouseEventFromTouch(target, event, mouseEventType);
-            target.dispatchEvent(defaultEvent);
+            if (mouseEventType) {
+                console.log("dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " ..");
+                var defaultEvent = createMouseEventFromTouch(target, event, mouseEventType);
+                target.dispatchEvent(defaultEvent);
+            }
+        }
+    }
+    function mouseEventForInputType(inputType) {
+        switch (inputType) {
+            case "button":
+            case "checkbox":
+            case "radio":
+            case "file":
+            case "reset":
+            case "submit":
+                return "click";
         }
     }
     var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all"];
@@ -205,7 +218,9 @@ var MobileDragAndDropPolyfill;
             if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouchId) === false) {
                 return;
             }
-            this._scrollIntention.x = this._scrollIntention.y = 0;
+            if (this._scrollIntention) {
+                this._scrollIntention.x = this._scrollIntention.y = 0;
+            }
             if (this._dragOperationState === 0) {
                 this._cleanup();
                 return;
@@ -404,47 +419,43 @@ var MobileDragAndDropPolyfill;
         });
         Object.defineProperty(DataTransfer.prototype, "types", {
             get: function () {
-                if (this._dataStore._mode === 0) {
-                    return null;
+                if (this._dataStore._mode !== 0) {
+                    return Object.freeze(this._dataStore._types);
                 }
-                return Object.freeze(this._dataStore._types);
             },
             enumerable: true,
             configurable: true
         });
         DataTransfer.prototype.setData = function (type, data) {
-            if (this._dataStore._mode !== 2) {
-                return;
-            }
-            if (type.indexOf(" ") > -1) {
-                throw new Error("illegal arg: type contains space");
-            }
-            this._dataStore._data[type] = data;
-            if (this._dataStore._types.indexOf(type) === -1) {
-                this._dataStore._types.push(type);
+            if (this._dataStore._mode === 2) {
+                if (type.indexOf(" ") > -1) {
+                    throw new Error("illegal arg: type contains space");
+                }
+                this._dataStore._data[type] = data;
+                if (this._dataStore._types.indexOf(type) === -1) {
+                    this._dataStore._types.push(type);
+                }
             }
         };
         DataTransfer.prototype.getData = function (type) {
-            if (this._dataStore._mode === 0
-                || this._dataStore._mode === 3) {
-                return null;
+            if (this._dataStore._mode === 1
+                || this._dataStore._mode === 2) {
+                return this._dataStore._data[type] || "";
             }
-            return this._dataStore._data[type] || "";
         };
         DataTransfer.prototype.clearData = function (format) {
-            if (this._dataStore._mode !== 2) {
-                return;
-            }
-            if (format && this._dataStore._data[format]) {
-                delete this._dataStore._data[format];
-                var index = this._dataStore._types.indexOf(format);
-                if (index > -1) {
-                    this._dataStore._types.splice(index, 1);
+            if (this._dataStore._mode === 2) {
+                if (format && this._dataStore._data[format]) {
+                    delete this._dataStore._data[format];
+                    var index = this._dataStore._types.indexOf(format);
+                    if (index > -1) {
+                        this._dataStore._types.splice(index, 1);
+                    }
+                    return;
                 }
-                return;
+                this._dataStore._data = {};
+                this._dataStore._types = [];
             }
-            this._dataStore._data = {};
-            this._dataStore._types = [];
         };
         DataTransfer.prototype.setDragImage = function (image, x, y) {
             if (this._dataStore._mode === 0) {
@@ -456,11 +467,10 @@ var MobileDragAndDropPolyfill;
                 return this._dataStore._effectAllowed;
             },
             set: function (value) {
-                if (this._dataStore._mode === 0
-                    || ALLOWED_EFFECTS.indexOf(value) === -1) {
-                    return;
+                if (this._dataStore._mode !== 0
+                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
+                    this._dataStore._effectAllowed = value;
                 }
-                this._dataStore._effectAllowed = value;
             },
             enumerable: true,
             configurable: true
@@ -470,11 +480,10 @@ var MobileDragAndDropPolyfill;
                 return this._dropEffect;
             },
             set: function (value) {
-                if (this._dataStore._mode === 0
-                    || ALLOWED_EFFECTS.indexOf(value) === -1) {
-                    return;
+                if (this._dataStore._mode !== 0
+                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
+                    this._dropEffect = value;
                 }
-                this._dropEffect = value;
             },
             enumerable: true,
             configurable: true
@@ -611,9 +620,9 @@ var MobileDragAndDropPolyfill;
         var topPadding = parseInt(cs.getPropertyValue("padding-top"), 10);
         pnt.x -= leftPadding;
         pnt.y -= topPadding;
-        once(dragImage, transitionEndEvent, transitionEndCb);
         dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
         translateDragImage(dragImage, pnt, false);
+        setTimeout(transitionEndCb, 250);
     }
     function determineScrollIntention(currentCoordinate, clientSize, threshold) {
         if (currentCoordinate < threshold) {
