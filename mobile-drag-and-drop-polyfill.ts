@@ -173,13 +173,16 @@ module MobileDragAndDropPolyfill {
 
         activeDragOperation = null;
 
+        //TODO do we need support/detection for single-click, double-click, right-click?
+
+        var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
+
         // this means the drag operation was not started so the "default action" of the original event should be applied
-        if( state === DragOperationState.POTENTIAL ) {
+        if( singleClick && state === DragOperationState.POTENTIAL ) {
 
             var target = (<HTMLElement>event.target);
             var targetTagName = target.tagName;
 
-            //TODO do we need support/detection for single-click, double-click, right-click?
             var mouseEventType:string;
             switch( targetTagName ) {
                 case "INPUT":
@@ -451,6 +454,16 @@ module MobileDragAndDropPolyfill {
 
             // drag operation did not start yet but on movement it should start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
+
+                // only allow a single moving finger to initiate a drag operation
+                if( event.touches.length > 1 ) {
+                    this._cleanup();
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
                 this._setup();
                 return;
             }
@@ -463,10 +476,10 @@ module MobileDragAndDropPolyfill {
 
             // populate shared coordinates from touch event
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
-            updateCentroidCoordinatesOfTouchesIn( "page", event, this._dragImagePageCoordinates );
+            updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
 
-            this._scrollIntention.x = determineScrollIntention( this._currentHotspotCoordinates.x, document.documentElement.clientWidth, this._config.scrollThreshold );
-            this._scrollIntention.y = determineScrollIntention( this._currentHotspotCoordinates.y, document.documentElement.clientHeight, this._config.scrollThreshold );
+            this._scrollIntention.x = determineScrollIntention( this._currentHotspotCoordinates.x, window.innerWidth, this._config.scrollThreshold );
+            this._scrollIntention.y = determineScrollIntention( this._currentHotspotCoordinates.y, window.innerHeight, this._config.scrollThreshold );
 
             // check whether the current scroll has reached a limit
             var horizontalScrollEndReached = scrollEndReached( ScrollAxis.HORIZONTAL, this._scrollIntention.x );
@@ -477,7 +490,6 @@ module MobileDragAndDropPolyfill {
 
                 // start programmatic scroll when not already started
                 if( !this._scrollAnimationId ) {
-
                     this._scrollAnimationId = window.requestAnimationFrame( this._scrollAnimationFrameHandler );
                 }
             }
@@ -499,6 +511,8 @@ module MobileDragAndDropPolyfill {
                 this._scrollIntention.x = this._scrollIntention.y = 0;
             }
 
+            this._lastTouchEvent = event;
+
             // drag operation did not even start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
                 this._cleanup();
@@ -508,8 +522,6 @@ module MobileDragAndDropPolyfill {
             // we emulate d'n'd so we dont want any defaults to apply
             event.preventDefault();
             event.stopImmediatePropagation();
-
-            this._lastTouchEvent = event;
 
             this._dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
         }
@@ -533,15 +545,18 @@ module MobileDragAndDropPolyfill {
 
             // update dragImage position according to scroll direction
             if( !horizontalScrollEndReached ) {
+                //console.log( "dnd-poly: scrolling horizontally.." );
                 var horizontalScroll = this._scrollIntention.x * this._config.scrollVelocity;
                 getSetScroll( ScrollAxis.HORIZONTAL, horizontalScroll );
                 this._dragImagePageCoordinates.x += horizontalScroll;
             }
             if( !verticalScrollEndReached ) {
+                //console.log( "dnd-poly: scrolling vertically.." );
                 var verticalScroll = this._scrollIntention.y * this._config.scrollVelocity;
                 getSetScroll( ScrollAxis.VERTICAL, verticalScroll );
                 this._dragImagePageCoordinates.y += verticalScroll;
             }
+
             translateDragImage( this._dragImage, this._dragImagePageCoordinates );
 
             // re-schedule animation frame callback
@@ -1276,7 +1291,7 @@ module MobileDragAndDropPolyfill {
         translateDragImage( dragImage, pnt, false );
 
         //TODO hack for when transitionEnd event fails, can we do better?
-        setTimeout(transitionEndCb, 250);
+        setTimeout( transitionEndCb, 250 );
     }
 
     function determineScrollIntention( currentCoordinate:number, clientSize:number, threshold:number ):number {
@@ -1303,7 +1318,7 @@ module MobileDragAndDropPolyfill {
         // abstracting away compatibility issues on scroll properties of document/body
 
         if( arguments.length === 1 ) {
-            return document.documentElement[ prop ] || document.body[ prop ];
+            return document.body[ prop ] || document.documentElement[ prop ];
         }
 
         document.documentElement[ prop ] += scroll;
@@ -1312,22 +1327,24 @@ module MobileDragAndDropPolyfill {
 
     function scrollEndReached( axis:ScrollAxis, scrollIntention:number ) {
         var scrollSizeProp = "scrollHeight",
-            clientSizeProp = "clientHeight",
+            clientSizeProp = "innerHeight",
             scroll         = getSetScroll( axis );
 
         if( axis === ScrollAxis.HORIZONTAL ) {
             scrollSizeProp = "scrollWidth";
-            clientSizeProp = "clientWidth";
+            clientSizeProp = "innerWidth";
         }
 
         // wants to scroll to the right/bottom
         if( scrollIntention > 0 ) {
 
             // abstracting away compatibility issues on scroll properties of document/body
-            var scrollSize = document.documentElement[ scrollSizeProp ] || document.body[ scrollSizeProp ];
+            var scrollSize = document.body[ scrollSizeProp ] || document.documentElement[ scrollSizeProp ];
+
+            var clientSize = window[ clientSizeProp ];
 
             // is already at the right/bottom edge
-            return (scroll + document.documentElement[ clientSizeProp ]) >= (scrollSize);
+            return (scroll + clientSize) >= (scrollSize);
         }
         // wants to scroll to the left/top
         else if( scrollIntention < 0 ) {

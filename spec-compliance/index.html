@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-icons.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-debug.css">
-    <!--<script src="mobile-drag-and-drop-polyfill.js"></script>-->
-    <script src="mobile-drag-and-drop-polyfill.min.js"></script>
+    <script src="mobile-drag-and-drop-polyfill.js"></script>
+    <!--<script src="mobile-drag-and-drop-polyfill.min.js"></script>-->
 </head>
 <body>
 <section id="wrapper">
@@ -502,6 +502,11 @@
                 var dropOccurred = event.dataTransfer.dropEffect !== 'none';
 
 //        this.onDragEnd.trigger(event.create(dropOccurred)); // Custom event
+            });
+
+            addEvent(item, 'click', function (event) {
+
+                alert('clicked on complex draggable');
             });
         });
 

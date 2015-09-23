@@ -75,7 +75,8 @@ var MobileDragAndDropPolyfill;
     }
     function dragOperationEnded(event, state) {
         activeDragOperation = null;
-        if (state === 0) {
+        var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
+        if (singleClick && state === 0) {
             var target = event.target;
             var targetTagName = target.tagName;
             var mouseEventType;
@@ -193,6 +194,12 @@ var MobileDragAndDropPolyfill;
                 return;
             }
             if (this._dragOperationState === 0) {
+                if (event.touches.length > 1) {
+                    this._cleanup();
+                    return;
+                }
+                event.preventDefault();
+                event.stopImmediatePropagation();
                 this._setup();
                 return;
             }
@@ -200,9 +207,9 @@ var MobileDragAndDropPolyfill;
             event.stopImmediatePropagation();
             this._lastTouchEvent = event;
             updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
-            updateCentroidCoordinatesOfTouchesIn("page", event, this._dragImagePageCoordinates);
-            this._scrollIntention.x = determineScrollIntention(this._currentHotspotCoordinates.x, document.documentElement.clientWidth, this._config.scrollThreshold);
-            this._scrollIntention.y = determineScrollIntention(this._currentHotspotCoordinates.y, document.documentElement.clientHeight, this._config.scrollThreshold);
+            updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
+            this._scrollIntention.x = determineScrollIntention(this._currentHotspotCoordinates.x, window.innerWidth, this._config.scrollThreshold);
+            this._scrollIntention.y = determineScrollIntention(this._currentHotspotCoordinates.y, window.innerHeight, this._config.scrollThreshold);
             var horizontalScrollEndReached = scrollEndReached(0, this._scrollIntention.x);
             var verticalScrollEndReached = scrollEndReached(1, this._scrollIntention.y);
             if (!horizontalScrollEndReached || !verticalScrollEndReached) {
@@ -221,13 +228,13 @@ var MobileDragAndDropPolyfill;
             if (this._scrollIntention) {
                 this._scrollIntention.x = this._scrollIntention.y = 0;
             }
+            this._lastTouchEvent = event;
             if (this._dragOperationState === 0) {
                 this._cleanup();
                 return;
             }
             event.preventDefault();
             event.stopImmediatePropagation();
-            this._lastTouchEvent = event;
             this._dragOperationState = (event.type === "touchcancel") ? 3 : 2;
         };
         DragOperationController.prototype._scrollAnimation = function () {
@@ -458,9 +465,6 @@ var MobileDragAndDropPolyfill;
             }
         };
         DataTransfer.prototype.setDragImage = function (image, x, y) {
-            if (this._dataStore._mode === 0) {
-                return;
-            }
         };
         Object.defineProperty(DataTransfer.prototype, "effectAllowed", {
             get: function () {
@@ -636,20 +640,21 @@ var MobileDragAndDropPolyfill;
     function getSetScroll(axis, scroll) {
         var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
         if (arguments.length === 1) {
-            return document.documentElement[prop] || document.body[prop];
+            return document.body[prop] || document.documentElement[prop];
         }
         document.documentElement[prop] += scroll;
         document.body[prop] += scroll;
     }
     function scrollEndReached(axis, scrollIntention) {
-        var scrollSizeProp = "scrollHeight", clientSizeProp = "clientHeight", scroll = getSetScroll(axis);
+        var scrollSizeProp = "scrollHeight", clientSizeProp = "innerHeight", scroll = getSetScroll(axis);
         if (axis === 0) {
             scrollSizeProp = "scrollWidth";
-            clientSizeProp = "clientWidth";
+            clientSizeProp = "innerWidth";
         }
         if (scrollIntention > 0) {
-            var scrollSize = document.documentElement[scrollSizeProp] || document.body[scrollSizeProp];
-            return (scroll + document.documentElement[clientSizeProp]) >= (scrollSize);
+            var scrollSize = document.body[scrollSizeProp] || document.documentElement[scrollSizeProp];
+            var clientSize = window[clientSizeProp];
+            return (scroll + clientSize) >= (scrollSize);
         }
         else if (scrollIntention < 0) {
             return (scroll <= 0);
