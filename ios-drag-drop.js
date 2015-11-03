@@ -77,8 +77,8 @@
         pageYs.push(touch.pageY);
       });
 
-      var x = average(pageXs) - (parseInt(this.dragImage.offsetWidth, 10) / 2);
-      var y = average(pageYs) - (parseInt(this.dragImage.offsetHeight, 10) / 2);
+      var x = average(pageXs) - (this.customDragImageX || parseInt(this.dragImage.offsetWidth, 10) / 2);
+      var y = average(pageYs) - (this.customDragImageY || parseInt(this.dragImage.offsetHeight, 10) / 2);
       this.translateDragImage(x, y);
 
       this.synthesizeEnterLeave(event);
@@ -221,16 +221,25 @@
           }
           return val;
         }.bind(this),
+        setDragImage: function(el, x, y){
+          this.customDragImage = el;
+          this.customDragImageX = x
+          this.customDragImageY = y
+        }.bind(this),
         dropEffect: "move"
       };
       this.el.dispatchEvent(evt);
     },
     createDragImage: function() {
-      this.dragImage = this.el.cloneNode(true);
-      
-      duplicateStyle(this.el, this.dragImage);
-      
+      if (this.customDragImage) {
+        this.dragImage = this.customDragImage.cloneNode(true);
+        duplicateStyle(this.customDragImage, this.dragImage); 
+      } else {
+        this.dragImage = this.el.cloneNode(true);
+        duplicateStyle(this.el, this.dragImage); 
+      }
       this.dragImage.style.opacity = "0.5";
+
       this.dragImage.style.position = "absolute";
       this.dragImage.style.left = "0px";
       this.dragImage.style.top = "0px";
