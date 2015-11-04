@@ -4,7 +4,7 @@
 
   var coordinateSystemForElementFromPoint,
     started = false,
-    biasForVerticalScrolling = true;
+    biasForVerticalScrolling = false;
 
   function main(config) {
     config = config || {};
