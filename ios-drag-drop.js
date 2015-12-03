@@ -146,7 +146,8 @@
         types: this.dragDataTypes,
         getData: function(type) {
           return this.dragData[type];
-        }.bind(this)
+        }.bind(this),
+        dropEffect: "move"
       };
       dropEvt.preventDefault = function() {
          // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
