@@ -86,13 +86,13 @@
     // We use translate instead of top/left because of sub-pixel rendering and for the hope of better performance
     // http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
     translateDragImage: function(x, y) {
-      var translate = " translate(" + x + "px," + y + "px)";
+      var translate = "translate(" + x + "px," + y + "px) ";
 
       if (this.dragImageWebKitTransform !== null) {
-        this.dragImage.style["-webkit-transform"] = this.dragImageWebKitTransform + translate;
+        this.dragImage.style["-webkit-transform"] = translate + this.dragImageWebKitTransform;
       }
       if (this.dragImageTransform !== null) {
-        this.dragImage.style.transform = this.dragImageTransform + translate;
+        this.dragImage.style.transform = translate + this.dragImageTransform;
       }
     },
     synthesizeEnterLeave: function(event) {
