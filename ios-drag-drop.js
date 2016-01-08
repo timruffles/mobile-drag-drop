@@ -2,7 +2,9 @@
 
   log = noop; // noOp, remove this line to enable debugging
 
-  var coordinateSystemForElementFromPoint;
+  var coordinateSystemForElementFromPoint,
+    started = false,
+    biasForVerticalScrolling = false;
 
   function main(config) {
     config = config || {};
@@ -27,7 +29,7 @@
     doc.addEventListener("touchstart", touchstart);
   }
 
-  function DragDrop(event, el) {
+  function DragDrop(event, el, biasForVerticalScrolling) {
 
     this.dragData = {};
     this.dragDataTypes = [];
@@ -35,43 +37,76 @@
     this.dragImageTransform = null;
     this.dragImageWebKitTransform = null;
     this.el = el || event.target;
+    this.startX = event.pageX;
+    this.startY = event.pageY;
+    this.biasForVerticalScrolling = biasForVerticalScrolling;
+    this.started = false;
 
     log("dragstart");
 
-    this.dispatchDragStart();
-    this.createDragImage();
+    if(!biasForVerticalScrolling) {
+      event.preventDefault();
+      this.dispatchDragStart();
+      this.createDragImage();
+    } else {
+      log('vertical scroll bias enabled, deferring drag');
+    }
 
     this.listen();
-
   }
 
   DragDrop.prototype = {
     listen: function() {
-      var move = onEvt(doc, "touchmove", this.move, this);
-      var end = onEvt(doc, "touchend", ontouchend, this);
-      var cancel = onEvt(doc, "touchcancel", cleanup, this);
+      this.moveEvt = onEvt(doc, "touchmove", this.move, this);
+      this.endEvt = onEvt(doc, "touchend", ontouchend, this);
+      this.cancelEvt = onEvt(doc, "touchcancel", this.cleanup, this);
 
       function ontouchend(event) {
         this.dragend(event, event.target);
-        cleanup.call(this);
+        this.cleanup();
       }
-      function cleanup() {
-        log("cleanup");
-        this.dragDataTypes = [];
-        if (this.dragImage !== null) {
-          this.dragImage.parentNode.removeChild(this.dragImage);
-          this.dragImage = null;
-          this.dragImageTransform = null;
-          this.dragImageWebKitTransform = null;
-        }
-        this.el = this.dragData = null;
-        return [move, end, cancel].forEach(function(handler) {
-          return handler.off();
-        });
+    },
+    cleanup: function() {
+      log("cleanup");
+      this.dragDataTypes = [];
+      if (this.dragImage !== null) {
+        this.dragImage.parentNode.removeChild(this.dragImage);
+        this.dragImage = null;
+        this.dragImageTransform = null;
+        this.dragImageWebKitTransform = null;
       }
+      this.el = this.dragData = null;
+      return [this.moveEvt, this.endEvt, this.cancelEvt].forEach(function(handler) {
+        return handler.off();
+      });
     },
     move: function(event) {
       var pageXs = [], pageYs = [];
+
+      if(this.biasForVerticalScrolling && !this.started) {
+        var curX = event.pageX,
+          curY = event.pageY,
+          deltaX = Math.abs(this.startX - curX),
+          deltaY = Math.abs(this.startY - curY);
+          totalDelta = deltaX + deltaY;
+
+        if(totalDelta > 10) {
+          if(deltaX > deltaY) {
+            log('horizontal drag detected, starting drag');
+            this.started = true;
+            this.dispatchDragStart();
+            this.createDragImage();
+          } else {
+            log('vertical scroll detected, aborting drag');
+            this.cleanup();
+            return;
+          }
+        } else {
+          log('delta not large enough to detect drag direction');
+          return;
+        }
+      }
+
       [].forEach.call(event.changedTouches, function(touch) {
         pageXs.push(touch.pageX);
         pageYs.push(touch.pageY);
@@ -212,6 +247,7 @@
     },
     dispatchDragStart: function() {
       var evt = doc.createEvent("Event");
+      this.started = true;
       evt.initEvent("dragstart", true, true);
       evt.dataTransfer = {
         setData: function(type, val) {
@@ -227,9 +263,9 @@
     },
     createDragImage: function() {
       this.dragImage = this.el.cloneNode(true);
-      
+
       duplicateStyle(this.el, this.dragImage);
-      
+
       this.dragImage.style.opacity = "0.5";
       this.dragImage.style.position = "absolute";
       this.dragImage.style.left = "0px";
@@ -275,8 +311,8 @@
           el.dispatchEvent(clickEvt);
           log("Simulating click to anchor");
         }
-        evt.preventDefault();
-        new DragDrop(evt,el);
+
+        new DragDrop(evt, el, biasForVerticalScrolling);
       }
     } while((el = el.parentNode) && el !== doc.body);
   }
