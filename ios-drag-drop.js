@@ -34,6 +34,9 @@
     this.dragImage = null;
     this.dragImageTransform = null;
     this.dragImageWebKitTransform = null;
+    this.customDragImage = null;
+    this.customDragImageX = null;
+    this.customDragImageY = null;
     this.el = el || event.target;
 
     log("dragstart");
@@ -64,6 +67,9 @@
           this.dragImageTransform = null;
           this.dragImageWebKitTransform = null;
         }
+        this.customDragImage = null;
+        this.customDragImageX = null;
+        this.customDragImageY = null;
         this.el = this.dragData = null;
         return [move, end, cancel].forEach(function(handler) {
           return handler.off();
@@ -239,12 +245,10 @@
         duplicateStyle(this.el, this.dragImage); 
       }
       this.dragImage.style.opacity = "0.5";
-
       this.dragImage.style.position = "absolute";
       this.dragImage.style.left = "0px";
       this.dragImage.style.top = "0px";
       this.dragImage.style.zIndex = "999999";
-
 
       var transform = this.dragImage.style.transform;
       if (typeof transform !== "undefined") {
