@@ -41,11 +41,10 @@
 
     log("dragstart");
 
-    this.dispatchDragStart();
-    this.createDragImage();
-
-    this.listen();
-
+    if (this.dispatchDragStart()) {
+      this.createDragImage();
+      this.listen();
+    }
   }
 
   DragDrop.prototype = {
@@ -234,7 +233,7 @@
         }.bind(this),
         dropEffect: "move"
       };
-      this.el.dispatchEvent(evt);
+      return this.el.dispatchEvent(evt);
     },
     createDragImage: function() {
       if (this.customDragImage) {
