@@ -1,21 +1,30 @@
 {
   "name": "drag-drop-webkit-mobile",
-  "description": "Shims drag-drop events for mobile webkit browsers (iOS).",
-  "version": "1.1.1",
-  "main": "ios-drag-drop.js",
+  "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
+  "version": "2.0.0",
+  "main": ["release/mobile-drag-and-drop-polyfill.min.js", "release/mobile-drag-and-drop-polyfill.css"],
   "ignore": [
     "*",
-    "!ios-drag-drop.js",
+    "!release/**/*",
     "!README.md"
   ],
   "authors": [
-    "Tim Ruffles <me@truffles.me.uk>"
+    "Tim Ruffles <me@truffles.me.uk>",
+    "Stefan Steinhart <stefansteinhart@artec-engineering.com>"
   ],
   "repository": {
     "type": "git",
     "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
   },
-  "license": "BSD-2-Clause",
+  "keywords": [
+    "dragdrop",
+    "drag-drop",
+    "html5",
+    "shim",
+    "mobile",
+    "polyfill"
+  ],
+  "license": "BSD 2 License",
   "moduleType": [
     "globals"
   ]
