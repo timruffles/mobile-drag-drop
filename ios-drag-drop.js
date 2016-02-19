@@ -290,6 +290,7 @@
         }
         evt.preventDefault();
         new DragDrop(evt,el);
+        break;
       }
     } while((el = el.parentNode) && el !== doc.body);
   }
