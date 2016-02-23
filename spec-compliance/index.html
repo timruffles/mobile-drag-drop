@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset=utf-8>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0001, minimum-scale=1.0001">
     <title>iOS shim for HTML5 Drag and drop</title>
     <link rel="stylesheet" href="demo.css">
     <script src="demo.js"></script>
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-icons.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-debug.css">
-    <script src="mobile-drag-and-drop-polyfill.js"></script>
-    <!--<script src="mobile-drag-and-drop-polyfill.min.js"></script>-->
+    <!--<script src="mobile-drag-and-drop-polyfill.js"></script>-->
+    <script src="mobile-drag-and-drop-polyfill.min.js"></script>
 </head>
 <body>
 <section id="wrapper">
@@ -210,6 +210,13 @@
                     </figure>
                 </div>
             </div>
+        </div>
+        <hr/>
+        <div>
+            <h3>Custom Drag Image</h3>
+            <ul>
+                <li draggable="true" class="custom">draggable with..</li>
+            </ul>
         </div>
     </article>
     <script>
@@ -509,6 +516,35 @@
                 alert('clicked on complex draggable');
             });
         });
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        var customDragImageDraggable = document.querySelectorAll('ul > li.custom');
+        for (var k = 0; k < flexboxedDraggables.length; k++) {
+            var customDragImage = customDragImageDraggable[k];
+            var clone;
+            addEvent(customDragImage, 'dragstart', function (event) {
+
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text', 'foo');
+
+                clone = this.cloneNode(true);
+                clone.innerHTML = "im custom!";
+                clone.style.backgroundColor = "red";
+
+                document.body.appendChild(clone);
+
+                event.dataTransfer.setDragImage(clone, 10, 10);
+            });
+
+            addEvent(customDragImage, 'dragend', function (event) {
+
+                document.body.removeChild(clone);
+                clone = null;
+            });
+        }
 
     </script>
     <footer>

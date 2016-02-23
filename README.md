@@ -1,4 +1,5 @@
 `TODO integrate travis ci, write unit and end2end tests (saucelabs?). if any browser starts to behave differently we should notice it.`
+`TODO add notes about file size`
 
 # Polyfill for HTML 5 drag'n'drop
 
@@ -25,11 +26,12 @@ Check out the demo to see it in action and monitor the console to see the events
 
 `bower install drag-drop-webkit-mobile --save`
 
+`TODO add instructions for jspm/webpack/.. etc`
 
 **Include**
 
 ```HTML
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, zoom-to-fit=no">
 <link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
 <script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
 ```
@@ -40,18 +42,6 @@ _You can try it out yourself and see what suits your application best ;)_
 **Initialize**
 
 ```JavaScript
-var options = {
-    log: function() {
-        // activate logging by implementing this method
-        var msg = "dnd-poly: ";
-        for (var i = 0; i < arguments.length; i++) {
-            msg += arguments[i];
-        }
-        console.log(msg);
-    },
-    dragImageClass: "my-custom-drag-image-style",
-    debug: false
-}
 // options are optional ;)
 MobileDragAndDropPolyfill.Initialize(options);
 ```
@@ -64,11 +54,9 @@ declare module MobileDragAndDropPolyfill {
     * polyfill config
     */
     interface Config {
-        log?:( ...args:any[] ) => void; // switch on/off logging by providing log fn
-        dragImageClass?:string;         // add custom class to dragImage
+        iterationInterval?: number;     // pause in ms between drag and drop processing model iterations 
         scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
         scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
-        debug?:boolean                  // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
     }
     /**
     * The polyfill must be actively initialized.
@@ -82,9 +70,7 @@ declare module MobileDragAndDropPolyfill {
 
 ## Customization
 
-You can provide a custom class that will be added to the dragImage-element via the [options](#options).
-
-The default class will be applied always. Of course you are free to specify any overrides on the default class.
+Override the classes that are applied by the polyfill.
 
 ```CSS
 .mobile-dnd-poly-drag-image {
@@ -101,6 +87,8 @@ The default class will be applied always. Of course you are free to specify any 
 .mobile-dnd-poly-drag-icon {
 }
 ```
+
+`TODO: currently the snapback-transition end is forced by a setTimeout() since transitionend-event was not reliable.. if someone wants to change the snapback duration the options should take the duration`
 
 Also there will be classes applied to the `dragImage`-element according to the
 current drop effect/operation on dragging: `none`, `copy`, `move`, `link`.
@@ -170,7 +158,7 @@ _empty cells mean there is nothing special to take into account_
     according to [caniuse](http://caniuse.com/#search=drag) so they allow it by default, which violates the spec. 
     If you have a handler set up you have to call `event.preventDefault()` to allow dropping.
     This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
-    which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make the it work.
+    which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make it work.
 *   FF:<a name="ff-quirk"></a> If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also.
 *   When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
 *   IE11 and Chrome scroll automatically when dragging close to a viewport edge.
@@ -199,6 +187,14 @@ To start working head to your terminal after checkout and execute:
 2. `grunt`
 
 3. start coding :)
+
+**Debugging**
+
+For debugging purposes you can include the non-minified polyfill and define `var DEBUG;` before you initialize. 
+This will result in verbose console output that helps to track down issues.
+
+Set `var DEBUG = true;` and include `mobile-drag-and-drop-polyfill-debug.css` to get visual feedback on the state
+of the drag and drop operation.
 
 ## Thanks
 

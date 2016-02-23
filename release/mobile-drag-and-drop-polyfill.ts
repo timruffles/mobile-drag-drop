@@ -1,7 +1,7 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
 declare var DEBUG:boolean;
 
-module MobileDragAndDropPolyfill {
+export module MobileDragAndDropPolyfill {
 
     //<editor-fold desc="feature detection">
 
@@ -384,8 +384,8 @@ module MobileDragAndDropPolyfill {
             };
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
             this._dragImage = createDragImage( this._sourceNode );
-            translateDragImage( this._dragImage, this._dragImagePageCoordinates );
-            document.body.appendChild( this._dragImage );
+            document.body.appendChild(this._dragImage);
+            //translateDragImage( this._dragImage, this._dragImagePageCoordinates );
 
             // 9. Fire a DND event named dragstart at the source node.
             this._dragDataStore._mode = DragDataStoreMode.READWRITE;
@@ -1203,7 +1203,8 @@ module MobileDragAndDropPolyfill {
 
             // no interaction with the drag image, pls! this is also important to make the drag image transparent for hit-testing
             // hit testing is done in the drag and drop iteration to find the element the user currently is hovering over while dragging
-            // if pointer-events is not none or a browser does behave in an unexpected way than the hit test will break
+            // if pointer-events is not none or a browser does behave in an unexpected way than the hit test transparency on the drag image
+            // will break
             dstNode.style[ "pointer-events" ] = "none";
 
             // Remove any potential conflict attributes

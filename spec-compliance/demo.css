@@ -519,3 +519,9 @@ div[draggable] {
     width: 100%;
     padding: 5% 0 0 0;
 }
+
+.custom {
+    border: 2px dashed gray;
+    background: #2e2e2e;
+    color: white;
+}

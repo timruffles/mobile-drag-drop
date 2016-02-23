@@ -4,16 +4,18 @@
 module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
+    // js minification
     uglify: {
       options: {
         banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */"
       },
-      release: {
+      js: {
         options: {
           mangle: true, // mangle var names
-          mangleProperties: true, // mangle props
+          mangleProperties: {
+            regex: /^_/
+          },
           reserveDOMProperties: true, // do not mangle DOM or js props
-          mangleRegex: /^_/,  // mangle all props starting with an `_`
           compress: {
             global_defs: {
               "DEBUG": false
@@ -30,73 +32,77 @@ module.exports = function (grunt) {
             evaluate: true
           },
           sourceMap: true,
-          sourceMapIn: "mobile-drag-and-drop-polyfill.js.map",
+          sourceMapIn: "src/mobile-drag-and-drop-polyfill.js.map",
           report: "min"
         },
-        src: "mobile-drag-and-drop-polyfill.js",
-        dest: "release/mobile-drag-and-drop-polyfill.min.js"
+        src: "src/mobile-drag-and-drop-polyfill.js",
+        dest: "src/mobile-drag-and-drop-polyfill.min.js"
       }
     },
+    // http server config for development and demo page
     connect: {
+      // starts a server that will serve the development sources with priority
+      // before sources of the demo page. allows to use demo page while developing.
       dev: {
         options: {
           port: 8000,
           // target development files
-          base: ['.', 'spec-compliance'],
-          open: true,
+          base: ["src", "spec-compliance"],
+          open: true
           //livereload: true
         }
       },
+      // serves the demo page
       release: {
         options: {
           keepalive: true,
           port: 8001,
-          base: ['spec-compliance']
+          base: ["spec-compliance"]
         }
       }
     },
+    // run tsc from grunt but use tsconfig.json
     ts: {
-      dev: {
-        src: ["*.ts", "!node_modules/**/*.ts"],
-        watch: ".",
-        options: {
-          target: "es5"
-        }
+      build: {
+        tsconfig: true
+      }
+    },
+    tslint: {
+      options: {
+        // can be a configuration object or a filepath to tslint.json
+        configuration: "tslint.json"
       },
-      release: {
-        src: ["*.ts", "!node_modules/**/*.ts"],
-        outDir: './release/',
-        options: {
-          noImplicitAny: true,
-          suppressImplicitAnyIndexErrors: true,
-          removeComments: true,
-          declaration: true,
-          fast: "never",
-          target: "es5"
-        }
-      },
-      es6: {
-        src: ["*.ts", "!node_modules/**/*.ts"],
-        out: "mobile-drag-and-drop-polyfill.es6.js",
-        options: {
-          declaration: false,
-          fast: "never",
-          target: "es6"
-        }
+      files: {
+        src: [
+          "src/mobile-drag-and-drop-polyfill.ts"
+        ]
       }
     },
     copy: {
+      // copy files from src to release folder
       release: {
         files: [
           // includes files within path
-          {expand: false, src: ['*.css'], dest: 'release/', filter: 'isFile'}
+          {expand: true, cwd: "src", src: ["*.css", "*.d.ts", "*.js"], dest: "release/", filter: "isFile", flatten: true}
         ]
       },
+      // copy files from release to demo page
       demoPage: {
         files: [
           // includes files within path
-          {expand: true, cwd: 'release', src: ['*.map', '*.js', '*.css'], dest: 'spec-compliance/', filter: 'isFile', flatten: true}
+          {expand: true, cwd: "release", src: ["*.map", "*.js", "*.css"], dest: "spec-compliance/", filter: "isFile", flatten: true}
         ]
+      }
+    },
+    // automatically recompile on changes
+    watch: {
+      ts: {
+        files: "src/**/*.ts",
+        tasks: ["ts:build", "tslint"],
+        options: {
+          debounceDelay: 250,
+          atBegin: true
+        }
       }
     }
   });
@@ -104,9 +110,13 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-contrib-connect");
   grunt.loadNpmTasks("grunt-contrib-copy");
+  grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ts");
+  grunt.loadNpmTasks("grunt-tslint");
 
-  grunt.registerTask("release", ["ts:release", "uglify:release", "copy:release", "copy:demoPage"]);
+  // build files, minify, copy to release folder and demo page (gh pages)
+  grunt.registerTask("release", ["ts:build", "tslint", "uglify:js", "copy:release", "copy:demoPage"]);
 
-  grunt.registerTask("default", ["connect:dev", "ts:dev"]);
+  // default task for developers to start coding
+  grunt.registerTask("default", ["connect:dev", "watch:ts"]);
 };
