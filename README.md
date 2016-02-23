@@ -1,4 +1,4 @@
-`TODO integrate travis ci, write unit and end2end tests (saucelabs?). if any browser starts to behave differently we should notice it.`
+`TODO tests? fancy state icons?`
 `TODO add notes about file size`
 
 # Polyfill for HTML 5 drag'n'drop
@@ -39,6 +39,8 @@ _The meta viewport tag is needed because mobile browsers zoom out when something
 _While this may be a good intent to give the user an overview on where he is and where he could drop something, it is quite choppy and interrupting UX._
 _You can try it out yourself and see what suits your application best ;)_
 
+`TODO need solutions that works with iOS 9.. badly..`
+
 **Initialize**
 
 ```JavaScript
@@ -61,8 +63,6 @@ declare module MobileDragAndDropPolyfill {
     /**
     * The polyfill must be actively initialized.
     * At this point you have the ability to pass a config.
-    * @param config
-    * @constructor
     */
     var Initialize: (config?: Config) => void;
 }
@@ -88,8 +88,6 @@ Override the classes that are applied by the polyfill.
 }
 ```
 
-`TODO: currently the snapback-transition end is forced by a setTimeout() since transitionend-event was not reliable.. if someone wants to change the snapback duration the options should take the duration`
-
 Also there will be classes applied to the `dragImage`-element according to the
 current drop effect/operation on dragging: `none`, `copy`, `move`, `link`.
 
@@ -98,9 +96,6 @@ There is a CSS-file you can drop in that defines default styles and icons:
 ```HTML
 <link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill-icons.css">
 ```
-
-`Note: Support for setDragImage() to override the dragImage has not yet arrived, contributions are welcome.`
-
 
 ## Compatibility and known issues
 
@@ -127,7 +122,7 @@ Chrome supports touch devices/events. When run on a desktop touch device like MS
 which also disables native drag and drop support. Touch events can also be set by a user in `chrome://flags` to `auto`, `on`, `off`.   
 Also there is a flag for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
 The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill
-when Chrome is detect with touch events enabled.
+when Chrome is detected with touch events enabled.
 
 **Firefox: <a name="firefox-issues"></a>**
 Touch events can be activated by a user in `about:config` to `0` (off), `1` (on), `2`(auto).
@@ -180,13 +175,13 @@ The project uses TypeScript as main language for several reasons:
 * type-safety & compiler support for easier maintenance
 * easily switch to ES6 when its ready
 
-To start working head to your terminal after checkout and execute:
+To get started execute:
 
 1. `npm install`
 
 2. `grunt`
 
-3. start coding :)
+3. start coding :) the browser should be automatically opened at the test page served on port 8000.
 
 **Debugging**
 
