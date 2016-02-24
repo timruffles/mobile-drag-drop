@@ -48,8 +48,8 @@ module.exports = function (grunt) {
           port: 8000,
           // target development files
           base: ["src", "spec-compliance"],
-          open: true
-          //livereload: true
+          open: true,
+          livereload: 35729
         }
       },
       // serves the demo page
@@ -101,7 +101,8 @@ module.exports = function (grunt) {
         tasks: ["ts:build", "tslint"],
         options: {
           debounceDelay: 250,
-          atBegin: true
+          atBegin: true,
+          livereload: 35729
         }
       }
     }
