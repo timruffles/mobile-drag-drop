@@ -61,7 +61,7 @@ module MobileDragAndDropPolyfill {
         dragImageOffset?:Point;
         // if the dragImage shall be centered on the touch coordinates
         // defaults to true
-        dragImageCenterOnTouch:boolean;
+        dragImageCenterOnTouch?:boolean;
         // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
         // defaults to 150ms
         iterationInterval?:number;
@@ -71,6 +71,12 @@ module MobileDragAndDropPolyfill {
         // how much px will be scrolled per animation frame iteration
         // defaults to 10px
         scrollVelocity?:number;
+        // hook for custom logic that decides if a drag operation should start
+        dragStartConditionOverride?:( event:TouchEvent ) => boolean;
+        // hook for custom logic that decides if and where the drag image should translate
+        //dragImageTranslateOverride?:( event:TouchEvent ) => boolean;
+        // hook for custom logic that can trigger a default event based on the original touch event because the drag never started
+        defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
 
     // default config
@@ -138,13 +144,11 @@ module MobileDragAndDropPolyfill {
             return;
         }
 
-        e.preventDefault();
-
         try {
             activeDragOperation = new DragOperationController( e, config, <HTMLElement>dragTarget, dragOperationEnded );
         }
         catch( err ) {
-            dragOperationEnded( e, DragOperationState.CANCELLED );
+            dragOperationEnded( config, e, DragOperationState.CANCELLED );
             // rethrow exception after cleanup
             throw err;
         }
@@ -183,50 +187,70 @@ module MobileDragAndDropPolyfill {
     /**
      * Implements callback invoked when a drag operation has ended or crashed.
      */
-    function dragOperationEnded( event:TouchEvent, state:DragOperationState ) {
+    function dragOperationEnded( _config:Config, event:TouchEvent, state:DragOperationState ) {
 
+        // we need to make the default action happen only when no drag operation took place
+        if( state === DragOperationState.POTENTIAL ) {
+
+            console.log( "dnd-poly: Drag never started. Last event was " + event.type );
+
+            var handled = false;
+
+            // on touchmove we dont do anything
+            if( event.type === "touchmove" ) {
+
+                handled = true;
+
+                console.log( "dnd-poly: Last drag event was touchmove - no default action for this." );
+            }
+            // when lifecycle hook is present let him handle it
+            else if( _config.defaultActionOverride ) {
+
+                try {
+                    handled = _config.defaultActionOverride( event );
+                }
+                catch( e ) {
+                    console.log( "dnd-poly: error in defaultActionOverride: " + e );
+                }
+
+                // lifecycle hook did the handling
+                if( handled ) {
+                    console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
+                }
+            }
+
+            // no one did handle it so we do the default thing
+            if( handled === false ) {
+
+                event.preventDefault();
+
+                var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
+                if( singleClick ) {
+
+                    var target = (<HTMLElement>event.target);
+                    var targetTagName = target.tagName;
+
+                    var mouseEventType:string;
+                    switch( targetTagName ) {
+                        case "SELECT":
+                        case "TEXTAREA":
+                            target.focus();
+                            break;
+                        default:
+                            mouseEventType = "click";
+                    }
+
+                    if( mouseEventType ) {
+                        console.log( "dnd-poly: dispatching default action: " + mouseEventType + " on " + targetTagName + " .." );
+                        var defaultEvent = createMouseEventFromTouch( target, event, mouseEventType );
+                        target.dispatchEvent( defaultEvent );
+                    }
+                }
+            }
+        }
+
+        // reset drag operation container
         activeDragOperation = null;
-
-        //TODO do we need support/detection for single-click, double-click, right-click?
-
-        var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
-
-        // this means the drag operation was not started so the "default action" of the original event should be applied
-        if( singleClick && state === DragOperationState.POTENTIAL ) {
-
-            var target = (<HTMLElement>event.target);
-            var targetTagName = target.tagName;
-
-            var mouseEventType:string;
-            switch( targetTagName ) {
-                case "INPUT":
-                    mouseEventType = mouseEventForInputType( target.getAttribute( "type" ) );
-                case "SELECT":
-                case "TEXTAREA":
-                    target.focus();
-                    break;
-                default:
-                    mouseEventType = "click";
-            }
-
-            if( mouseEventType ) {
-                console.log( "dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " .." );
-                var defaultEvent = createMouseEventFromTouch( target, event, mouseEventType );
-                target.dispatchEvent( defaultEvent );
-            }
-        }
-    }
-
-    function mouseEventForInputType( inputType:string ):string {
-        switch( inputType ) {
-            case "button":
-            case "checkbox":
-            case "radio":
-            case "file":
-            case "reset":
-            case "submit":
-                return "click";
-        }
     }
 
     //</editor-fold>
@@ -312,10 +336,10 @@ module MobileDragAndDropPolyfill {
         private _iterationLock:boolean;
         private _iterationIntervalId:number;
 
-        constructor( _initialEvent:TouchEvent,
+        constructor( private _initialEvent:TouchEvent,
                      private _config:Config,
                      private _sourceNode:HTMLElement,
-                     private _dragOperationEndedCb:( event:TouchEvent, state:DragOperationState ) => void ) {
+                     private _dragOperationEndedCb:( config:Config, event:TouchEvent, state:DragOperationState ) => void ) {
 
             console.log( "dnd-poly: setting up potential drag operation.." );
 
@@ -328,6 +352,8 @@ module MobileDragAndDropPolyfill {
             document.addEventListener( "touchmove", this._touchMoveHandler );
             document.addEventListener( "touchend", this._touchEndOrCancelHandler );
             document.addEventListener( "touchcancel", this._touchEndOrCancelHandler );
+
+            // the only thing we do is setup the touch listeners. if drag will really start is decided in touch move handler.
 
             //<spec>
 
@@ -460,6 +486,7 @@ module MobileDragAndDropPolyfill {
         }
 
         private _cleanup() {
+
             console.log( "dnd-poly: cleanup" );
 
             if( this._iterationIntervalId ) {
@@ -476,7 +503,7 @@ module MobileDragAndDropPolyfill {
                 this._dragImage = null;
             }
 
-            this._dragOperationEndedCb( this._lastTouchEvent, this._dragOperationState );
+            this._dragOperationEndedCb( this._config, this._lastTouchEvent, this._dragOperationState );
         }
 
         //</editor-fold>
@@ -490,13 +517,33 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
+            // update the reference to the last received touch event
+            this._lastTouchEvent = event;
+
             // drag operation did not start yet but on movement it should start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
 
-                //TODO here is the right place for invoking an optional hook that decides about starting the dnd operation
+                // by default only allow a single moving finger to initiate a drag operation
+                var startDrag = (event.touches.length === 1);
 
-                // only allow a single moving finger to initiate a drag operation
-                if( event.touches.length > 1 ) {
+                // is a lifecycle hook present?
+                if( this._config.dragStartConditionOverride ) {
+
+                    try {
+                        startDrag = this._config.dragStartConditionOverride( event );
+                    }
+                    catch( e ) {
+                        console.log( "dnd-poly: error in dragStartConditionOverride hook: " + e );
+                    }
+
+                    // we got undefined or some other unspecific value so we just do nothing
+                    // the hook has to return a boolean
+                    if( typeof startDrag !== "boolean" ) {
+                        return;
+                    }
+                }
+
+                if( !startDrag ) {
                     this._cleanup();
                     return;
                 }
@@ -504,15 +551,17 @@ module MobileDragAndDropPolyfill {
                 event.preventDefault();
                 event.stopImmediatePropagation();
 
+                this._initialEvent.preventDefault();
+
                 this._setup();
                 return;
             }
 
+            console.log( "dnd-poly: moving draggable.." );
+
             // we emulate d'n'd so we dont want any defaults to apply
             event.preventDefault();
             event.stopImmediatePropagation();
-
-            this._lastTouchEvent = event;
 
             // populate shared coordinates from touch event
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
@@ -552,8 +601,6 @@ module MobileDragAndDropPolyfill {
                 // will cancel eventual programmatic scrolling
                 this._scrollIntention.x = this._scrollIntention.y = 0;
             }
-
-            this._lastTouchEvent = event;
 
             // drag operation did not even start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
@@ -1024,6 +1071,7 @@ module MobileDragAndDropPolyfill {
 
     /**
      * Polyfills https://html.spec.whatwg.org/multipage/interaction.html#datatransfer
+     * TODO fail with errors when somebody uses it wrong so they know they are doing it wrong?
      */
     class DataTransfer {
 
@@ -1034,12 +1082,11 @@ module MobileDragAndDropPolyfill {
         }
 
         public get files():FileList {
-            return null;
+            return undefined;
         }
 
-        //TODO support items property in DataTransfer polyfill
         public get items():DataTransferItemList {
-            return null;
+            return undefined;
         }
 
         public get types():Array<string> {
@@ -1148,7 +1195,7 @@ module MobileDragAndDropPolyfill {
         return false;
     }
 
-    //TODO initMouseEvent is deprecated, replace by MouseEvent constructor?
+    //TODO initMouseEvent is deprecated, replace by MouseEvent constructor
     //TODO integrate feature detection to switch to MouseEvent constructor
     function createMouseEventFromTouch( targetElement:Element,
                                         e:TouchEvent,
@@ -1164,8 +1211,10 @@ module MobileDragAndDropPolyfill {
             touch.screenX, touch.screenY, touch.clientX, touch.clientY,
             e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget );
 
+        //mouseEvent.pageX = touch.pageX;
+        //mouseEvent.pageY = touch.pageY;
+
         var targetRect = targetElement.getBoundingClientRect();
-        //TODO is this working or are mouse event instances immutable?
         mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
         mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
 
@@ -1193,17 +1242,8 @@ module MobileDragAndDropPolyfill {
         dndEvent.screenY = touch.screenY;
         dndEvent.clientX = touch.clientX;
         dndEvent.clientY = touch.clientY;
-
-        //var dndEvent:DragEvent = <any>document.createEvent( "MouseEvents" );
-        //dndEvent.initMouseEvent( typeArg, true, cancelable,window, 1,
-        //    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
-        //    false, false, false, false, 0, relatedTarget );
-        //dndEvent.dataTransfer = <any>dataTransfer;
-
-        //var dndEvent:DragEvent = <any>document.createEvent( "DragEvents" );
-        //dndEvent.initDragEvent( typeArg, true, cancelable, window, 1,
-        //    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
-        //    false, false, false, false, 0, relatedTarget, <any>dataTransfer );
+        //dndEvent.pageX = touch.pageX;
+        //dndEvent.pageY = touch.pageY;
 
         var targetRect = targetElement.getBoundingClientRect();
         dndEvent.offsetX = dndEvent.clientX - targetRect.left;
