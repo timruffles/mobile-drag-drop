@@ -1204,15 +1204,15 @@ module MobileDragAndDropPolyfill {
                                         window:Window = document.defaultView,
                                         relatedTarget:Element = null ) {
 
-        var mouseEvent = document.createEvent( "MouseEvents" );
         var touch:Touch = e.changedTouches[ 0 ];
 
+        var mouseEvent = document.createEvent( "MouseEvents" );
         mouseEvent.initMouseEvent( typeArg, true, cancelable, window, 1,
             touch.screenX, touch.screenY, touch.clientX, touch.clientY,
             e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget );
 
-        //mouseEvent.pageX = touch.pageX;
-        //mouseEvent.pageY = touch.pageY;
+        mouseEvent.pageX = touch.pageX;
+        mouseEvent.pageY = touch.pageY;
 
         var targetRect = targetElement.getBoundingClientRect();
         mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
@@ -1234,16 +1234,18 @@ module MobileDragAndDropPolyfill {
 
         var dndEvent:DragEvent = <any>document.createEvent( "Event" );
         dndEvent.initEvent( typeArg, true, cancelable );
+
         // cast our polyfill
         dndEvent.dataTransfer = <any>dataTransfer;
         dndEvent.relatedTarget = relatedTarget;
+
         // set the coordinates
         dndEvent.screenX = touch.screenX;
         dndEvent.screenY = touch.screenY;
         dndEvent.clientX = touch.clientX;
         dndEvent.clientY = touch.clientY;
-        //dndEvent.pageX = touch.pageX;
-        //dndEvent.pageY = touch.pageY;
+        dndEvent.pageX = touch.pageX;
+        dndEvent.pageY = touch.pageY;
 
         var targetRect = targetElement.getBoundingClientRect();
         dndEvent.offsetX = dndEvent.clientX - targetRect.left;
