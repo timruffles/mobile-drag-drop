@@ -181,6 +181,8 @@
       var touch = event.changedTouches[0];
       enterEvt.pageX = touch.pageX;
       enterEvt.pageY = touch.pageY;
+      enterEvt.clientX = touch.clientX;
+      enterEvt.clientY = touch.clientY;
 
       this.lastEnter.dispatchEvent(enterEvt);
     },
@@ -198,6 +200,8 @@
       var touch = event.changedTouches[0];
       overEvt.pageX = touch.pageX;
       overEvt.pageY = touch.pageY;
+      overEvt.clientX = touch.clientX;
+      overEvt.clientY = touch.clientY;
 
       this.lastEnter.dispatchEvent(overEvt);
     },
@@ -215,6 +219,8 @@
       var touch = event.changedTouches[0];
       leaveEvt.pageX = touch.pageX;
       leaveEvt.pageY = touch.pageY;
+      leaveEvt.clientX = touch.clientX;
+      leaveEvt.clientY = touch.clientY;
 
       this.lastEnter.dispatchEvent(leaveEvt);
       this.lastEnter = null;
