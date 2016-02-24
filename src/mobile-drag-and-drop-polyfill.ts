@@ -454,6 +454,9 @@ module MobileDragAndDropPolyfill {
                 return;
             }
 
+            updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
+            this._dragImage = createDragImage( dragImageSrc );
+
             if( !this._dragImageOffset ) {
 
                 // apply specific offset
@@ -476,17 +479,18 @@ module MobileDragAndDropPolyfill {
                 else {
 
                     var initialTouch = this._initialTouch;
-                    var initialTarget = <HTMLElement>this._initialTouch.target;
+                    var initialTarget = dragImageSrc;
                     var targetRect = initialTarget.getBoundingClientRect();
+                    var cs = getComputedStyle(initialTarget, null);
+                    var leftMargin = parseInt( cs.getPropertyValue( "margin-left" ), 10 );
+                    var topMargin = parseInt( cs.getPropertyValue( "margin-top" ), 10 );
                     this._dragImageOffset = {
-                        x: targetRect.left - initialTouch.clientX,
-                        y: targetRect.top - initialTouch.clientY
+                        x: targetRect.left - initialTouch.clientX - leftMargin,
+                        y: targetRect.top - initialTouch.clientY - topMargin
                     };
                 }
             }
 
-            updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
-            this._dragImage = createDragImage( dragImageSrc );
             translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
             document.body.appendChild( this._dragImage );
 
