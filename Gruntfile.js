@@ -104,6 +104,13 @@ module.exports = function (grunt) {
           atBegin: true,
           livereload: 35729
         }
+      },
+      resources: {
+        files: ["src/**/*.css", "spec-compliance/**/*"],
+        options: {
+          debounceDelay: 500,
+          livereload: 35729
+        }
       }
     }
   });
@@ -119,5 +126,5 @@ module.exports = function (grunt) {
   grunt.registerTask("release", ["ts:build", "tslint", "uglify:js", "copy:release", "copy:demoPage"]);
 
   // default task for developers to start coding
-  grunt.registerTask("default", ["connect:dev", "watch:ts"]);
+  grunt.registerTask("default", ["connect:dev", "watch"]);
 };
