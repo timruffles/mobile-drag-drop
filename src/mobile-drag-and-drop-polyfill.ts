@@ -695,6 +695,8 @@ module MobileDragAndDropPolyfill {
                     debug_class_drop_target    = CLASS_PREFIX + "current-drop-target";
             }
 
+            var previousDragOperation = this._currentDragOperation;
+
             // Fire a DND event named drag event at the source node.
             this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
             this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
@@ -918,11 +920,15 @@ module MobileDragAndDropPolyfill {
             // "none"	        |  No operation allowed, dropping here will cancel the drag-and-drop operation.
             // ---------------------------------------------------------------------------------------------------------
 
-            for( var i = 0; i < DROP_EFFECTS.length; i++ ) {
-                this._dragImage.classList.remove( CLASS_PREFIX + DROP_EFFECTS[ i ] );
+            if( previousDragOperation !== this._currentDragOperation ) {
+                this._dragImage.classList.remove( CLASS_PREFIX + previousDragOperation );
             }
 
-            this._dragImage.classList.add( CLASS_PREFIX + this._currentDragOperation );
+            var currentDragOperationClass = CLASS_PREFIX + this._currentDragOperation;
+
+            if( this._dragImage.classList.contains( currentDragOperationClass ) === false ) {
+                this._dragImage.classList.add( currentDragOperationClass );
+            }
         }
 
         /**
@@ -1309,7 +1315,7 @@ module MobileDragAndDropPolyfill {
             }
 
             // no interaction with the drag image, pls! this is also important to make the drag image transparent for hit-testing
-            // hit testing is done in the drag and drop iteration to find the element the user currently is hovering over while dragging
+            // hit testing is done in the drag and drop iteration to find the element the user currently is hovering over while dragging.
             // if pointer-events is not none or a browser does behave in an unexpected way than the hit test transparency on the drag image
             // will break
             dstNode.style.pointerEvents = "none";
