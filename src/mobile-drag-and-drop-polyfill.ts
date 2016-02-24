@@ -81,7 +81,7 @@ module MobileDragAndDropPolyfill {
 
     // default config
     const config:Config = {
-        dragImageCenterOnTouch: true,
+        dragImageCenterOnTouch: false,
         iterationInterval: 150,
         scrollThreshold: 50,
         scrollVelocity: 10,
@@ -324,7 +324,7 @@ module MobileDragAndDropPolyfill {
 
         private _currentDragOperation:string;    // the current drag operation set according to the d'n'd processing model
 
-        private _initialTouchId:number;  // the identifier for the touch that initiated the drag operation
+        private _initialTouch:Touch;  // the identifier for the touch that initiated the drag operation
         private _touchMoveHandler:EventListener;
         private _touchEndOrCancelHandler:EventListener;
         private _lastTouchEvent:TouchEvent;
@@ -344,7 +344,7 @@ module MobileDragAndDropPolyfill {
             console.log( "dnd-poly: setting up potential drag operation.." );
 
             this._lastTouchEvent = _initialEvent;
-            this._initialTouchId = _initialEvent.changedTouches[ 0 ].identifier;
+            this._initialTouch = _initialEvent.changedTouches[ 0 ];
 
             // create bound event listeners
             this._touchMoveHandler = this._onTouchMove.bind( this );
@@ -431,19 +431,16 @@ module MobileDragAndDropPolyfill {
                 y: null
             };
 
-            this._dragImageOffset = this._config.dragImageOffset || {
-                    x: 0,
-                    y: 0
-                };
-
             var dragImageSrc:HTMLElement = this._sourceNode;
 
             this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x = 0, y = 0 ) => {
 
                 dragImageSrc = element;
 
-                this._dragImageOffset.x = x;
-                this._dragImageOffset.y = y;
+                this._dragImageOffset = {
+                    x: x,
+                    y: y
+                };
             } );
 
             // 9. Fire a DND event named dragstart at the source node.
@@ -455,6 +452,37 @@ module MobileDragAndDropPolyfill {
                 this._dragOperationState = DragOperationState.CANCELLED;
                 this._cleanup();
                 return;
+            }
+
+            if( !this._dragImageOffset ) {
+
+                // apply specific offset
+                if( this._config.dragImageOffset ) {
+
+                    this._dragImageOffset = {
+                        x: this._config.dragImageOffset.x,
+                        y: this._config.dragImageOffset.y
+                    };
+                }
+                // center drag image on touch coordinates
+                else if( this._config.dragImageCenterOnTouch ) {
+
+                    this._dragImageOffset = {
+                        x: 0,
+                        y: 0
+                    };
+                }
+                // by default initialize drag image offset the same as desktop
+                else {
+
+                    var initialTouch = this._initialTouch;
+                    var initialTarget = <HTMLElement>this._initialTouch.target;
+                    var targetRect = initialTarget.getBoundingClientRect();
+                    this._dragImageOffset = {
+                        x: targetRect.left - initialTouch.clientX,
+                        y: targetRect.top - initialTouch.clientY
+                    };
+                }
             }
 
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
@@ -513,7 +541,7 @@ module MobileDragAndDropPolyfill {
         private _onTouchMove( event:TouchEvent ) {
 
             // filter unrelated touches
-            if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouchId ) === false ) {
+            if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouch.identifier ) === false ) {
                 return;
             }
 
@@ -593,7 +621,7 @@ module MobileDragAndDropPolyfill {
         private _onTouchEndOrCancel( event:TouchEvent ) {
 
             // filter unrelated touches
-            if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouchId ) === false ) {
+            if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouch.identifier ) === false ) {
                 return;
             }
 
