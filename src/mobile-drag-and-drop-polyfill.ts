@@ -478,6 +478,8 @@ module MobileDragAndDropPolyfill {
             // drag operation did not start yet but on movement it should start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
 
+                //TODO here is the right place for invoking an optional hook that decides about starting the dnd operation
+
                 // only allow a single moving finger to initiate a drag operation
                 if( event.touches.length > 1 ) {
                     this._cleanup();
@@ -500,6 +502,8 @@ module MobileDragAndDropPolyfill {
             // populate shared coordinates from touch event
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
+
+            //TODO here is the right place for letting an optional hook decide if to translate the drag image (or scroll some container)
 
             this._scrollIntention.x = determineScrollIntention( this._currentHotspotCoordinates.x, window.innerWidth, this._config.scrollThreshold );
             this._scrollIntention.y = determineScrollIntention( this._currentHotspotCoordinates.y, window.innerHeight, this._config.scrollThreshold );
@@ -620,29 +624,18 @@ module MobileDragAndDropPolyfill {
                 // if drag failed transition snap back
                 if( dragFailed ) {
 
-                    var sourceNodeComputedStyle = window.getComputedStyle( this._sourceNode, null );
-                    var visiblity = sourceNodeComputedStyle.getPropertyValue( "visibility" );
-                    var display = sourceNodeComputedStyle.getPropertyValue( "display" );
-
-                    if( visiblity === "hidden" || display === "none" ) {
-                        console.log( "dnd-poly: source node is not visible. skipping snapback transition." );
-                        // shortcut to end the drag operation
+                    var snapbackActive = applyDragImageSnapback( this._sourceNode, this._dragImage, () => {
                         this._finishDragOperation();
-                    }
-                    else {
+                    } );
 
-                        triggerDragImageSnapback( detectedFeatures.transitionEnd, this._sourceNode, this._dragImage, () => {
-                            this._finishDragOperation();
-                        } );
+                    if( snapbackActive ) {
+                        return;
                     }
-
-                    return;
                 }
 
                 // Otherwise immediately
                 // Fire a DND event named dragend at the source node.
                 this._finishDragOperation();
-
                 return;
             }
 
@@ -1250,7 +1243,7 @@ module MobileDragAndDropPolyfill {
         }
     }
 
-    function createDragImage( sourceNode:HTMLElement ) {
+    function createDragImage( sourceNode:HTMLElement ):HTMLElement {
 
         var dragImage = <HTMLElement>sourceNode.cloneNode( true );
 
@@ -1294,39 +1287,59 @@ module MobileDragAndDropPolyfill {
         }
     }
 
-    function triggerDragImageSnapback( transitionEndEvent:string, sourceEl:HTMLElement, dragImage:HTMLElement, transitionEndCb:EventListener ):void {
+    /**
+     * calculates the coordinates of the drag source and transitions the drag image to those coordinates.
+     * the drag operation is finished after the transition has ended.
+     */
+    function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, transitionEndCb:EventListener ):boolean {
+
+        var cs = window.getComputedStyle( sourceEl, null );
+        var visiblity = cs.getPropertyValue( "visibility" );
+        var display = cs.getPropertyValue( "display" );
+
+        if( visiblity === "hidden" || display === "none" ) {
+            console.log( "dnd-poly: source node is not visible. skipping snapback transition." );
+            // shortcut to end the drag operation
+            return false;
+        }
 
         console.log( "dnd-poly: starting dragimage snap back" );
 
         // calc source node position
         var rect = sourceEl.getBoundingClientRect();
+
         var pnt:Point = {
             x: rect.left,
             y: rect.top
         };
+
+        // add scroll offset of document
+        //TODO this breaks on nested scrolls, does it?
         var scrollLeft = getSetScroll( ScrollAxis.HORIZONTAL );
         var scrollTop = getSetScroll( ScrollAxis.VERTICAL );
         pnt.x += scrollLeft;
         pnt.y += scrollTop;
 
-        //TODO seems to break in the demo page when dragging flex-box, find out when this is really needed
-        var cs = window.getComputedStyle( sourceEl, null );
-        var leftPadding = parseInt( cs.getPropertyValue( "padding-left" ), 10 );
-        var topPadding = parseInt( cs.getPropertyValue( "padding-top" ), 10 );
-        pnt.x -= leftPadding;
-        pnt.y -= topPadding;
-
-        // setup one-time transitionend listener
-        //once( dragImage, transitionEndEvent, transitionEndCb );
+        var leftMargin = parseInt( cs.getPropertyValue( "margin-left" ), 10 );
+        var topMargin = parseInt( cs.getPropertyValue( "margin-top" ), 10 );
+        pnt.x -= leftMargin;
+        pnt.y -= topMargin;
 
         // add class containing transition rules
         dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
 
+        var csDragImage = getComputedStyle( dragImage, null );
+        var durationInS = parseFloat( csDragImage.transitionDuration );
+        var delayInS = parseFloat( csDragImage.transitionDelay );
+
+        var durationInMs = Math.round((durationInS + delayInS) * 1000);
+
         // apply the translate
         translateDragImage( dragImage, pnt, undefined, false );
 
-        //TODO hack for when transitionEnd event fails, can we do better?
-        setTimeout( transitionEndCb, 250 );
+        setTimeout( transitionEndCb, durationInMs );
+
+        return true;
     }
 
     function determineScrollIntention( currentCoordinate:number, clientSize:number, threshold:number ):number {
