@@ -55,13 +55,27 @@ module MobileDragAndDropPolyfill {
     //<editor-fold desc="public api">
 
     export interface Config {
+        // useful for when you want the default drag image but still want to apply
+        // some static offset from touch coordinates to drag image coordinates
+        // defaults to (0,0)
+        dragImageOffset?:Point;
+        // if the dragImage shall be centered on the touch coordinates
+        // defaults to true
+        dragImageCenterOnTouch:boolean;
+        // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
+        // defaults to 150ms
         iterationInterval?:number;
-        scrollThreshold?:number;         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
-        scrollVelocity?:number;          // how much px will be scrolled per animation frame iteration
+        // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
+        // defaults to 50px
+        scrollThreshold?:number;
+        // how much px will be scrolled per animation frame iteration
+        // defaults to 10px
+        scrollVelocity?:number;
     }
 
     // default config
     const config:Config = {
+        dragImageCenterOnTouch: true,
         iterationInterval: 150,
         scrollThreshold: 50,
         scrollVelocity: 10,
@@ -83,7 +97,7 @@ module MobileDragAndDropPolyfill {
         if( override ) {
             // overwrite default config with user config
             Object.keys( override ).forEach( function( key ) {
-                config[ key ] = config[ key ];
+                config[ key ] = override[ key ];
             } );
         }
 
@@ -391,10 +405,10 @@ module MobileDragAndDropPolyfill {
                 y: null
             };
 
-            this._dragImageOffset = {
-                x: 0,
-                y: 0
-            };
+            this._dragImageOffset = this._config.dragImageOffset || {
+                    x: 0,
+                    y: 0
+                };
 
             var dragImageSrc:HTMLElement = this._sourceNode;
 
@@ -419,7 +433,7 @@ module MobileDragAndDropPolyfill {
 
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
             this._dragImage = createDragImage( dragImageSrc );
-            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset);
+            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
             document.body.appendChild( this._dragImage );
 
             this._scrollIntention = {
@@ -523,7 +537,7 @@ module MobileDragAndDropPolyfill {
             }
             else {
 
-                translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset );
+                translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
             }
         }
 
@@ -585,7 +599,7 @@ module MobileDragAndDropPolyfill {
                 this._dragImagePageCoordinates.y += verticalScroll;
             }
 
-            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset );
+            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
 
             // re-schedule animation frame callback
             this._scrollAnimationId = window.requestAnimationFrame( this._scrollAnimationFrameHandler );
@@ -1106,7 +1120,7 @@ module MobileDragAndDropPolyfill {
 
     //<editor-fold desc="util">
 
-    interface Point {
+    export interface Point {
         x:number;
         y:number;
     }
@@ -1333,7 +1347,7 @@ module MobileDragAndDropPolyfill {
         var durationInS = parseFloat( csDragImage.transitionDuration );
         var delayInS = parseFloat( csDragImage.transitionDelay );
 
-        var durationInMs = Math.round((durationInS + delayInS) * 1000);
+        var durationInMs = Math.round( (durationInS + delayInS) * 1000 );
 
         // apply the translate
         translateDragImage( dragImage, pnt, undefined, false );

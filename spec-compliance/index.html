@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-icons.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-debug.css">
-    <!--<script src="mobile-drag-and-drop-polyfill.js"></script>-->
-    <script src="mobile-drag-and-drop-polyfill.min.js"></script>
+    <script src="mobile-drag-and-drop-polyfill.js"></script>
+    <!--<script src="mobile-drag-and-drop-polyfill.min.js"></script>-->
 </head>
 <body>
 <section id="wrapper">
@@ -223,7 +223,13 @@
 
         var DEBUG = false;
 
-        MobileDragAndDropPolyfill.Initialize();
+        MobileDragAndDropPolyfill.Initialize({
+            dragImageCenterOnTouch: false,
+            dragImageOffset: {
+                x: 0,
+                y: 0
+            }
+        });
 
         /**
          * ---------------------------------------------------------------------------------------------------------
@@ -492,7 +498,7 @@
 
         var allComplexDraggables = [].concat(nestedComplexDraggables).concat(complexDraggables);
 
-        allComplexDraggables.forEach(function(item) {
+        allComplexDraggables.forEach(function (item) {
 
             addEvent(item, 'dragstart', function (event) {
 
