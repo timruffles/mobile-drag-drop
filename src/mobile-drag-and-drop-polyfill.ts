@@ -419,6 +419,7 @@ module MobileDragAndDropPolyfill {
 
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
             this._dragImage = createDragImage( dragImageSrc );
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset);
             document.body.appendChild( this._dragImage );
 
             this._scrollIntention = {
