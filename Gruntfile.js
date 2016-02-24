@@ -97,7 +97,7 @@ module.exports = function (grunt) {
     // automatically recompile on changes
     watch: {
       ts: {
-        files: "src/**/*.ts",
+        files: ["src/**/*.ts", "!src/**/*.d.ts"],
         tasks: ["ts:build", "tslint"],
         options: {
           debounceDelay: 250,
