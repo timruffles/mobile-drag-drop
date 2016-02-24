@@ -30,16 +30,24 @@ Check out the demo to see it in action and monitor the console to see the events
 
 **Include**
 
+Meta-Tag
+
 ```HTML
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, zoom-to-fit=no">
-<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
-<script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=no">
 ```
 _The meta viewport tag is needed because mobile browsers zoom out when something is dragged close to the right edge of the screen._
 _While this may be a good intent to give the user an overview on where he is and where he could drop something, it is quite choppy and interrupting UX._
+_For iOS9 the `shrink-to-fit=no` is especially important._
 _You can try it out yourself and see what suits your application best ;)_
 
-`TODO need solutions that works with iOS 9.. badly..`
+Static
+
+```HTML
+<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
+<script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
+```
+
+`TODO add instructions for jspm/webpack/.. etc`
 
 **Initialize**
 
@@ -179,7 +187,7 @@ To get started execute:
 
 1. `npm install`
 
-2. `grunt`
+2. `grunt` this will start a watch on typescript files, setup a development server with live-reload and do an initial transpilation and linting.
 
 3. start coding :) the browser should be automatically opened at the test page served on port 8000.
 
