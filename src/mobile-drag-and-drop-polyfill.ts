@@ -395,7 +395,7 @@ module MobileDragAndDropPolyfill {
          * Setup dragImage, input listeners and the drag
          * and drop process model iteration interval.
          */
-        private _setup() {
+        private _setup():boolean {
             console.log( "dnd-poly: starting drag and drop operation" );
 
             this._dragOperationState = DragOperationState.STARTED;
@@ -421,14 +421,14 @@ module MobileDragAndDropPolyfill {
 
             var dragImageSrc:HTMLElement = this._sourceNode;
 
-            this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x:number, y:number) => {
+            this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x:number, y:number ) => {
 
                 dragImageSrc = element;
 
-                if(typeof x === "number" && typeof y === "number") {
+                if( typeof x === "number" || typeof y === "number" ) {
                     this._dragImageOffset = {
-                        x: x,
-                        y: y
+                        x: x || 0,
+                        y: y || 0
                     };
                 }
             } );
@@ -441,7 +441,7 @@ module MobileDragAndDropPolyfill {
                 // dragstart has been prevented -> cancel d'n'd
                 this._dragOperationState = DragOperationState.CANCELLED;
                 this._cleanup();
-                return;
+                return false;
             }
 
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
@@ -499,6 +499,8 @@ module MobileDragAndDropPolyfill {
 
                 this._iterationLock = false;
             }, this._config.iterationInterval );
+
+            return true;
         }
 
         private _cleanup() {
@@ -564,12 +566,14 @@ module MobileDragAndDropPolyfill {
                     return;
                 }
 
-                event.preventDefault();
-                event.stopImmediatePropagation();
+                // setup will return true when drag operation starts
+                if( this._setup() === true ) {
 
-                this._initialEvent.preventDefault();
+                    // prevent scrolling when drag operation starts
+                    this._initialEvent.preventDefault();
+                    event.preventDefault();
+                }
 
-                this._setup();
                 return;
             }
 
@@ -577,7 +581,6 @@ module MobileDragAndDropPolyfill {
 
             // we emulate d'n'd so we dont want any defaults to apply
             event.preventDefault();
-            event.stopImmediatePropagation();
 
             // populate shared coordinates from touch event
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
@@ -628,7 +631,8 @@ module MobileDragAndDropPolyfill {
             if( this._config.dragImageTranslateOverride ) {
                 try {
                     /* tslint:disable */
-                    this._config.dragImageTranslateOverride(undefined, undefined, function() { });
+                    this._config.dragImageTranslateOverride( undefined, undefined, function() {
+                    } );
                 }
                 catch( e ) {
                     console.log( "dnd-poly: error in dragImageTranslateOverride hook: " + e );
