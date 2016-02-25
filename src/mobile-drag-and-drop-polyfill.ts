@@ -35,15 +35,15 @@ module MobileDragAndDropPolyfill {
 
         features.userAgentNotSupportingNativeDnD = (
             // if is mobile safari or android browser
-            /iPad|iPhone|iPod|Android/.test( navigator.userAgent )
+            (/iPad|iPhone|iPod|Android/.test( navigator.userAgent ))
             || // OR
             //if is blink(chrome/opera) with touch events enabled -> no native dnd
-            features.touchEvents && (detectedFeatures.isBlinkEngine)
+            ((features.touchEvents) && (features.isBlinkEngine))
         );
 
         if( DEBUG ) {
-            Object.keys( detectedFeatures ).forEach( function( key ) {
-                console.log( "dnd-poly: detected feature '" + key + " = " + detectedFeatures[ key ] + "'" );
+            Object.keys( features ).forEach( function( key ) {
+                console.log( "dnd-poly: detected feature '" + key + " = " + features[ key ] + "'" );
             } );
         }
 
@@ -65,16 +65,10 @@ module MobileDragAndDropPolyfill {
         // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
         // defaults to 150ms
         iterationInterval?:number;
-        // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
-        // defaults to 50px
-        scrollThreshold?:number;
-        // how much px will be scrolled per animation frame iteration
-        // defaults to 10px
-        scrollVelocity?:number;
         // hook for custom logic that decides if a drag operation should start
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
         // hook for custom logic that decides if and where the drag image should translate
-        //dragImageTranslateOverride?:( event:TouchEvent ) => boolean;
+        dragImageTranslateOverride?:( currentCoordinates:Point, hoveredElement:HTMLElement, translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ) => boolean;
         // hook for custom logic that can trigger a default event based on the original touch event because the drag never started
         defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
@@ -83,8 +77,6 @@ module MobileDragAndDropPolyfill {
     const config:Config = {
         dragImageCenterOnTouch: false,
         iterationInterval: 150,
-        scrollThreshold: 50,
-        scrollVelocity: 10,
     };
 
     export function Initialize( override?:Config ) {
@@ -203,19 +195,19 @@ module MobileDragAndDropPolyfill {
 
                 console.log( "dnd-poly: Last drag event was touchmove - no default action for this." );
             }
-            // when lifecycle hook is present let him handle it
+            // when lifecycle hook is present
             else if( _config.defaultActionOverride ) {
 
                 try {
                     handled = _config.defaultActionOverride( event );
+
+                    // lifecycle hook did the handling
+                    if( handled ) {
+                        console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
+                    }
                 }
                 catch( e ) {
                     console.log( "dnd-poly: error in defaultActionOverride: " + e );
-                }
-
-                // lifecycle hook did the handling
-                if( handled ) {
-                    console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
                 }
             }
 
@@ -328,10 +320,6 @@ module MobileDragAndDropPolyfill {
         private _touchMoveHandler:EventListener;
         private _touchEndOrCancelHandler:EventListener;
         private _lastTouchEvent:TouchEvent;
-
-        private _scrollIntention:Point;
-        private _scrollAnimationFrameHandler:FrameRequestCallback;
-        private _scrollAnimationId:number;
 
         private _iterationLock:boolean;
         private _iterationIntervalId:number;
@@ -481,7 +469,7 @@ module MobileDragAndDropPolyfill {
                     var initialTouch = this._initialTouch;
                     var initialTarget = dragImageSrc;
                     var targetRect = initialTarget.getBoundingClientRect();
-                    var cs = getComputedStyle(initialTarget, null);
+                    var cs = getComputedStyle( initialTarget, null );
                     var leftMargin = parseInt( cs.getPropertyValue( "margin-left" ), 10 );
                     var topMargin = parseInt( cs.getPropertyValue( "margin-top" ), 10 );
                     this._dragImageOffset = {
@@ -493,12 +481,6 @@ module MobileDragAndDropPolyfill {
 
             translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
             document.body.appendChild( this._dragImage );
-
-            this._scrollIntention = {
-                x: null,
-                y: null
-            };
-            this._scrollAnimationFrameHandler = this._scrollAnimation.bind( this );
 
             // 10. Initiate the drag-and-drop operation in a manner consistent with platform conventions, and as described below.
             this._iterationIntervalId = setInterval( () => {
@@ -599,27 +581,37 @@ module MobileDragAndDropPolyfill {
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
 
-            //TODO here is the right place for letting an optional hook decide if to translate the drag image (or scroll some container)
+            var handledDragImageTranslate = false;
 
-            this._scrollIntention.x = determineScrollIntention( this._currentHotspotCoordinates.x, window.innerWidth, this._config.scrollThreshold );
-            this._scrollIntention.y = determineScrollIntention( this._currentHotspotCoordinates.y, window.innerHeight, this._config.scrollThreshold );
+            if( this._config.dragImageTranslateOverride ) {
 
-            // check whether the current scroll has reached a limit
-            var horizontalScrollEndReached = scrollEndReached( ScrollAxis.HORIZONTAL, this._scrollIntention.x );
-            var verticalScrollEndReached = scrollEndReached( ScrollAxis.VERTICAL, this._scrollIntention.y );
+                try {
+                    handledDragImageTranslate = this._config.dragImageTranslateOverride(
+                        this._currentHotspotCoordinates,
+                        this._immediateUserSelection,
+                        ( scrollDiffX:number, scrollDiffY:number ) => {
 
-            // scrolling is possible
-            if( !horizontalScrollEndReached || !verticalScrollEndReached ) {
+                        // preventing translation of drag image when there was a drag operation cleanup meanwhile
+                        if( !this._dragImage ) {
+                            return;
+                        }
 
-                // start programmatic scroll when not already started
-                if( !this._scrollAnimationId ) {
-                    this._scrollAnimationId = window.requestAnimationFrame( this._scrollAnimationFrameHandler );
+                        this._dragImagePageCoordinates.x += scrollDiffX;
+                        this._dragImagePageCoordinates.y += scrollDiffY;
+
+                        translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
+                    } );
+
+                    if( handledDragImageTranslate ) {
+                        return;
+                    }
+                }
+                catch( e ) {
+                    console.log( "dnd-poly: error in dragImageTranslateOverride hook: " + e );
                 }
             }
-            else {
 
-                translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
-            }
+            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
         }
 
         private _onTouchEndOrCancel( event:TouchEvent ) {
@@ -627,11 +619,6 @@ module MobileDragAndDropPolyfill {
             // filter unrelated touches
             if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouch.identifier ) === false ) {
                 return;
-            }
-
-            if( this._scrollIntention ) {
-                // will cancel eventual programmatic scrolling
-                this._scrollIntention.x = this._scrollIntention.y = 0;
             }
 
             // drag operation did not even start
@@ -645,43 +632,6 @@ module MobileDragAndDropPolyfill {
             event.stopImmediatePropagation();
 
             this._dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
-        }
-
-        //</editor-fold>
-
-        //<editor-fold desc="programmatic scroll">
-
-        private _scrollAnimation() {
-
-            // check whether the current scroll has reached a limit
-            var horizontalScrollEndReached = scrollEndReached( ScrollAxis.HORIZONTAL, this._scrollIntention.x );
-            var verticalScrollEndReached = scrollEndReached( ScrollAxis.VERTICAL, this._scrollIntention.y );
-
-            // both scroll limits reached -> stop scroll
-            if( horizontalScrollEndReached && verticalScrollEndReached ) {
-                console.log( "dnd-poly: scroll end reached" );
-                this._scrollAnimationId = null;
-                return;
-            }
-
-            // update dragImage position according to scroll direction
-            if( !horizontalScrollEndReached ) {
-                //console.log( "dnd-poly: scrolling horizontally.." );
-                var horizontalScroll = this._scrollIntention.x * this._config.scrollVelocity;
-                getSetScroll( ScrollAxis.HORIZONTAL, horizontalScroll );
-                this._dragImagePageCoordinates.x += horizontalScroll;
-            }
-            if( !verticalScrollEndReached ) {
-                //console.log( "dnd-poly: scrolling vertically.." );
-                var verticalScroll = this._scrollIntention.y * this._config.scrollVelocity;
-                getSetScroll( ScrollAxis.VERTICAL, verticalScroll );
-                this._dragImagePageCoordinates.y += verticalScroll;
-            }
-
-            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
-
-            // re-schedule animation frame callback
-            this._scrollAnimationId = window.requestAnimationFrame( this._scrollAnimationFrameHandler );
         }
 
         //</editor-fold>
@@ -1119,13 +1069,13 @@ module MobileDragAndDropPolyfill {
                      private _setDragImageHandler:( image:Element, x:number, y:number ) => void ) {
         }
 
-        public get files():FileList {
-            return undefined;
-        }
-
-        public get items():DataTransferItemList {
-            return undefined;
-        }
+        //public get files():FileList {
+        //    return undefined;
+        //}
+        //
+        //public get items():DataTransferItemList {
+        //    return undefined;
+        //}
 
         public get types():Array<string> {
             if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED ) {
@@ -1410,8 +1360,8 @@ module MobileDragAndDropPolyfill {
 
         // add scroll offset of document
         //TODO this breaks on nested scrolls, does it?
-        var scrollLeft = getSetScroll( ScrollAxis.HORIZONTAL );
-        var scrollTop = getSetScroll( ScrollAxis.VERTICAL );
+        var scrollLeft = getDocumentScroll( "scrollLeft" );
+        var scrollTop = getDocumentScroll( "scrollTop" );
         pnt.x += scrollLeft;
         pnt.y += scrollTop;
 
@@ -1437,66 +1387,9 @@ module MobileDragAndDropPolyfill {
         return true;
     }
 
-    function determineScrollIntention( currentCoordinate:number, clientSize:number, threshold:number ):number {
-        // LEFT / TOP
-        if( currentCoordinate < threshold ) {
-            return -1;
-        }
-        // RIGHT / BOTTOM
-        else if( clientSize - currentCoordinate < threshold ) {
-            return 1;
-        }
-        // NONE
-        return 0;
-    }
-
-    const enum ScrollAxis {
-        HORIZONTAL,
-        VERTICAL
-    }
-
-    function getSetScroll( axis:ScrollAxis, scroll?:number ) {
-        var prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
-
-        // abstracting away compatibility issues on scroll properties of document/body
-
-        if( arguments.length === 1 ) {
-            return document.body[ prop ] || document.documentElement[ prop ];
-        }
-
-        document.documentElement[ prop ] += scroll;
-        document.body[ prop ] += scroll;
-    }
-
-    function scrollEndReached( axis:ScrollAxis, scrollIntention:number ) {
-        var scrollSizeProp = "scrollHeight",
-            clientSizeProp = "innerHeight",
-            scroll         = getSetScroll( axis );
-
-        if( axis === ScrollAxis.HORIZONTAL ) {
-            scrollSizeProp = "scrollWidth";
-            clientSizeProp = "innerWidth";
-        }
-
-        // wants to scroll to the right/bottom
-        if( scrollIntention > 0 ) {
-
-            // abstracting away compatibility issues on scroll properties of document/body
-            var scrollSize = document.body[ scrollSizeProp ] || document.documentElement[ scrollSizeProp ];
-
-            var clientSize = window[ clientSizeProp ];
-
-            // is already at the right/bottom edge
-            return (scroll + clientSize) >= (scrollSize);
-        }
-        // wants to scroll to the left/top
-        else if( scrollIntention < 0 ) {
-
-            // is already at left/top edge
-            return (scroll <= 0);
-        }
-        // no scroll
-        return true;
+    function getDocumentScroll( prop:string ) {
+        // abstracting compatibility issues on scroll properties of document/body
+        return document.body[ prop ] || document.documentElement[ prop ];
     }
 
     //</editor-fold>

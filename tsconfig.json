@@ -8,6 +8,7 @@
     "suppressImplicitAnyIndexErrors": true
   },
   "files": [
-    "./src/mobile-drag-and-drop-polyfill.ts"
+    "./src/mobile-drag-and-drop-polyfill.ts",
+    "./src/mobile-drag-and-drop-polyfill-scroll-behaviour.ts"
   ]
 }

@@ -7,36 +7,43 @@ module.exports = function (grunt) {
     // js minification
     uglify: {
       options: {
-        banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */"
+        mangle: true, // mangle var names
+        mangleProperties: {
+          regex: /^_/
+        },
+        reserveDOMProperties: true, // do not mangle DOM or js props
+        compress: {
+          global_defs: {
+            "DEBUG": false
+          },
+          drop_console: true, // remove console log statements
+          drop_debugger: true, // remove debugger statements
+          dead_code: true, // removes unreachable code
+          unused: true, // remove unused code
+          sequences: true,
+          if_return: true,
+          join_vars: true,
+          keep_fargs: true,
+          conditionals: true,
+          evaluate: true
+        },
+        sourceMap: true,
+        report: "min"
       },
-      js: {
+      main: {
         options: {
-          mangle: true, // mangle var names
-          mangleProperties: {
-            regex: /^_/
-          },
-          reserveDOMProperties: true, // do not mangle DOM or js props
-          compress: {
-            global_defs: {
-              "DEBUG": false
-            },
-            drop_console: true, // remove console log statements
-            drop_debugger: true, // remove debugger statements
-            dead_code: true, // removes unreachable code
-            unused: true, // remove unused code
-            sequences: true,
-            if_return: true,
-            join_vars: true,
-            keep_fargs: true,
-            conditionals: true,
-            evaluate: true
-          },
-          sourceMap: true,
-          sourceMapIn: "src/mobile-drag-and-drop-polyfill.js.map",
-          report: "min"
+          banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */",
+          sourceMapIn: "src/mobile-drag-and-drop-polyfill.js.map"
         },
         src: "src/mobile-drag-and-drop-polyfill.js",
         dest: "src/mobile-drag-and-drop-polyfill.min.js"
+      },
+      scroll: {
+        options: {
+          sourceMapIn: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.js.map"
+        },
+        src: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.js",
+        dest: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.min.js"
       }
     },
     // http server config for development and demo page
@@ -74,9 +81,14 @@ module.exports = function (grunt) {
       },
       files: {
         src: [
-          "src/mobile-drag-and-drop-polyfill.ts"
+          "src/*.ts",
+          "!src/*.d.ts"
         ]
       }
+    },
+    clean: {
+      release: ["release"],
+      demo: ["spec-compliance/mobile-drag-and-drop-polyfill*"]
     },
     copy: {
       // copy files from src to release folder
@@ -98,7 +110,7 @@ module.exports = function (grunt) {
     watch: {
       ts: {
         files: ["src/**/*.ts", "!src/**/*.d.ts"],
-        tasks: ["ts:build", "tslint"],
+        tasks: ["ts", "tslint"],
         options: {
           debounceDelay: 250,
           atBegin: true,
@@ -117,13 +129,14 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-contrib-connect");
+  grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ts");
   grunt.loadNpmTasks("grunt-tslint");
 
   // build files, minify, copy to release folder and demo page (gh pages)
-  grunt.registerTask("release", ["ts:build", "tslint", "uglify:js", "copy:release", "copy:demoPage"]);
+  grunt.registerTask("release", ["ts", "tslint", "uglify", "clean", "copy"]);
 
   // default task for developers to start coding
   grunt.registerTask("default", ["connect:dev", "watch"]);
