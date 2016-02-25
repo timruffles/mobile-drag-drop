@@ -421,14 +421,16 @@ module MobileDragAndDropPolyfill {
 
             var dragImageSrc:HTMLElement = this._sourceNode;
 
-            this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x = 0, y = 0 ) => {
+            this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x:number, y:number) => {
 
                 dragImageSrc = element;
 
-                this._dragImageOffset = {
-                    x: x,
-                    y: y
-                };
+                if(typeof x === "number" && typeof y === "number") {
+                    this._dragImageOffset = {
+                        x: x,
+                        y: y
+                    };
+                }
             } );
 
             // 9. Fire a DND event named dragstart at the source node.
