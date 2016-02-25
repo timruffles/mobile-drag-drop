@@ -591,16 +591,17 @@ module MobileDragAndDropPolyfill {
                         this._immediateUserSelection,
                         ( scrollDiffX:number, scrollDiffY:number ) => {
 
-                        // preventing translation of drag image when there was a drag operation cleanup meanwhile
-                        if( !this._dragImage ) {
-                            return;
+                            // preventing translation of drag image when there was a drag operation cleanup meanwhile
+                            if( !this._dragImage ) {
+                                return;
+                            }
+
+                            this._dragImagePageCoordinates.x += scrollDiffX;
+                            this._dragImagePageCoordinates.y += scrollDiffY;
+
+                            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
                         }
-
-                        this._dragImagePageCoordinates.x += scrollDiffX;
-                        this._dragImagePageCoordinates.y += scrollDiffY;
-
-                        translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
-                    } );
+                    );
 
                     if( handledDragImageTranslate ) {
                         return;
@@ -619,6 +620,17 @@ module MobileDragAndDropPolyfill {
             // filter unrelated touches
             if( isTouchIdentifierContainedInTouchEvent( event, this._initialTouch.identifier ) === false ) {
                 return;
+            }
+
+            // let the dragImageTranslateOverride know that its over
+            if( this._config.dragImageTranslateOverride ) {
+                try {
+                    /* tslint:disable */
+                    this._config.dragImageTranslateOverride(undefined, undefined, function() { });
+                }
+                catch( e ) {
+                    console.log( "dnd-poly: error in dragImageTranslateOverride hook: " + e );
+                }
             }
 
             // drag operation did not even start
