@@ -186,57 +186,15 @@ module MobileDragAndDropPolyfill {
 
             console.log( "dnd-poly: Drag never started. Last event was " + event.type );
 
-            var handled = false;
-
-            // on touchmove we dont do anything
-            if( event.type === "touchmove" ) {
-
-                handled = true;
-
-                console.log( "dnd-poly: Last drag event was touchmove - no default action for this." );
-            }
             // when lifecycle hook is present
-            else if( _config.defaultActionOverride ) {
-
+            if( _config.defaultActionOverride ) {
                 try {
-                    handled = _config.defaultActionOverride( event );
-
-                    // lifecycle hook did the handling
-                    if( handled ) {
+                    if(_config.defaultActionOverride( event )) {
                         console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
                     }
                 }
                 catch( e ) {
                     console.log( "dnd-poly: error in defaultActionOverride: " + e );
-                }
-            }
-
-            // no one did handle it so we do the default thing
-            if( handled === false ) {
-
-                event.preventDefault();
-
-                var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
-                if( singleClick ) {
-
-                    var target = (<HTMLElement>event.target);
-                    var targetTagName = target.tagName;
-
-                    var mouseEventType:string;
-                    switch( targetTagName ) {
-                        case "SELECT":
-                        case "TEXTAREA":
-                            target.focus();
-                            break;
-                        default:
-                            mouseEventType = "click";
-                    }
-
-                    if( mouseEventType ) {
-                        console.log( "dnd-poly: dispatching default action: " + mouseEventType + " on " + targetTagName + " .." );
-                        var defaultEvent = createMouseEventFromTouch( target, event, mouseEventType );
-                        target.dispatchEvent( defaultEvent );
-                    }
                 }
             }
         }
