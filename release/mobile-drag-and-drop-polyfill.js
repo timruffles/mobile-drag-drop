@@ -10,20 +10,19 @@ var MobileDragAndDropPolyfill;
             transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend",
             userAgentNotSupportingNativeDnD: false
         };
-        features.userAgentNotSupportingNativeDnD = (/iPad|iPhone|iPod|Android/.test(navigator.userAgent)
+        features.userAgentNotSupportingNativeDnD = ((/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
             ||
-                features.touchEvents && (detectedFeatures.isBlinkEngine));
+                ((features.touchEvents) && (features.isBlinkEngine)));
         if (DEBUG) {
-            Object.keys(detectedFeatures).forEach(function (key) {
-                console.log("dnd-poly: detected feature '" + key + " = " + detectedFeatures[key] + "'");
+            Object.keys(features).forEach(function (key) {
+                console.log("dnd-poly: detected feature '" + key + " = " + features[key] + "'");
             });
         }
         return features;
     }
     var config = {
+        dragImageCenterOnTouch: false,
         iterationInterval: 150,
-        scrollThreshold: 50,
-        scrollVelocity: 10,
     };
     function Initialize(override) {
         detectedFeatures = detectFeatures();
@@ -34,7 +33,7 @@ var MobileDragAndDropPolyfill;
         }
         if (override) {
             Object.keys(override).forEach(function (key) {
-                config[key] = config[key];
+                config[key] = override[key];
             });
         }
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
@@ -52,12 +51,11 @@ var MobileDragAndDropPolyfill;
         if (!dragTarget) {
             return;
         }
-        e.preventDefault();
         try {
             activeDragOperation = new DragOperationController(e, config, dragTarget, dragOperationEnded);
         }
         catch (err) {
-            dragOperationEnded(e, 3);
+            dragOperationEnded(config, e, 3);
             throw err;
         }
     }
@@ -72,40 +70,49 @@ var MobileDragAndDropPolyfill;
             }
         } while ((el = el.parentNode) && el !== document.body);
     }
-    function dragOperationEnded(event, state) {
+    function dragOperationEnded(_config, event, state) {
+        if (state === 0) {
+            console.log("dnd-poly: Drag never started. Last event was " + event.type);
+            var handled = false;
+            if (event.type === "touchmove") {
+                handled = true;
+                console.log("dnd-poly: Last drag event was touchmove - no default action for this.");
+            }
+            else if (_config.defaultActionOverride) {
+                try {
+                    handled = _config.defaultActionOverride(event);
+                    if (handled) {
+                        console.log("dnd-poly: defaultActionOverride has taken care of triggering the default action.");
+                    }
+                }
+                catch (e) {
+                    console.log("dnd-poly: error in defaultActionOverride: " + e);
+                }
+            }
+            if (handled === false) {
+                event.preventDefault();
+                var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
+                if (singleClick) {
+                    var target = event.target;
+                    var targetTagName = target.tagName;
+                    var mouseEventType;
+                    switch (targetTagName) {
+                        case "SELECT":
+                        case "TEXTAREA":
+                            target.focus();
+                            break;
+                        default:
+                            mouseEventType = "click";
+                    }
+                    if (mouseEventType) {
+                        console.log("dnd-poly: dispatching default action: " + mouseEventType + " on " + targetTagName + " ..");
+                        var defaultEvent = createMouseEventFromTouch(target, event, mouseEventType);
+                        target.dispatchEvent(defaultEvent);
+                    }
+                }
+            }
+        }
         activeDragOperation = null;
-        var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
-        if (singleClick && state === 0) {
-            var target = event.target;
-            var targetTagName = target.tagName;
-            var mouseEventType;
-            switch (targetTagName) {
-                case "INPUT":
-                    mouseEventType = mouseEventForInputType(target.getAttribute("type"));
-                case "SELECT":
-                case "TEXTAREA":
-                    target.focus();
-                    break;
-                default:
-                    mouseEventType = "click";
-            }
-            if (mouseEventType) {
-                console.log("dnd-poly: No movement on draggable. Dispatching " + mouseEventType + " on " + targetTagName + " ..");
-                var defaultEvent = createMouseEventFromTouch(target, event, mouseEventType);
-                target.dispatchEvent(defaultEvent);
-            }
-        }
-    }
-    function mouseEventForInputType(inputType) {
-        switch (inputType) {
-            case "button":
-            case "checkbox":
-            case "radio":
-            case "file":
-            case "reset":
-            case "submit":
-                return "click";
-        }
     }
     var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all"];
     var DROP_EFFECTS = ["none", "copy", "move", "link"];
@@ -116,6 +123,7 @@ var MobileDragAndDropPolyfill;
     var CLASS_DRAG_OPERATION_ICON = CLASS_PREFIX + "icon";
     var DragOperationController = (function () {
         function DragOperationController(_initialEvent, _config, _sourceNode, _dragOperationEndedCb) {
+            this._initialEvent = _initialEvent;
             this._config = _config;
             this._sourceNode = _sourceNode;
             this._dragOperationEndedCb = _dragOperationEndedCb;
@@ -124,7 +132,7 @@ var MobileDragAndDropPolyfill;
             this._currentDropTarget = null;
             console.log("dnd-poly: setting up potential drag operation..");
             this._lastTouchEvent = _initialEvent;
-            this._initialTouchId = _initialEvent.changedTouches[0].identifier;
+            this._initialTouch = _initialEvent.changedTouches[0];
             this._touchMoveHandler = this._onTouchMove.bind(this);
             this._touchEndOrCancelHandler = this._onTouchEndOrCancel.bind(this);
             document.addEventListener("touchmove", this._touchMoveHandler);
@@ -150,17 +158,15 @@ var MobileDragAndDropPolyfill;
                 x: null,
                 y: null
             };
-            this._dragImageOffset = {
-                x: 0,
-                y: 0
-            };
             var dragImageSrc = this._sourceNode;
             this._dataTransfer = new DataTransfer(this._dragDataStore, function (element, x, y) {
                 if (x === void 0) { x = 0; }
                 if (y === void 0) { y = 0; }
                 dragImageSrc = element;
-                _this._dragImageOffset.x = x;
-                _this._dragImageOffset.y = y;
+                _this._dragImageOffset = {
+                    x: x,
+                    y: y
+                };
             });
             this._dragDataStore._mode = 2;
             this._dataTransfer.dropEffect = DROP_EFFECTS[0];
@@ -172,12 +178,34 @@ var MobileDragAndDropPolyfill;
             }
             updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
             this._dragImage = createDragImage(dragImageSrc);
+            if (!this._dragImageOffset) {
+                if (this._config.dragImageOffset) {
+                    this._dragImageOffset = {
+                        x: this._config.dragImageOffset.x,
+                        y: this._config.dragImageOffset.y
+                    };
+                }
+                else if (this._config.dragImageCenterOnTouch) {
+                    this._dragImageOffset = {
+                        x: 0,
+                        y: 0
+                    };
+                }
+                else {
+                    var initialTouch = this._initialTouch;
+                    var initialTarget = dragImageSrc;
+                    var targetRect = initialTarget.getBoundingClientRect();
+                    var cs = getComputedStyle(initialTarget, null);
+                    var leftMargin = parseInt(cs.getPropertyValue("margin-left"), 10);
+                    var topMargin = parseInt(cs.getPropertyValue("margin-top"), 10);
+                    this._dragImageOffset = {
+                        x: targetRect.left - initialTouch.clientX - leftMargin,
+                        y: targetRect.top - initialTouch.clientY - topMargin
+                    };
+                }
+            }
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch);
             document.body.appendChild(this._dragImage);
-            this._scrollIntention = {
-                x: null,
-                y: null
-            };
-            this._scrollAnimationFrameHandler = this._scrollAnimation.bind(this);
             this._iterationIntervalId = setInterval(function () {
                 if (_this._iterationLock) {
                     console.log("dnd-poly: iteration skipped because previous iteration hast not yet finished.");
@@ -201,48 +229,67 @@ var MobileDragAndDropPolyfill;
                 this._dragImage.parentNode.removeChild(this._dragImage);
                 this._dragImage = null;
             }
-            this._dragOperationEndedCb(this._lastTouchEvent, this._dragOperationState);
+            this._dragOperationEndedCb(this._config, this._lastTouchEvent, this._dragOperationState);
         };
         DragOperationController.prototype._onTouchMove = function (event) {
-            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouchId) === false) {
+            var _this = this;
+            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouch.identifier) === false) {
                 return;
             }
+            this._lastTouchEvent = event;
             if (this._dragOperationState === 0) {
-                if (event.touches.length > 1) {
+                var startDrag = (event.touches.length === 1);
+                if (this._config.dragStartConditionOverride) {
+                    try {
+                        startDrag = this._config.dragStartConditionOverride(event);
+                    }
+                    catch (e) {
+                        console.log("dnd-poly: error in dragStartConditionOverride hook: " + e);
+                    }
+                    if (typeof startDrag !== "boolean") {
+                        return;
+                    }
+                }
+                if (!startDrag) {
                     this._cleanup();
                     return;
                 }
                 event.preventDefault();
                 event.stopImmediatePropagation();
+                this._initialEvent.preventDefault();
                 this._setup();
                 return;
             }
+            console.log("dnd-poly: moving draggable..");
             event.preventDefault();
             event.stopImmediatePropagation();
-            this._lastTouchEvent = event;
             updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
             updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
-            this._scrollIntention.x = determineScrollIntention(this._currentHotspotCoordinates.x, window.innerWidth, this._config.scrollThreshold);
-            this._scrollIntention.y = determineScrollIntention(this._currentHotspotCoordinates.y, window.innerHeight, this._config.scrollThreshold);
-            var horizontalScrollEndReached = scrollEndReached(0, this._scrollIntention.x);
-            var verticalScrollEndReached = scrollEndReached(1, this._scrollIntention.y);
-            if (!horizontalScrollEndReached || !verticalScrollEndReached) {
-                if (!this._scrollAnimationId) {
-                    this._scrollAnimationId = window.requestAnimationFrame(this._scrollAnimationFrameHandler);
+            var handledDragImageTranslate = false;
+            if (this._config.dragImageTranslateOverride) {
+                try {
+                    handledDragImageTranslate = this._config.dragImageTranslateOverride(this._currentHotspotCoordinates, this._immediateUserSelection, function (scrollDiffX, scrollDiffY) {
+                        if (!_this._dragImage) {
+                            return;
+                        }
+                        _this._dragImagePageCoordinates.x += scrollDiffX;
+                        _this._dragImagePageCoordinates.y += scrollDiffY;
+                        translateDragImage(_this._dragImage, _this._dragImagePageCoordinates, _this._dragImageOffset, _this._config.dragImageCenterOnTouch);
+                    });
+                    if (handledDragImageTranslate) {
+                        return;
+                    }
+                }
+                catch (e) {
+                    console.log("dnd-poly: error in dragImageTranslateOverride hook: " + e);
                 }
             }
-            else {
-                translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset);
-            }
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch);
         };
         DragOperationController.prototype._onTouchEndOrCancel = function (event) {
-            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouchId) === false) {
+            if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouch.identifier) === false) {
                 return;
             }
-            if (this._scrollIntention) {
-                this._scrollIntention.x = this._scrollIntention.y = 0;
-            }
-            this._lastTouchEvent = event;
             if (this._dragOperationState === 0) {
                 this._cleanup();
                 return;
@@ -251,32 +298,12 @@ var MobileDragAndDropPolyfill;
             event.stopImmediatePropagation();
             this._dragOperationState = (event.type === "touchcancel") ? 3 : 2;
         };
-        DragOperationController.prototype._scrollAnimation = function () {
-            var horizontalScrollEndReached = scrollEndReached(0, this._scrollIntention.x);
-            var verticalScrollEndReached = scrollEndReached(1, this._scrollIntention.y);
-            if (horizontalScrollEndReached && verticalScrollEndReached) {
-                console.log("dnd-poly: scroll end reached");
-                this._scrollAnimationId = null;
-                return;
-            }
-            if (!horizontalScrollEndReached) {
-                var horizontalScroll = this._scrollIntention.x * this._config.scrollVelocity;
-                getSetScroll(0, horizontalScroll);
-                this._dragImagePageCoordinates.x += horizontalScroll;
-            }
-            if (!verticalScrollEndReached) {
-                var verticalScroll = this._scrollIntention.y * this._config.scrollVelocity;
-                getSetScroll(1, verticalScroll);
-                this._dragImagePageCoordinates.y += verticalScroll;
-            }
-            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset);
-            this._scrollAnimationId = window.requestAnimationFrame(this._scrollAnimationFrameHandler);
-        };
         DragOperationController.prototype._dragAndDropProcessModelIteration = function () {
             var _this = this;
             if (DEBUG) {
                 var debug_class = CLASS_PREFIX + "debug", debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection", debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
             }
+            var previousDragOperation = this._currentDragOperation;
             this._dragDataStore._mode = 3;
             this._dataTransfer.dropEffect = DROP_EFFECTS[0];
             var dragCancelled = dispatchDragEvent("drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer);
@@ -287,19 +314,12 @@ var MobileDragAndDropPolyfill;
             if (dragCancelled || this._dragOperationState === 2 || this._dragOperationState === 3) {
                 var dragFailed = this._dragOperationEnded(this._dragOperationState);
                 if (dragFailed) {
-                    var sourceNodeComputedStyle = window.getComputedStyle(this._sourceNode, null);
-                    var visiblity = sourceNodeComputedStyle.getPropertyValue("visibility");
-                    var display = sourceNodeComputedStyle.getPropertyValue("display");
-                    if (visiblity === "hidden" || display === "none") {
-                        console.log("dnd-poly: source node is not visible. skipping snapback transition.");
-                        this._finishDragOperation();
+                    var snapbackActive = applyDragImageSnapback(this._sourceNode, this._dragImage, function () {
+                        _this._finishDragOperation();
+                    });
+                    if (snapbackActive) {
+                        return;
                     }
-                    else {
-                        triggerDragImageSnapback(detectedFeatures.transitionEnd, this._sourceNode, this._dragImage, function () {
-                            _this._finishDragOperation();
-                        });
-                    }
-                    return;
                 }
                 this._finishDragOperation();
                 return;
@@ -368,10 +388,13 @@ var MobileDragAndDropPolyfill;
                 }
             }
             console.log("dnd-poly: d'n'd iteration ended. current drag operation: " + this._currentDragOperation);
-            for (var i = 0; i < DROP_EFFECTS.length; i++) {
-                this._dragImage.classList.remove(CLASS_PREFIX + DROP_EFFECTS[i]);
+            if (previousDragOperation !== this._currentDragOperation) {
+                this._dragImage.classList.remove(CLASS_PREFIX + previousDragOperation);
             }
-            this._dragImage.classList.add(CLASS_PREFIX + this._currentDragOperation);
+            var currentDragOperationClass = CLASS_PREFIX + this._currentDragOperation;
+            if (this._dragImage.classList.contains(currentDragOperationClass) === false) {
+                this._dragImage.classList.add(currentDragOperationClass);
+            }
         };
         DragOperationController.prototype._dragOperationEnded = function (state) {
             console.log("dnd-poly: drag operation end detected with " + this._currentDragOperation);
@@ -425,20 +448,6 @@ var MobileDragAndDropPolyfill;
             this._setDragImageHandler = _setDragImageHandler;
             this._dropEffect = DROP_EFFECTS[0];
         }
-        Object.defineProperty(DataTransfer.prototype, "files", {
-            get: function () {
-                return null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(DataTransfer.prototype, "items", {
-            get: function () {
-                return null;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(DataTransfer.prototype, "types", {
             get: function () {
                 if (this._dataStore._mode !== 0) {
@@ -536,9 +545,11 @@ var MobileDragAndDropPolyfill;
         if (cancelable === void 0) { cancelable = true; }
         if (window === void 0) { window = document.defaultView; }
         if (relatedTarget === void 0) { relatedTarget = null; }
-        var mouseEvent = document.createEvent("MouseEvents");
         var touch = e.changedTouches[0];
+        var mouseEvent = document.createEvent("MouseEvents");
         mouseEvent.initMouseEvent(typeArg, true, cancelable, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget);
+        mouseEvent.pageX = touch.pageX;
+        mouseEvent.pageY = touch.pageY;
         var targetRect = targetElement.getBoundingClientRect();
         mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
         mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
@@ -555,6 +566,8 @@ var MobileDragAndDropPolyfill;
         dndEvent.screenY = touch.screenY;
         dndEvent.clientX = touch.clientX;
         dndEvent.clientY = touch.clientY;
+        dndEvent.pageX = touch.pageX;
+        dndEvent.pageY = touch.pageY;
         var targetRect = targetElement.getBoundingClientRect();
         dndEvent.offsetX = dndEvent.clientX - targetRect.left;
         dndEvent.offsetY = dndEvent.clientY - targetRect.top;
@@ -616,58 +629,39 @@ var MobileDragAndDropPolyfill;
             dragImage.style[transformProp] = translate;
         }
     }
-    function triggerDragImageSnapback(transitionEndEvent, sourceEl, dragImage, transitionEndCb) {
+    function applyDragImageSnapback(sourceEl, dragImage, transitionEndCb) {
+        var cs = window.getComputedStyle(sourceEl, null);
+        var visiblity = cs.getPropertyValue("visibility");
+        var display = cs.getPropertyValue("display");
+        if (visiblity === "hidden" || display === "none") {
+            console.log("dnd-poly: source node is not visible. skipping snapback transition.");
+            return false;
+        }
         console.log("dnd-poly: starting dragimage snap back");
         var rect = sourceEl.getBoundingClientRect();
         var pnt = {
             x: rect.left,
             y: rect.top
         };
-        var scrollLeft = getSetScroll(0);
-        var scrollTop = getSetScroll(1);
+        var scrollLeft = getDocumentScroll("scrollLeft");
+        var scrollTop = getDocumentScroll("scrollTop");
         pnt.x += scrollLeft;
         pnt.y += scrollTop;
-        var cs = window.getComputedStyle(sourceEl, null);
-        var leftPadding = parseInt(cs.getPropertyValue("padding-left"), 10);
-        var topPadding = parseInt(cs.getPropertyValue("padding-top"), 10);
-        pnt.x -= leftPadding;
-        pnt.y -= topPadding;
+        var leftMargin = parseInt(cs.getPropertyValue("margin-left"), 10);
+        var topMargin = parseInt(cs.getPropertyValue("margin-top"), 10);
+        pnt.x -= leftMargin;
+        pnt.y -= topMargin;
         dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
+        var csDragImage = getComputedStyle(dragImage, null);
+        var durationInS = parseFloat(csDragImage.transitionDuration);
+        var delayInS = parseFloat(csDragImage.transitionDelay);
+        var durationInMs = Math.round((durationInS + delayInS) * 1000);
         translateDragImage(dragImage, pnt, undefined, false);
-        setTimeout(transitionEndCb, 250);
-    }
-    function determineScrollIntention(currentCoordinate, clientSize, threshold) {
-        if (currentCoordinate < threshold) {
-            return -1;
-        }
-        else if (clientSize - currentCoordinate < threshold) {
-            return 1;
-        }
-        return 0;
-    }
-    function getSetScroll(axis, scroll) {
-        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
-        if (arguments.length === 1) {
-            return document.body[prop] || document.documentElement[prop];
-        }
-        document.documentElement[prop] += scroll;
-        document.body[prop] += scroll;
-    }
-    function scrollEndReached(axis, scrollIntention) {
-        var scrollSizeProp = "scrollHeight", clientSizeProp = "innerHeight", scroll = getSetScroll(axis);
-        if (axis === 0) {
-            scrollSizeProp = "scrollWidth";
-            clientSizeProp = "innerWidth";
-        }
-        if (scrollIntention > 0) {
-            var scrollSize = document.body[scrollSizeProp] || document.documentElement[scrollSizeProp];
-            var clientSize = window[clientSizeProp];
-            return (scroll + clientSize) >= (scrollSize);
-        }
-        else if (scrollIntention < 0) {
-            return (scroll <= 0);
-        }
+        setTimeout(transitionEndCb, durationInMs);
         return true;
+    }
+    function getDocumentScroll(prop) {
+        return document.body[prop] || document.documentElement[prop];
     }
     function determineDropEffect(effectAllowed, sourceNode) {
         if (!effectAllowed) {

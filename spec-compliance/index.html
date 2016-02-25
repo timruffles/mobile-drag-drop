@@ -9,8 +9,10 @@
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-icons.css">
     <link rel="stylesheet" href="mobile-drag-and-drop-polyfill-debug.css">
-    <script src="mobile-drag-and-drop-polyfill.js"></script>
-    <!--<script src="mobile-drag-and-drop-polyfill.min.js"></script>-->
+    <!--<script src="mobile-drag-and-drop-polyfill.js"></script>-->
+    <!--<script src="mobile-drag-and-drop-polyfill-scroll-behaviour.js"></script>-->
+    <script src="mobile-drag-and-drop-polyfill.min.js"></script>
+    <script src="mobile-drag-and-drop-polyfill-scroll-behaviour.min.js"></script>
 </head>
 <body>
 <section id="wrapper">
@@ -291,7 +293,8 @@
 //                y: 0
 //            },
 //            dragStartConditionOverride: allowHorizontalDragOnly,
-            defaultActionOverride: alertAction
+//            defaultActionOverride: alertAction,
+            dragImageTranslateOverride: MobileDragAndDropPolyfill.HandleDragImageTranslateOverride
         });
 
         /**
