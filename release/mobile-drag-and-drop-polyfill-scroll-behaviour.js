@@ -1,24 +1,42 @@
 var MobileDragAndDropPolyfill;
 (function (MobileDragAndDropPolyfill) {
     var _options = {
-        threshold: 50,
-        velocity: 10
+        threshold: 75,
+        velocityFn: function (velocity) {
+            var multiplier = .7;
+            var easeInCubic = multiplier * multiplier * multiplier;
+            return easeInCubic * velocity;
+        }
     };
-    var _scrollIntention = {
+    var _scrollIntentions = {
+        horizontal: 0,
+        vertical: 0
+    };
+    var _dynamicVelocity = {
         x: 0,
         y: 0
     };
     var _scrollAnimationFrameId;
+    var _currentCoordinates;
+    var _hoveredElement;
+    var _scrollableParent;
+    var _translateDragImageFn;
     function SetOptions(options) {
         Object.keys(options).forEach(function (key) {
             _options[key] = options[key];
         });
     }
     MobileDragAndDropPolyfill.SetOptions = SetOptions;
-    function HandleDragImageTranslateOverride(currentCoordinates, hoveredElement, translateDragImageFn) {
-        var performScrollAnimation = updateScrollIntention(currentCoordinates, _options.threshold, _scrollIntention);
+    function HandleDragImageTranslateOverride(event, currentCoordinates, hoveredElement, translateDragImageFn) {
+        _currentCoordinates = currentCoordinates;
+        _translateDragImageFn = translateDragImageFn;
+        if (_hoveredElement !== hoveredElement) {
+            _hoveredElement = hoveredElement;
+            _scrollableParent = findScrollableParent(_hoveredElement);
+        }
+        var performScrollAnimation = updateScrollIntentions(_currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity);
         if (performScrollAnimation) {
-            scheduleScrollAnimation(currentCoordinates, hoveredElement, translateDragImageFn);
+            scheduleScrollAnimation();
         }
         else if (!!_scrollAnimationFrameId) {
             window.cancelAnimationFrame(_scrollAnimationFrameId);
@@ -27,78 +45,148 @@ var MobileDragAndDropPolyfill;
         return performScrollAnimation;
     }
     MobileDragAndDropPolyfill.HandleDragImageTranslateOverride = HandleDragImageTranslateOverride;
-    function scheduleScrollAnimation(currentCoordinates, hoveredElement, translateDragImageFn) {
+    function scheduleScrollAnimation() {
         if (!!_scrollAnimationFrameId) {
             return;
         }
-        _scrollAnimationFrameId = window.requestAnimationFrame(function () {
-            scrollAnimation(currentCoordinates, hoveredElement, translateDragImageFn);
-        });
+        _scrollAnimationFrameId = window.requestAnimationFrame(scrollAnimation);
     }
-    function scrollAnimation(currentCoordinates, hoveredElement, translateDragImageFn) {
-        var scrollDiffX = 0, scrollDiffY = 0;
-        if (_scrollIntention.x) {
-            scrollDiffX = _scrollIntention.x * _options.velocity;
-            getSetScroll(0, scrollDiffX);
-            currentCoordinates.x += scrollDiffX;
+    function scrollAnimation() {
+        var scrollDiffX = 0, scrollDiffY = 0, isTopLevel = isTopLevelEl(_scrollableParent);
+        if (_scrollIntentions.horizontal !== 0) {
+            scrollDiffX = Math.round(_options.velocityFn(_dynamicVelocity.x) * _scrollIntentions.horizontal);
+            getSetElementScroll(_scrollableParent, 0, scrollDiffX);
         }
-        if (_scrollIntention.y) {
-            scrollDiffY = _scrollIntention.y * _options.velocity;
-            getSetScroll(1, scrollDiffY);
-            currentCoordinates.y += scrollDiffY;
+        if (_scrollIntentions.vertical !== 0) {
+            scrollDiffY = Math.round(_options.velocityFn(_dynamicVelocity.y) * _scrollIntentions.vertical);
+            getSetElementScroll(_scrollableParent, 1, scrollDiffY);
         }
-        translateDragImageFn(scrollDiffX, scrollDiffY);
+        if (isTopLevel) {
+            _translateDragImageFn(scrollDiffX, scrollDiffY);
+        }
+        else {
+            _translateDragImageFn(0, 0);
+        }
         _scrollAnimationFrameId = undefined;
-        if (updateScrollIntention(currentCoordinates, _options.threshold, _scrollIntention)) {
-            scheduleScrollAnimation(currentCoordinates, hoveredElement, translateDragImageFn);
+        if (updateScrollIntentions(_currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity)) {
+            scheduleScrollAnimation();
         }
     }
-    function determineScrollIntention(currentCoordinate, clientSize, threshold) {
+    function updateScrollIntentions(currentCoordinates, scrollableParent, threshold, scrollIntentions, dynamicVelocity) {
+        if (!currentCoordinates || !scrollableParent) {
+            return false;
+        }
+        var scrollableParentBounds = {
+            x: getElementViewportOffset(scrollableParent, 0),
+            y: getElementViewportOffset(scrollableParent, 1),
+            width: getElementViewportSize(scrollableParent, 0),
+            height: getElementViewportSize(scrollableParent, 1),
+            scrollX: getSetElementScroll(scrollableParent, 0),
+            scrollY: getSetElementScroll(scrollableParent, 1),
+            scrollWidth: scrollableParent.scrollWidth,
+            scrollHeight: scrollableParent.scrollHeight
+        };
+        var currentCoordinatesOffset = {
+            x: currentCoordinates.x - scrollableParentBounds.x,
+            y: currentCoordinates.y - scrollableParentBounds.y
+        };
+        scrollIntentions.horizontal = determineScrollIntention(currentCoordinatesOffset.x, scrollableParentBounds.width, threshold);
+        scrollIntentions.vertical = determineScrollIntention(currentCoordinatesOffset.y, scrollableParentBounds.height, threshold);
+        if (scrollIntentions.horizontal && isScrollEndReached(0, scrollIntentions.horizontal, scrollableParentBounds)) {
+            scrollIntentions.horizontal = 0;
+        }
+        else if (scrollIntentions.horizontal) {
+            dynamicVelocity.x = determineDynamicVelocity(scrollIntentions.horizontal, currentCoordinatesOffset.x, scrollableParentBounds.width, threshold);
+        }
+        if (scrollIntentions.vertical && isScrollEndReached(1, scrollIntentions.vertical, scrollableParentBounds)) {
+            scrollIntentions.vertical = 0;
+        }
+        else if (scrollIntentions.vertical) {
+            dynamicVelocity.y = determineDynamicVelocity(scrollIntentions.vertical, currentCoordinatesOffset.y, scrollableParentBounds.height, threshold);
+        }
+        return !!(scrollIntentions.horizontal || scrollIntentions.vertical);
+    }
+    function isTopLevelEl(el) {
+        return (el === document.body || el === document.documentElement);
+    }
+    function getElementViewportOffset(el, axis) {
+        var offset;
+        if (isTopLevelEl(el)) {
+            offset = (axis === 0) ? el.clientLeft : el.clientTop;
+        }
+        else {
+            var bounds = el.getBoundingClientRect();
+            offset = (axis === 0) ? bounds.left : bounds.top;
+        }
+        return offset;
+    }
+    function getElementViewportSize(el, axis) {
+        var size;
+        if (isTopLevelEl(el)) {
+            size = (axis === 0) ? window.innerWidth : window.innerHeight;
+        }
+        else {
+            size = (axis === 0) ? el.clientWidth : el.clientHeight;
+        }
+        return size;
+    }
+    function getSetElementScroll(el, axis, scroll) {
+        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
+        var isTopLevel = isTopLevelEl(el);
+        if (arguments.length === 2) {
+            if (isTopLevel) {
+                return document.body[prop] || document.documentElement[prop];
+            }
+            return el[prop];
+        }
+        if (isTopLevel) {
+            document.documentElement[prop] += scroll;
+            document.body[prop] += scroll;
+        }
+        else {
+            el[prop] += scroll;
+        }
+    }
+    function isScrollable(el) {
+        return el && ((el.scrollHeight > el.offsetHeight) || (el.scrollWidth > el.offsetWidth));
+    }
+    function findScrollableParent(el) {
+        do {
+            if (isScrollable(el)) {
+                return el;
+            }
+        } while ((el = el.parentNode) && el !== document.documentElement);
+        return undefined;
+    }
+    function determineScrollIntention(currentCoordinate, size, threshold) {
         if (currentCoordinate < threshold) {
             return -1;
         }
-        else if (clientSize - currentCoordinate < threshold) {
+        else if (size - currentCoordinate < threshold) {
             return 1;
         }
         return 0;
     }
-    function updateScrollIntention(currentCoordinates, threshold, scrollIntention) {
-        if (!currentCoordinates) {
-            return false;
+    function determineDynamicVelocity(scrollIntention, currentCoordinate, size, threshold) {
+        if (scrollIntention === -1) {
+            return Math.abs(currentCoordinate - threshold);
         }
-        scrollIntention.x = determineScrollIntention(currentCoordinates.x, window.innerWidth, threshold);
-        scrollIntention.y = determineScrollIntention(currentCoordinates.y, window.innerHeight, threshold);
-        if (scrollIntention.x && isScrollEndReached(0, scrollIntention.x)) {
-            scrollIntention.x = 0;
+        else if (scrollIntention === 1) {
+            return Math.abs(size - currentCoordinate - threshold);
         }
-        if (scrollIntention.y && isScrollEndReached(1, scrollIntention.y)) {
-            scrollIntention.y = 0;
-        }
-        return !!(scrollIntention.x || scrollIntention.y);
+        return 0;
     }
-    function isScrollEndReached(axis, scrollIntention) {
-        var scrollSizeProp = "scrollHeight", clientSizeProp = "innerHeight", scroll = getSetScroll(axis);
-        if (axis === 0) {
-            scrollSizeProp = "scrollWidth";
-            clientSizeProp = "innerWidth";
+    function isScrollEndReached(axis, scrollIntention, scrollBounds) {
+        var currentScrollOffset = (axis === 0) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
+        if (scrollIntention === 1) {
+            var maxScrollOffset = (axis === 0) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
+                scrollBounds.height);
+            return currentScrollOffset >= maxScrollOffset;
         }
-        if (scrollIntention > 0) {
-            var scrollSize = document.body[scrollSizeProp] || document.documentElement[scrollSizeProp];
-            var clientSize = window[clientSizeProp];
-            return (scroll + clientSize) >= (scrollSize);
-        }
-        else if (scrollIntention < 0) {
-            return (scroll <= 0);
+        else if (scrollIntention === -1) {
+            return (currentScrollOffset <= 0);
         }
         return true;
-    }
-    function getSetScroll(axis, scroll) {
-        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
-        if (arguments.length === 1) {
-            return document.body[prop] || document.documentElement[prop];
-        }
-        document.documentElement[prop] += scroll;
-        document.body[prop] += scroll;
     }
 })(MobileDragAndDropPolyfill || (MobileDragAndDropPolyfill = {}));
 //# sourceMappingURL=mobile-drag-and-drop-polyfill-scroll-behaviour.js.map

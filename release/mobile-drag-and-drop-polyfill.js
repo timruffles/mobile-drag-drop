@@ -73,42 +73,14 @@ var MobileDragAndDropPolyfill;
     function dragOperationEnded(_config, event, state) {
         if (state === 0) {
             console.log("dnd-poly: Drag never started. Last event was " + event.type);
-            var handled = false;
-            if (event.type === "touchmove") {
-                handled = true;
-                console.log("dnd-poly: Last drag event was touchmove - no default action for this.");
-            }
-            else if (_config.defaultActionOverride) {
+            if (_config.defaultActionOverride) {
                 try {
-                    handled = _config.defaultActionOverride(event);
-                    if (handled) {
+                    if (_config.defaultActionOverride(event)) {
                         console.log("dnd-poly: defaultActionOverride has taken care of triggering the default action.");
                     }
                 }
                 catch (e) {
                     console.log("dnd-poly: error in defaultActionOverride: " + e);
-                }
-            }
-            if (handled === false) {
-                event.preventDefault();
-                var singleClick = event.touches.length === 0 && event.changedTouches.length === 1;
-                if (singleClick) {
-                    var target = event.target;
-                    var targetTagName = target.tagName;
-                    var mouseEventType;
-                    switch (targetTagName) {
-                        case "SELECT":
-                        case "TEXTAREA":
-                            target.focus();
-                            break;
-                        default:
-                            mouseEventType = "click";
-                    }
-                    if (mouseEventType) {
-                        console.log("dnd-poly: dispatching default action: " + mouseEventType + " on " + targetTagName + " ..");
-                        var defaultEvent = createMouseEventFromTouch(target, event, mouseEventType);
-                        target.dispatchEvent(defaultEvent);
-                    }
                 }
             }
         }
@@ -160,13 +132,13 @@ var MobileDragAndDropPolyfill;
             };
             var dragImageSrc = this._sourceNode;
             this._dataTransfer = new DataTransfer(this._dragDataStore, function (element, x, y) {
-                if (x === void 0) { x = 0; }
-                if (y === void 0) { y = 0; }
                 dragImageSrc = element;
-                _this._dragImageOffset = {
-                    x: x,
-                    y: y
-                };
+                if (typeof x === "number" || typeof y === "number") {
+                    _this._dragImageOffset = {
+                        x: x || 0,
+                        y: y || 0
+                    };
+                }
             });
             this._dragDataStore._mode = 2;
             this._dataTransfer.dropEffect = DROP_EFFECTS[0];
@@ -174,7 +146,7 @@ var MobileDragAndDropPolyfill;
                 console.log("dnd-poly: dragstart cancelled");
                 this._dragOperationState = 3;
                 this._cleanup();
-                return;
+                return false;
             }
             updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
             this._dragImage = createDragImage(dragImageSrc);
@@ -215,6 +187,7 @@ var MobileDragAndDropPolyfill;
                 _this._dragAndDropProcessModelIteration();
                 _this._iterationLock = false;
             }, this._config.iterationInterval);
+            return true;
         };
         DragOperationController.prototype._cleanup = function () {
             console.log("dnd-poly: cleanup");
@@ -254,26 +227,30 @@ var MobileDragAndDropPolyfill;
                     this._cleanup();
                     return;
                 }
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                this._initialEvent.preventDefault();
-                this._setup();
+                if (this._setup() === true) {
+                    this._initialEvent.preventDefault();
+                    event.preventDefault();
+                }
                 return;
             }
             console.log("dnd-poly: moving draggable..");
             event.preventDefault();
-            event.stopImmediatePropagation();
             updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
             updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
             var handledDragImageTranslate = false;
             if (this._config.dragImageTranslateOverride) {
                 try {
-                    handledDragImageTranslate = this._config.dragImageTranslateOverride(this._currentHotspotCoordinates, this._immediateUserSelection, function (scrollDiffX, scrollDiffY) {
+                    handledDragImageTranslate = this._config.dragImageTranslateOverride(event, {
+                        x: this._currentHotspotCoordinates.x,
+                        y: this._currentHotspotCoordinates.y
+                    }, this._immediateUserSelection, function (offsetX, offsetY) {
                         if (!_this._dragImage) {
                             return;
                         }
-                        _this._dragImagePageCoordinates.x += scrollDiffX;
-                        _this._dragImagePageCoordinates.y += scrollDiffY;
+                        _this._currentHotspotCoordinates.x += offsetX;
+                        _this._currentHotspotCoordinates.y += offsetY;
+                        _this._dragImagePageCoordinates.x += offsetX;
+                        _this._dragImagePageCoordinates.y += offsetY;
                         translateDragImage(_this._dragImage, _this._dragImagePageCoordinates, _this._dragImageOffset, _this._config.dragImageCenterOnTouch);
                     });
                     if (handledDragImageTranslate) {
@@ -289,6 +266,15 @@ var MobileDragAndDropPolyfill;
         DragOperationController.prototype._onTouchEndOrCancel = function (event) {
             if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouch.identifier) === false) {
                 return;
+            }
+            if (this._config.dragImageTranslateOverride) {
+                try {
+                    this._config.dragImageTranslateOverride(undefined, undefined, undefined, function () {
+                    });
+                }
+                catch (e) {
+                    console.log("dnd-poly: error in dragImageTranslateOverride hook: " + e);
+                }
             }
             if (this._dragOperationState === 0) {
                 this._cleanup();
@@ -541,25 +527,13 @@ var MobileDragAndDropPolyfill;
         }
         return false;
     }
-    function createMouseEventFromTouch(targetElement, e, typeArg, cancelable, window, relatedTarget) {
-        if (cancelable === void 0) { cancelable = true; }
-        if (window === void 0) { window = document.defaultView; }
+    function createDragEventFromTouch(targetElement, e, type, cancelable, window, dataTransfer, relatedTarget) {
         if (relatedTarget === void 0) { relatedTarget = null; }
         var touch = e.changedTouches[0];
-        var mouseEvent = document.createEvent("MouseEvents");
-        mouseEvent.initMouseEvent(typeArg, true, cancelable, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget);
-        mouseEvent.pageX = touch.pageX;
-        mouseEvent.pageY = touch.pageY;
-        var targetRect = targetElement.getBoundingClientRect();
-        mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
-        mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
-        return mouseEvent;
-    }
-    function createDragEventFromTouch(targetElement, e, typeArg, cancelable, window, dataTransfer, relatedTarget) {
-        if (relatedTarget === void 0) { relatedTarget = null; }
-        var touch = e.changedTouches[0];
-        var dndEvent = document.createEvent("Event");
-        dndEvent.initEvent(typeArg, true, cancelable);
+        var dndEvent = new Event(type, {
+            bubbles: true,
+            cancelable: cancelable
+        });
         dndEvent.dataTransfer = dataTransfer;
         dndEvent.relatedTarget = relatedTarget;
         dndEvent.screenX = touch.screenX;

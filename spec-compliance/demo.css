@@ -525,3 +525,44 @@ div[draggable] {
     background: #2e2e2e;
     color: white;
 }
+
+.drag-handle {
+    display: inline;
+}
+
+li.draggable {
+    box-sizing: border-box;
+    color: #000;
+    margin: 10px;
+    border: 3px dashed #999;
+    background: #eee;
+    display: flex;
+    box-shadow: 0 0 6px 0 rgba(0,0,0,.5);
+}
+
+li .drag-handle {
+    height: 15px;
+    width: 15px;
+    text-align: center;
+    margin: 10px;
+    padding: 15px;
+    background-color: darkgray;
+    color: white;
+    border: 1px white solid;
+    border-radius: 50%;
+}
+
+li .no-drag {
+    flex: 1 1 100%;
+    display: flex;
+}
+
+.scroll-container {
+    -webkit-overflow-scrolling: touch;
+    height: 180px;
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid gray;
+    background-color: #888888;
+    box-shadow: inset 0 0 5px 0 rgba(0, 0, 0, .5);
+}

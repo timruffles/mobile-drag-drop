@@ -5,7 +5,7 @@ declare module MobileDragAndDropPolyfill {
         dragImageCenterOnTouch?: boolean;
         iterationInterval?: number;
         dragStartConditionOverride?: (event: TouchEvent) => boolean;
-        dragImageTranslateOverride?: (currentCoordinates: Point, hoveredElement: HTMLElement, translateDragImageFn: (scrollDiffX: number, scrollDiffY: number) => void) => boolean;
+        dragImageTranslateOverride?: (event: TouchEvent, hoverCoordinates: Point, hoveredElement: HTMLElement, translateDragImageFn: (scrollDiffX: number, scrollDiffY: number) => void) => boolean;
         defaultActionOverride?: (event: TouchEvent) => boolean;
     }
     function Initialize(override?: Config): void;
