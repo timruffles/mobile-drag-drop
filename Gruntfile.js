@@ -56,7 +56,7 @@ module.exports = function (grunt) {
           // target development files
           base: ["src", "spec-compliance"],
           open: true,
-          livereload: 35729
+          livereload: 35731
         }
       },
       // serves the demo page
@@ -114,14 +114,14 @@ module.exports = function (grunt) {
         options: {
           debounceDelay: 250,
           atBegin: true,
-          livereload: 35729
+          livereload: 35731
         }
       },
       resources: {
         files: ["src/**/*.css", "spec-compliance/**/*"],
         options: {
           debounceDelay: 500,
-          livereload: 35729
+          livereload: 35731
         }
       }
     }

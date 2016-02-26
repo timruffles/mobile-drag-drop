@@ -40,7 +40,7 @@
     "no-unreachable": true,
     "no-use-before-declare": true,
     "no-var-keyword": false,
-    "object-literal-sort-keys": true,
+    "object-literal-sort-keys": false,
     "one-line": [true,
       "check-open-brace",
       "check-whitespace"
