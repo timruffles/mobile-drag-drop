@@ -68,7 +68,10 @@ module MobileDragAndDropPolyfill {
         // hook for custom logic that decides if a drag operation should start
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
         // hook for custom logic that decides if and where the drag image should translate
-        dragImageTranslateOverride?:( currentCoordinates:Point, hoveredElement:HTMLElement, translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ) => boolean;
+        dragImageTranslateOverride?:( event:TouchEvent,
+                                      hoverCoordinates:Point,
+                                      hoveredElement:HTMLElement,
+                                      translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ) => boolean;
         // hook for custom logic that can trigger a default event based on the original touch event because the drag never started
         defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
@@ -550,17 +553,23 @@ module MobileDragAndDropPolyfill {
 
                 try {
                     handledDragImageTranslate = this._config.dragImageTranslateOverride(
-                        this._currentHotspotCoordinates,
+                        event,
+                        {
+                            x: this._currentHotspotCoordinates.x,
+                            y: this._currentHotspotCoordinates.y
+                        },
                         this._immediateUserSelection,
-                        ( scrollDiffX:number, scrollDiffY:number ) => {
+                        ( offsetX:number, offsetY:number ) => {
 
                             // preventing translation of drag image when there was a drag operation cleanup meanwhile
                             if( !this._dragImage ) {
                                 return;
                             }
 
-                            this._dragImagePageCoordinates.x += scrollDiffX;
-                            this._dragImagePageCoordinates.y += scrollDiffY;
+                            this._currentHotspotCoordinates.x += offsetX;
+                            this._currentHotspotCoordinates.y += offsetY;
+                            this._dragImagePageCoordinates.x += offsetX;
+                            this._dragImagePageCoordinates.y += offsetY;
 
                             translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
                         }
@@ -589,7 +598,7 @@ module MobileDragAndDropPolyfill {
             if( this._config.dragImageTranslateOverride ) {
                 try {
                     /* tslint:disable */
-                    this._config.dragImageTranslateOverride( undefined, undefined, function() {
+                    this._config.dragImageTranslateOverride( undefined, undefined, undefined, function() {
                     } );
                 }
                 catch( e ) {
