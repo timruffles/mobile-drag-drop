@@ -1159,36 +1159,9 @@ module MobileDragAndDropPolyfill {
         return false;
     }
 
-    //TODO initMouseEvent is deprecated, replace by MouseEvent constructor
-    //TODO integrate feature detection to switch to MouseEvent constructor
-    function createMouseEventFromTouch( targetElement:Element,
-                                        e:TouchEvent,
-                                        typeArg:string,
-                                        cancelable = true,
-                                        window:Window = document.defaultView,
-                                        relatedTarget:Element = null ) {
-
-        var touch:Touch = e.changedTouches[ 0 ];
-
-        var mouseEvent = document.createEvent( "MouseEvents" );
-        mouseEvent.initMouseEvent( typeArg, true, cancelable, window, 1,
-            touch.screenX, touch.screenY, touch.clientX, touch.clientY,
-            e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, relatedTarget );
-
-        mouseEvent.pageX = touch.pageX;
-        mouseEvent.pageY = touch.pageY;
-
-        var targetRect = targetElement.getBoundingClientRect();
-        mouseEvent.offsetX = mouseEvent.clientX - targetRect.left;
-        mouseEvent.offsetY = mouseEvent.clientY - targetRect.top;
-
-        return mouseEvent;
-    }
-
-    //TODO initEvent is deprecated, replace by Event constructor?
     function createDragEventFromTouch( targetElement:Element,
                                        e:TouchEvent,
-                                       typeArg:string,
+                                       type:string,
                                        cancelable:boolean,
                                        window:Window,
                                        dataTransfer:DataTransfer,
@@ -1196,8 +1169,10 @@ module MobileDragAndDropPolyfill {
 
         var touch:Touch = e.changedTouches[ 0 ];
 
-        var dndEvent:DragEvent = <any>document.createEvent( "Event" );
-        dndEvent.initEvent( typeArg, true, cancelable );
+        var dndEvent:DragEvent = <DragEvent>new Event( type, {
+            bubbles: true,
+            cancelable: cancelable
+        } );
 
         // cast our polyfill
         dndEvent.dataTransfer = <any>dataTransfer;
@@ -1335,7 +1310,6 @@ module MobileDragAndDropPolyfill {
         };
 
         // add scroll offset of document
-        //TODO this breaks on nested scrolls, does it?
         var scrollLeft = getDocumentScroll( "scrollLeft" );
         var scrollTop = getDocumentScroll( "scrollTop" );
         pnt.x += scrollLeft;
