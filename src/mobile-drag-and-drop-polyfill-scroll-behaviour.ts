@@ -63,6 +63,7 @@ module MobileDragAndDropPolyfill {
         }
 
         // update scroll intention and check if we should scroll at all
+        //TODO implement scroll chaining? if scroll end is reached continue to look for scrollable parent
         var performScrollAnimation = updateScrollIntentions( _currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity );
 
         // no animation in progress but scroll is intended
@@ -126,6 +127,7 @@ module MobileDragAndDropPolyfill {
         _scrollAnimationFrameId = undefined;
 
         // check if we should continue scrolling
+        //TODO implement scroll chaining? if scroll end is reached continue to look for scrollable parent
         if( updateScrollIntentions( _currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity ) ) {
 
             // re-schedule animation frame callback
@@ -278,6 +280,7 @@ module MobileDragAndDropPolyfill {
         }
     }
 
+    //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
     function isScrollable( el:HTMLElement ):boolean {
         return el && ((el.scrollHeight > el.offsetHeight) || (el.scrollWidth > el.offsetWidth));
     }
