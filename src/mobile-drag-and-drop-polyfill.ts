@@ -9,9 +9,6 @@ module MobileDragAndDropPolyfill {
         draggable:boolean;
         dragEvents:boolean;
         touchEvents:boolean;
-        //mouseEventConstructor:boolean;
-        //dragEventConstructor:boolean;
-        //customEventConstructor:boolean;
         userAgentNotSupportingNativeDnD:boolean;
         isBlinkEngine:boolean;
         transitionEnd:string;
@@ -26,9 +23,6 @@ module MobileDragAndDropPolyfill {
             draggable: ("draggable" in document.documentElement),
             isBlinkEngine: !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent ),
             touchEvents: ("ontouchstart" in document.documentElement),
-            //mouseEventConstructor: ("MouseEvent" in window),
-            //dragEventConstructor: ("DragEvent" in window),
-            //customEventConstructor: ("CustomEvent" in window),
             transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend",
             userAgentNotSupportingNativeDnD: false
         };
@@ -60,7 +54,7 @@ module MobileDragAndDropPolyfill {
         // defaults to (0,0)
         dragImageOffset?:Point;
         // if the dragImage shall be centered on the touch coordinates
-        // defaults to true
+        // defaults to false
         dragImageCenterOnTouch?:boolean;
         // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
         // defaults to 150ms
@@ -192,7 +186,7 @@ module MobileDragAndDropPolyfill {
             // when lifecycle hook is present
             if( _config.defaultActionOverride ) {
                 try {
-                    if(_config.defaultActionOverride( event )) {
+                    if( _config.defaultActionOverride( event ) ) {
                         console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
                     }
                 }
@@ -429,15 +423,11 @@ module MobileDragAndDropPolyfill {
                 // by default initialize drag image offset the same as desktop
                 else {
 
-                    var initialTouch = this._initialTouch;
-                    var initialTarget = dragImageSrc;
-                    var targetRect = initialTarget.getBoundingClientRect();
-                    var cs = getComputedStyle( initialTarget, null );
-                    var leftMargin = parseInt( cs.getPropertyValue( "margin-left" ), 10 );
-                    var topMargin = parseInt( cs.getPropertyValue( "margin-top" ), 10 );
+                    var targetRect = dragImageSrc.getBoundingClientRect();
+                    var cs = getComputedStyle( dragImageSrc );
                     this._dragImageOffset = {
-                        x: targetRect.left - initialTouch.clientX - leftMargin,
-                        y: targetRect.top - initialTouch.clientY - topMargin
+                        x: targetRect.left - this._initialTouch.clientX - parseInt( cs.marginLeft, 10 ),
+                        y: targetRect.top - this._initialTouch.clientY - parseInt( cs.marginTop, 10 )
                     };
                 }
             }
@@ -614,7 +604,6 @@ module MobileDragAndDropPolyfill {
 
             // we emulate d'n'd so we dont want any defaults to apply
             event.preventDefault();
-            event.stopImmediatePropagation();
 
             this._dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
         }
@@ -655,13 +644,10 @@ module MobileDragAndDropPolyfill {
                 // if drag failed transition snap back
                 if( dragFailed ) {
 
-                    var snapbackActive = applyDragImageSnapback( this._sourceNode, this._dragImage, () => {
+                    applyDragImageSnapback( this._sourceNode, this._dragImage, () => {
                         this._finishDragOperation();
                     } );
-
-                    if( snapbackActive ) {
-                        return;
-                    }
+                    return;
                 }
 
                 // Otherwise immediately
@@ -1222,7 +1208,7 @@ module MobileDragAndDropPolyfill {
         if( srcNode.nodeType === 1 ) {
 
             // Clone the style
-            var cs = window.getComputedStyle( srcNode );
+            var cs = getComputedStyle( srcNode );
             for( let i = 0; i < cs.length; i++ ) {
                 var csName = cs[ i ];
                 dstNode.style.setProperty( csName, cs.getPropertyValue( csName ), cs.getPropertyPriority( csName ) );
@@ -1296,16 +1282,15 @@ module MobileDragAndDropPolyfill {
      * calculates the coordinates of the drag source and transitions the drag image to those coordinates.
      * the drag operation is finished after the transition has ended.
      */
-    function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, transitionEndCb:EventListener ):boolean {
+    function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, transitionEndCb:Function ):void {
 
-        var cs = window.getComputedStyle( sourceEl, null );
-        var visiblity = cs.getPropertyValue( "visibility" );
-        var display = cs.getPropertyValue( "display" );
+        var cs = getComputedStyle( sourceEl );
 
-        if( visiblity === "hidden" || display === "none" ) {
+        if( cs.visibility === "hidden" || cs.display === "none" ) {
             console.log( "dnd-poly: source node is not visible. skipping snapback transition." );
             // shortcut to end the drag operation
-            return false;
+            transitionEndCb();
+            return;
         }
 
         console.log( "dnd-poly: starting dragimage snap back" );
@@ -1319,36 +1304,25 @@ module MobileDragAndDropPolyfill {
         };
 
         // add scroll offset of document
-        var scrollLeft = getDocumentScroll( "scrollLeft" );
-        var scrollTop = getDocumentScroll( "scrollTop" );
-        pnt.x += scrollLeft;
-        pnt.y += scrollTop;
+        pnt.x += (document.body.scrollLeft || document.documentElement.scrollLeft);
+        pnt.y += (document.body.scrollTop || document.documentElement.scrollTop);
 
-        var leftMargin = parseInt( cs.getPropertyValue( "margin-left" ), 10 );
-        var topMargin = parseInt( cs.getPropertyValue( "margin-top" ), 10 );
-        pnt.x -= leftMargin;
-        pnt.y -= topMargin;
+        //TODO this sometimes fails.. find out when exactly and how to detect
+        pnt.x -= parseInt( cs.marginLeft, 10 );
+        pnt.y -= parseInt( cs.marginTop, 10 );
 
         // add class containing transition rules
         dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
 
-        var csDragImage = getComputedStyle( dragImage, null );
+        var csDragImage = getComputedStyle( dragImage );
         var durationInS = parseFloat( csDragImage.transitionDuration );
         var delayInS = parseFloat( csDragImage.transitionDelay );
-
         var durationInMs = Math.round( (durationInS + delayInS) * 1000 );
 
         // apply the translate
         translateDragImage( dragImage, pnt, undefined, false );
 
         setTimeout( transitionEndCb, durationInMs );
-
-        return true;
-    }
-
-    function getDocumentScroll( prop:string ) {
-        // abstracting compatibility issues on scroll properties of document/body
-        return document.body[ prop ] || document.documentElement[ prop ];
     }
 
     //</editor-fold>
