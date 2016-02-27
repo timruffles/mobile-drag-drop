@@ -2,11 +2,11 @@ module MobileDragAndDropPolyfill {
 
     var _options:ScrollOptions = {
         threshold: 75,
-        velocityFn: function( velocity:number ) {
-            var multiplier = .7;
-            // default to cubic-in-easing
+        // simplified cubic-ease-in function
+        velocityFn: function( velocity:number, threshold:number ) {
+            var multiplier = velocity / threshold;
             var easeInCubic = multiplier * multiplier * multiplier;
-            return easeInCubic * velocity;
+            return easeInCubic * threshold;
         }
     };
 
@@ -33,10 +33,10 @@ module MobileDragAndDropPolyfill {
         // defaults to 75px
         threshold?:number;
         // function to customize the scroll velocity
-        // the function receives the current distance
-        // of the touch to the scrollable element edge in px.
+        // velocity param: distance to scrollable element edge
+        // threshold: the threshold used to determine when scrolling should start
         // defaults to cubic-ease-in.
-        velocityFn:( velocity:number ) => number;
+        velocityFn:( velocity:number, threshold:number ) => number;
     }
 
     export function SetOptions( options:ScrollOptions ):void {
@@ -103,13 +103,13 @@ module MobileDragAndDropPolyfill {
 
         if( _scrollIntentions.horizontal !== ScrollIntention.NONE ) {
 
-            scrollDiffX = Math.round( _options.velocityFn( _dynamicVelocity.x ) * _scrollIntentions.horizontal );
+            scrollDiffX = Math.round( _options.velocityFn( _dynamicVelocity.x, _options.threshold ) * _scrollIntentions.horizontal );
             getSetElementScroll( _scrollableParent, ScrollAxis.HORIZONTAL, scrollDiffX );
         }
 
         if( _scrollIntentions.vertical !== ScrollIntention.NONE ) {
 
-            scrollDiffY = Math.round( _options.velocityFn( _dynamicVelocity.y ) * _scrollIntentions.vertical );
+            scrollDiffY = Math.round( _options.velocityFn( _dynamicVelocity.y, _options.threshold ) * _scrollIntentions.vertical );
             getSetElementScroll( _scrollableParent, ScrollAxis.VERTICAL, scrollDiffY );
         }
 
