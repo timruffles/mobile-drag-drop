@@ -282,15 +282,31 @@ module MobileDragAndDropPolyfill {
 
     //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
     function isScrollable( el:HTMLElement ):boolean {
-        return el && ((el.scrollHeight > el.offsetHeight) || (el.scrollWidth > el.offsetWidth));
+        var cs = getComputedStyle( el );
+
+        if( el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto") ) {
+            return true;
+        }
+
+        if( el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto") ) {
+            return true;
+        }
+
+        return false;
     }
 
     function findScrollableParent( el:HTMLElement ):HTMLElement {
         do {
+            if( !el ) {
+                return undefined;
+            }
             if( isScrollable( el ) ) {
                 return el;
             }
-        } while( (el = <HTMLElement>el.parentNode) && el !== document.documentElement );
+            if( el === document.documentElement ) {
+                return undefined;
+            }
+        } while( el = <HTMLElement>el.parentNode );
         return undefined;
     }
 
