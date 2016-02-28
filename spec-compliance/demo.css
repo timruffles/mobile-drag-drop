@@ -566,3 +566,7 @@ li .no-drag {
     background-color: #888888;
     box-shadow: inset 0 0 5px 0 rgba(0, 0, 0, .5);
 }
+
+.rotate {
+    transform: rotate(90deg);
+}

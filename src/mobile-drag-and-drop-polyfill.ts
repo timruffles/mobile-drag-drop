@@ -258,6 +258,7 @@ module MobileDragAndDropPolyfill {
         private _dragOperationState:DragOperationState = DragOperationState.POTENTIAL;
 
         private _dragImage:HTMLElement;
+        private _dragImageTransforms:string[];
         private _dragImagePageCoordinates:Point; // the current page coordinates of the dragImage
         private _dragImageOffset:Point; // offset of the drag image relative to the coordinates
 
@@ -401,6 +402,7 @@ module MobileDragAndDropPolyfill {
 
             updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
             this._dragImage = createDragImage( dragImageSrc );
+            this._dragImageTransforms = extractTransformStyles( this._dragImage );
 
             if( !this._dragImageOffset ) {
 
@@ -432,7 +434,7 @@ module MobileDragAndDropPolyfill {
                 }
             }
 
-            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
+            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageTransforms, this._dragImageOffset, this._config.dragImageCenterOnTouch );
             document.body.appendChild( this._dragImage );
 
             // 10. Initiate the drag-and-drop operation in a manner consistent with platform conventions, and as described below.
@@ -535,7 +537,7 @@ module MobileDragAndDropPolyfill {
 
             // populate shared coordinates from touch event
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
-            updateCentroidCoordinatesOfTouchesIn( "page", this._lastTouchEvent, this._dragImagePageCoordinates );
+            updateCentroidCoordinatesOfTouchesIn( "page", event, this._dragImagePageCoordinates );
 
             var handledDragImageTranslate = false;
 
@@ -561,7 +563,13 @@ module MobileDragAndDropPolyfill {
                             this._dragImagePageCoordinates.x += offsetX;
                             this._dragImagePageCoordinates.y += offsetY;
 
-                            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
+                            translateDragImage(
+                                this._dragImage,
+                                this._dragImagePageCoordinates,
+                                this._dragImageTransforms,
+                                this._dragImageOffset,
+                                this._config.dragImageCenterOnTouch
+                            );
                         }
                     );
 
@@ -574,7 +582,7 @@ module MobileDragAndDropPolyfill {
                 }
             }
 
-            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch );
+            translateDragImage( this._dragImage, this._dragImagePageCoordinates, this._dragImageTransforms, this._dragImageOffset, this._config.dragImageCenterOnTouch );
         }
 
         private _onTouchEndOrCancel( event:TouchEvent ) {
@@ -644,7 +652,7 @@ module MobileDragAndDropPolyfill {
                 // if drag failed transition snap back
                 if( dragFailed ) {
 
-                    applyDragImageSnapback( this._sourceNode, this._dragImage, () => {
+                    applyDragImageSnapback( this._sourceNode, this._dragImage, this._dragImageTransforms, () => {
                         this._finishDragOperation();
                     } );
                     return;
@@ -1255,7 +1263,24 @@ module MobileDragAndDropPolyfill {
         return dragImage;
     }
 
-    function translateDragImage( dragImage:HTMLElement, pnt:Point, offset?:Point, centerOnCoordinates = true ):void {
+    function extractTransformStyles( sourceNode:HTMLElement ):string[] {
+
+        return TRANSFORM_CSS_VENDOR_PREFIXES.map( function( prefix ) {
+
+            var transform = sourceNode.style[ prefix + "transform" ];
+
+            if( !transform || transform === "none" ) {
+                return "";
+            }
+
+            // TODO what about translateX(x), translateY(x), translateZ(z), translate3d(x,y,z), matrix(*,*,*,*,x,y) ?
+
+            // removes translate(x,y)
+            return transform.replace( /translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, "" );
+        } );
+    }
+
+    function translateDragImage( dragImage:HTMLElement, pnt:Point, originalTransforms:string[], offset?:Point, centerOnCoordinates = true ):void {
 
         var x = pnt.x, y = pnt.y;
 
@@ -1274,7 +1299,7 @@ module MobileDragAndDropPolyfill {
 
         for( var i = 0; i < TRANSFORM_CSS_VENDOR_PREFIXES.length; i++ ) {
             var transformProp = TRANSFORM_CSS_VENDOR_PREFIXES[ i ] + "transform";
-            dragImage.style[ transformProp ] = translate;
+            dragImage.style[ transformProp ] = translate + " " + originalTransforms[ i ];
         }
     }
 
@@ -1282,7 +1307,7 @@ module MobileDragAndDropPolyfill {
      * calculates the coordinates of the drag source and transitions the drag image to those coordinates.
      * the drag operation is finished after the transition has ended.
      */
-    function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, transitionEndCb:Function ):void {
+    function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, dragImageTransforms:string[], transitionEndCb:Function ):void {
 
         var cs = getComputedStyle( sourceEl );
 
@@ -1320,7 +1345,7 @@ module MobileDragAndDropPolyfill {
         var durationInMs = Math.round( (durationInS + delayInS) * 1000 );
 
         // apply the translate
-        translateDragImage( dragImage, pnt, undefined, false );
+        translateDragImage( dragImage, pnt, dragImageTransforms, undefined, false );
 
         setTimeout( transitionEndCb, durationInMs );
     }
