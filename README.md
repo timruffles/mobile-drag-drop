@@ -13,7 +13,7 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 
 ## Demos
 
-`TODO demo page containing all the different things that need to be working as a test base and to show capabilities/spec compliance`
+`TODO demo page containing all the different things that need to be working as a test base and to show capabilities/spec compliance/limitations`
 
 [Demo](http://reppners.github.io/ios-html5-drag-drop-shim/spec-compliance/)
 
@@ -22,34 +22,42 @@ Check out the demo to see it in action and monitor the console to see the events
 
 ## Install
 
-**Install**
+**bower**
 
 `bower install drag-drop-webkit-mobile --save`
 
-`TODO add instructions for jspm/webpack/.. etc`
+**npm**
 
-**Include**
+`npm install drag-drop-webkit-mobile --save`
 
-Meta-Tag
+**jspm**
 
-```HTML
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=no">
-```
-_The meta viewport tag is needed because mobile browsers zoom out when something is dragged close to the right edge of the screen._
-_While this may be a good intent to give the user an overview on where he is and where he could drop something, it is quite choppy and interrupting UX._
-_For iOS9 the `shrink-to-fit=no` is especially important._
-_You can try it out yourself and see what suits your application best ;)_
+`jspm install npm:drag-drop-webkit-mobile`
 
-Static
+### Include
+
+**global**
 
 ```HTML
-<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
-<script src="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
+<link rel="stylesheet" href="libs/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
+<script src="libs/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
 ```
 
-`TODO add instructions for jspm/webpack/.. etc`
+**SystemJS/JSPM**
 
-**Initialize**
+```JavaScript
+System.import("drag-drop-webkit-mobile");
+System.import("drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css!");
+```
+
+**ES6/TypeScript flavour**
+
+```JavaScript
+import "drag-drop-webkit-mobile";
+import "drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css!";
+```
+
+### Initialize
 
 ```JavaScript
 // options are optional ;)
@@ -64,48 +72,76 @@ declare module MobileDragAndDropPolyfill {
     * polyfill config
     */
     interface Config {
-        iterationInterval?: number;     // pause in ms between drag and drop processing model iterations 
-        scrollThreshold?:number         // threshold in px. when distance between viewport edge and touch position is smaller start programmatic scroll.
-        scrollVelocity?:number          // how much px will be scrolled per animation frame iteration
-    }
+            // useful for when you want the default drag image but still want to apply
+            // some static offset from touch coordinates to drag image coordinates
+            // defaults to (0,0)
+            dragImageOffset?:Point;
+            // if the dragImage shall be centered on the touch coordinates
+            // defaults to false
+            dragImageCenterOnTouch?:boolean;
+            // the drag-and-drop operation involves some processing. here you can specify in what interval this processing takes place.
+            // defaults to 150ms
+            iterationInterval?:number;
+            // hook for custom logic that decides if a drag-operation should start
+            dragStartConditionOverride?:( event:TouchEvent ) => boolean;
+            // hook for custom logic that decides if and where the drag image should translate
+            dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
+                                          hoverCoordinates:Point,   // the processed touch event viewport coordinates
+                                          hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
+                                          translateDragImageFn:( offsetX:number, offsetY:number ) => void ) => boolean; // updates the drag image position
+            // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
+            defaultActionOverride?:( event:TouchEvent ) => boolean;
+        }
     /**
     * The polyfill must be actively initialized.
     * At this point you have the ability to pass a config.
     */
-    var Initialize: (config?: Config) => void;
+    function Initialize(config?: Config) => void;
 }
 ```
 
-## Customization
+## DragImage Customization
 
-Override the classes that are applied by the polyfill.
+Override the classes that are applied by the polyfill. Mind the `!important`.
 
 ```CSS
 .mobile-dnd-poly-drag-image {
-    opacity: .5;
+    opacity: .5 !important;
 }
 /* applied when the drag effect is none and the operation ends */
 .mobile-dnd-poly-drag-image.snapback {
-    -webkit-transition: -webkit-transform 250ms ease-out;
-    -moz-transition: -moz-transform 250ms ease-out;
-    -o-transition: -o-transform 250ms ease-out;
-    transition: transform 250ms ease-out;
+    -webkit-transition: -webkit-transform 250ms ease-out !important;
+    -moz-transition: -moz-transform 250ms ease-out !important;
+    -o-transition: -o-transform 250ms ease-out !important;
+    transition: transform 250ms ease-out !important;
 }
 /* applied always as a base class for drop effect styles */
 .mobile-dnd-poly-drag-icon {
 }
 ```
 
-Also there will be classes applied to the `dragImage`-element according to the
-current drop effect/operation on dragging: `none`, `copy`, `move`, `link`.
+CSS classes are applied to the `dragImage`-element according to the
+current drop effect: `none`, `copy`, `move`, `link`.
 
-There is a CSS-file you can drop in that defines default styles and icons:
+There is a CSS-file you can drop in that defines default styles and icons.
 
 ```HTML
 <link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill-icons.css">
 ```
 
-## Compatibility and known issues
+`setDragImage()` is supported. This enables you to set a custom drag image.
+
+## Usage Examples
+
+`TODO`
+
+## Known issues and limitations
+
+* Currently does not work with `iFrames`. Contributions welcome.
+
+* `dragStartConditionOverride` `TODO`
+
+## Browser compatibility
 
 | Browser                          |  Support                 |  Known issues                                  |
 | -------------------------------- | ------------------------ | ---------------------------------------------- |
@@ -114,36 +150,33 @@ There is a CSS-file you can drop in that defines default styles and icons:
 | Safari                           |  Native                  |  No known issues.                              |
 | Opera                            |  Native                  |  Same as Chrome.                               |
 | Internet Explorer 11             |  Native                  |  No known issues.                              |
-| Edge                             |  Unknown                 |  Unknown                                       |
+| Edge                             |  **Unknown**             |  **Unknown**                                   |
 | Mobile Safari                    |  Polyfill                |  No known issues.                              |
 | Chrome on iOS                    |  Polyfill                |  No known issues.                              |
 | Chrome on Android                |  Polyfill                |  No known issues.                              |
 | Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
 | Firefox on touch device          |  Native                  |  No known issues.                              |
 | Firefox on Android               |  Polyfill                |  No known issues. [More info](#firefox-android-issues) |
-| Amazon Silk                      |  Unknown                 |  Unknown                                       |
+| Amazon Silk                      |  **Unknown**             |  **Unknown**                                   |
 | Ubuntu Phone                     |  Polyfill                |  No known issues.                              |
-| IEMobile                         |  Native                  |  Unknown                                       |
+| IEMobile                         |  Native                  |  **Unknown**                                   |
 
 **Chrome: <a name="chrome-issues"></a>**
 Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it turns on touch events
-which also disables native drag and drop support. Touch events can also be set by a user in `chrome://flags` to `auto`, `on`, `off`.   
-Also there is a flag for enabling drag and drop through touch interaction but only for Windows and the option is off by default.
+which also disables native drag-and-drop support. Touch events can also be set by a user in `chrome://flags` to `auto`, `on`, `off`.   
+There is also a flag for enabling drag-and-drop through touch interaction but only for Windows and the option is off by default.
 The polyfill still works if this setting is active. We cannot detect if this flag is set so we just stick to applying the polyfill
 when Chrome is detected with touch events enabled.
 
 **Firefox: <a name="firefox-issues"></a>**
 Touch events can be activated by a user in `about:config` to `0` (off), `1` (on), `2`(auto).
 As of today (FF39.0) touch behavior is off.
-When touch events are active drag and drop interaction will still work, so no need to polyfill.
+When touch events are active drag-and-drop interaction will still work, so no need to polyfill.
 
 **Firefox on Android: <a name="firefox-android-issues"></a>**
 No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
 
 `TODO test where support is still unknown and try to discover any issues`
-
-`TODO keep an eye out for pointer-event support as this will become a common event api for user interaction wether it be touch, stylus, mouse`
-
 
 ## Cross-browser differences in HTML5 drag'n'drop API
 
@@ -157,47 +190,49 @@ _empty cells mean there is nothing special to take into account_
 
 **Further notices:**
 
-*   If you don't have a `dragenter`-handler registered, drag operation is silently allowed. Browsers don't implement `dropzone`-attribute
+*   If you don't have a `dragenter`-handler registered, drag-operation is silently allowed. Browsers don't implement `dropzone`-attribute
     according to [caniuse](http://caniuse.com/#search=drag) so they allow it by default, which violates the spec. 
     If you have a handler set up you have to call `event.preventDefault()` to allow dropping.
     This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
     which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make it work.
-*   FF:<a name="ff-quirk"></a> If you set `effectAllowed` or `dropEffect` in dragstart you need to set them in `dragenter/dragover` also.
-*   When using an MS Surface tablet a drag and drop operation is initiated by touch and hold on a draggable.
+*   FF:<a name="ff-quirk"></a> If you set `effectAllowed` or `dropEffect` in `dragstart` you need to set them in `dragenter/dragover` also.
+*   When using a MS Surface tablet a drag-operation is initiated by touch and hold on a draggable.
 *   IE11 and Chrome scroll automatically when dragging close to a viewport edge.
 
-**Baseline recommendations for cross-browser support:**
+**Baseline recommendations for cross-browser/-platform support:**
 
-* Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`. This is the expected behavior defined by the spec.
-* Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`. This is expected behavior defined by the spec.
-* Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag operation is aborted. This is expected behavior defined by the spec.
+* Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`.
+* Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`.
+* Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag-operation is aborted.
 
 
 ## Contribute
 
-Contributions are welcome. I tried to comment as much as possible and provide a few grunt tasks for making it easy to get involved.
-The HTML5 spec on drag and drop should altough be your first read if you're new to the topic:
+Contributions are welcome. There are [grunt](http://gruntjs.com) tasks for making it easy to get started.
+
+The HTML5 spec on drag-and-drop should altough be your first read if you're new to the topic:
 https://html.spec.whatwg.org/multipage/interaction.html#dnd
 
-The project uses TypeScript as main language for several reasons:
+The project uses [TypeScript](http://www.typescriptlang.org) as main language for several reasons:
 * type-safety & compiler support for easier maintenance
 * easily switch to ES6 when its ready
 
-To get started execute:
+**Getting started**
 
-1. `npm install`
+`npm install`
 
-2. `grunt` this will start a watch on typescript files, setup a development server with live-reload and do an initial transpilation and linting.
+`grunt` _(will start a watch on typescript files, setup a development server with live-reload and do an initial transpilation and linting)_
 
-3. start coding :) the browser should be automatically opened at the test page served on port 8000.
+start coding :) the browser should be automatically opened at the test page served on port 8000.
 
 **Debugging**
 
-For debugging purposes you can include the non-minified polyfill and define `var DEBUG;` before you initialize. 
+For debugging purposes you can include the non-minified polyfill and define `var DEBUG;` before you `Initialize()`. 
 This will result in verbose console output that helps to track down issues.
 
 Set `var DEBUG = true;` and include `mobile-drag-and-drop-polyfill-debug.css` to get visual feedback on the state
-of the drag and drop operation.
+of the drag-and-drop operation.
+
 
 ## Thanks
 

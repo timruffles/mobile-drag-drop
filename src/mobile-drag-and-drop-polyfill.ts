@@ -62,11 +62,11 @@ module MobileDragAndDropPolyfill {
         // hook for custom logic that decides if a drag operation should start
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
         // hook for custom logic that decides if and where the drag image should translate
-        dragImageTranslateOverride?:( event:TouchEvent,
-                                      hoverCoordinates:Point,
-                                      hoveredElement:HTMLElement,
-                                      translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ) => boolean;
-        // hook for custom logic that can trigger a default event based on the original touch event because the drag never started
+        dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
+                                      hoverCoordinates:Point,   // the processed touch event viewport coordinates
+                                      hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
+                                      translateDragImageFn:( offsetX:number, offsetY:number ) => void ) => boolean; // updates the drag image position
+        // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
         defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
 
