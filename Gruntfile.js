@@ -50,21 +50,11 @@ module.exports = function (grunt) {
     connect: {
       // starts a server that will serve the development sources with priority
       // before sources of the demo page. allows to use demo page while developing.
-      dev: {
+      demo: {
         options: {
           port: 8000,
-          // target development files
-          base: ["src", "spec-compliance"],
-          open: true,
+          open: "http://localhost:8000/spec-compliance/",
           livereload: 35731
-        }
-      },
-      // serves the demo page
-      release: {
-        options: {
-          keepalive: true,
-          port: 8001,
-          base: ["spec-compliance"]
         }
       }
     },
@@ -87,8 +77,7 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-      release: ["release"],
-      demo: ["spec-compliance/mobile-drag-and-drop-polyfill*"]
+      release: ["release"]
     },
     copy: {
       // copy files from src to release folder
@@ -97,20 +86,13 @@ module.exports = function (grunt) {
           // includes files within path
           {expand: true, cwd: "src", src: ["*.css", "*.d.ts", "*.js"], dest: "release/", filter: "isFile", flatten: true}
         ]
-      },
-      // copy files from release to demo page
-      demoPage: {
-        files: [
-          // includes files within path
-          {expand: true, cwd: "release", src: ["*.map", "*.js", "*.css"], dest: "spec-compliance/", filter: "isFile", flatten: true}
-        ]
       }
     },
     // automatically recompile on changes
     watch: {
       ts: {
         files: ["src/**/*.ts", "!src/**/*.d.ts"],
-        tasks: ["ts", "tslint"],
+        tasks: ["ts", "uglify"],
         options: {
           debounceDelay: 250,
           atBegin: true,
@@ -139,5 +121,5 @@ module.exports = function (grunt) {
   grunt.registerTask("release", ["ts", "tslint", "uglify", "clean", "copy"]);
 
   // default task for developers to start coding
-  grunt.registerTask("default", ["connect:dev", "watch"]);
+  grunt.registerTask("default", ["connect:demo", "watch"]);
 };

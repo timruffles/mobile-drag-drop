@@ -150,6 +150,7 @@ var MobileDragAndDropPolyfill;
             }
             updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
             this._dragImage = createDragImage(dragImageSrc);
+            this._dragImageTransforms = extractTransformStyles(this._dragImage);
             if (!this._dragImageOffset) {
                 if (this._config.dragImageOffset) {
                     this._dragImageOffset = {
@@ -164,19 +165,15 @@ var MobileDragAndDropPolyfill;
                     };
                 }
                 else {
-                    var initialTouch = this._initialTouch;
-                    var initialTarget = dragImageSrc;
-                    var targetRect = initialTarget.getBoundingClientRect();
-                    var cs = getComputedStyle(initialTarget, null);
-                    var leftMargin = parseInt(cs.getPropertyValue("margin-left"), 10);
-                    var topMargin = parseInt(cs.getPropertyValue("margin-top"), 10);
+                    var targetRect = dragImageSrc.getBoundingClientRect();
+                    var cs = getComputedStyle(dragImageSrc);
                     this._dragImageOffset = {
-                        x: targetRect.left - initialTouch.clientX - leftMargin,
-                        y: targetRect.top - initialTouch.clientY - topMargin
+                        x: targetRect.left - this._initialTouch.clientX - parseInt(cs.marginLeft, 10),
+                        y: targetRect.top - this._initialTouch.clientY - parseInt(cs.marginTop, 10)
                     };
                 }
             }
-            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch);
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageTransforms, this._dragImageOffset, this._config.dragImageCenterOnTouch);
             document.body.appendChild(this._dragImage);
             this._iterationIntervalId = setInterval(function () {
                 if (_this._iterationLock) {
@@ -236,7 +233,7 @@ var MobileDragAndDropPolyfill;
             console.log("dnd-poly: moving draggable..");
             event.preventDefault();
             updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
-            updateCentroidCoordinatesOfTouchesIn("page", this._lastTouchEvent, this._dragImagePageCoordinates);
+            updateCentroidCoordinatesOfTouchesIn("page", event, this._dragImagePageCoordinates);
             var handledDragImageTranslate = false;
             if (this._config.dragImageTranslateOverride) {
                 try {
@@ -251,7 +248,7 @@ var MobileDragAndDropPolyfill;
                         _this._currentHotspotCoordinates.y += offsetY;
                         _this._dragImagePageCoordinates.x += offsetX;
                         _this._dragImagePageCoordinates.y += offsetY;
-                        translateDragImage(_this._dragImage, _this._dragImagePageCoordinates, _this._dragImageOffset, _this._config.dragImageCenterOnTouch);
+                        translateDragImage(_this._dragImage, _this._dragImagePageCoordinates, _this._dragImageTransforms, _this._dragImageOffset, _this._config.dragImageCenterOnTouch);
                     });
                     if (handledDragImageTranslate) {
                         return;
@@ -261,7 +258,7 @@ var MobileDragAndDropPolyfill;
                     console.log("dnd-poly: error in dragImageTranslateOverride hook: " + e);
                 }
             }
-            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageOffset, this._config.dragImageCenterOnTouch);
+            translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageTransforms, this._dragImageOffset, this._config.dragImageCenterOnTouch);
         };
         DragOperationController.prototype._onTouchEndOrCancel = function (event) {
             if (isTouchIdentifierContainedInTouchEvent(event, this._initialTouch.identifier) === false) {
@@ -281,7 +278,6 @@ var MobileDragAndDropPolyfill;
                 return;
             }
             event.preventDefault();
-            event.stopImmediatePropagation();
             this._dragOperationState = (event.type === "touchcancel") ? 3 : 2;
         };
         DragOperationController.prototype._dragAndDropProcessModelIteration = function () {
@@ -300,12 +296,10 @@ var MobileDragAndDropPolyfill;
             if (dragCancelled || this._dragOperationState === 2 || this._dragOperationState === 3) {
                 var dragFailed = this._dragOperationEnded(this._dragOperationState);
                 if (dragFailed) {
-                    var snapbackActive = applyDragImageSnapback(this._sourceNode, this._dragImage, function () {
+                    applyDragImageSnapback(this._sourceNode, this._dragImage, this._dragImageTransforms, function () {
                         _this._finishDragOperation();
                     });
-                    if (snapbackActive) {
-                        return;
-                    }
+                    return;
                 }
                 this._finishDragOperation();
                 return;
@@ -559,7 +553,7 @@ var MobileDragAndDropPolyfill;
     }
     function prepareNodeCopyAsDragImage(srcNode, dstNode) {
         if (srcNode.nodeType === 1) {
-            var cs = window.getComputedStyle(srcNode);
+            var cs = getComputedStyle(srcNode);
             for (var i = 0; i < cs.length; i++) {
                 var csName = cs[i];
                 dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
@@ -586,7 +580,16 @@ var MobileDragAndDropPolyfill;
         dragImage.classList.add(CLASS_DRAG_OPERATION_ICON);
         return dragImage;
     }
-    function translateDragImage(dragImage, pnt, offset, centerOnCoordinates) {
+    function extractTransformStyles(sourceNode) {
+        return TRANSFORM_CSS_VENDOR_PREFIXES.map(function (prefix) {
+            var transform = sourceNode.style[prefix + "transform"];
+            if (!transform || transform === "none") {
+                return "";
+            }
+            return transform.replace(/translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, "");
+        });
+    }
+    function translateDragImage(dragImage, pnt, originalTransforms, offset, centerOnCoordinates) {
         if (centerOnCoordinates === void 0) { centerOnCoordinates = true; }
         var x = pnt.x, y = pnt.y;
         if (offset) {
@@ -600,16 +603,15 @@ var MobileDragAndDropPolyfill;
         var translate = "translate3d(" + x + "px," + y + "px, 0)";
         for (var i = 0; i < TRANSFORM_CSS_VENDOR_PREFIXES.length; i++) {
             var transformProp = TRANSFORM_CSS_VENDOR_PREFIXES[i] + "transform";
-            dragImage.style[transformProp] = translate;
+            dragImage.style[transformProp] = translate + " " + originalTransforms[i];
         }
     }
-    function applyDragImageSnapback(sourceEl, dragImage, transitionEndCb) {
-        var cs = window.getComputedStyle(sourceEl, null);
-        var visiblity = cs.getPropertyValue("visibility");
-        var display = cs.getPropertyValue("display");
-        if (visiblity === "hidden" || display === "none") {
+    function applyDragImageSnapback(sourceEl, dragImage, dragImageTransforms, transitionEndCb) {
+        var cs = getComputedStyle(sourceEl);
+        if (cs.visibility === "hidden" || cs.display === "none") {
             console.log("dnd-poly: source node is not visible. skipping snapback transition.");
-            return false;
+            transitionEndCb();
+            return;
         }
         console.log("dnd-poly: starting dragimage snap back");
         var rect = sourceEl.getBoundingClientRect();
@@ -617,25 +619,17 @@ var MobileDragAndDropPolyfill;
             x: rect.left,
             y: rect.top
         };
-        var scrollLeft = getDocumentScroll("scrollLeft");
-        var scrollTop = getDocumentScroll("scrollTop");
-        pnt.x += scrollLeft;
-        pnt.y += scrollTop;
-        var leftMargin = parseInt(cs.getPropertyValue("margin-left"), 10);
-        var topMargin = parseInt(cs.getPropertyValue("margin-top"), 10);
-        pnt.x -= leftMargin;
-        pnt.y -= topMargin;
+        pnt.x += (document.body.scrollLeft || document.documentElement.scrollLeft);
+        pnt.y += (document.body.scrollTop || document.documentElement.scrollTop);
+        pnt.x -= parseInt(cs.marginLeft, 10);
+        pnt.y -= parseInt(cs.marginTop, 10);
         dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
-        var csDragImage = getComputedStyle(dragImage, null);
+        var csDragImage = getComputedStyle(dragImage);
         var durationInS = parseFloat(csDragImage.transitionDuration);
         var delayInS = parseFloat(csDragImage.transitionDelay);
         var durationInMs = Math.round((durationInS + delayInS) * 1000);
-        translateDragImage(dragImage, pnt, undefined, false);
+        translateDragImage(dragImage, pnt, dragImageTransforms, undefined, false);
         setTimeout(transitionEndCb, durationInMs);
-        return true;
-    }
-    function getDocumentScroll(prop) {
-        return document.body[prop] || document.documentElement[prop];
     }
     function determineDropEffect(effectAllowed, sourceNode) {
         if (!effectAllowed) {

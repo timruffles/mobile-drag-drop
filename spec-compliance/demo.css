@@ -5,6 +5,7 @@ body {
     margin-top: 40px;
     padding: 0;
     height: 2000px;
+    overflow: auto;
 }
 
 section, header, footer {
@@ -471,12 +472,12 @@ ul[draggable=true] > li:first-child {
     display: block;
     width: 100%;
     background-color: gray;
-    color:white;
+    color: white;
 }
 
 div[draggable] {
     padding: 10px;
-    background-color: rgba(0,0,0,0.3);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .draggable {
@@ -503,7 +504,7 @@ div[draggable] {
     padding: 1% 2%;
     box-sizing: border-box;
     height: 100%;
-    min-height:210px;
+    min-height: 210px;
 }
 
 .oic {
@@ -537,7 +538,7 @@ li.draggable {
     border: 3px dashed #999;
     background: #eee;
     display: flex;
-    box-shadow: 0 0 6px 0 rgba(0,0,0,.5);
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, .5);
 }
 
 li .drag-handle {

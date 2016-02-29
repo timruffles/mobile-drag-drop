@@ -2,10 +2,10 @@ var MobileDragAndDropPolyfill;
 (function (MobileDragAndDropPolyfill) {
     var _options = {
         threshold: 75,
-        velocityFn: function (velocity) {
-            var multiplier = .7;
+        velocityFn: function (velocity, threshold) {
+            var multiplier = velocity / threshold;
             var easeInCubic = multiplier * multiplier * multiplier;
-            return easeInCubic * velocity;
+            return easeInCubic * threshold;
         }
     };
     var _scrollIntentions = {
@@ -54,11 +54,11 @@ var MobileDragAndDropPolyfill;
     function scrollAnimation() {
         var scrollDiffX = 0, scrollDiffY = 0, isTopLevel = isTopLevelEl(_scrollableParent);
         if (_scrollIntentions.horizontal !== 0) {
-            scrollDiffX = Math.round(_options.velocityFn(_dynamicVelocity.x) * _scrollIntentions.horizontal);
+            scrollDiffX = Math.round(_options.velocityFn(_dynamicVelocity.x, _options.threshold) * _scrollIntentions.horizontal);
             getSetElementScroll(_scrollableParent, 0, scrollDiffX);
         }
         if (_scrollIntentions.vertical !== 0) {
-            scrollDiffY = Math.round(_options.velocityFn(_dynamicVelocity.y) * _scrollIntentions.vertical);
+            scrollDiffY = Math.round(_options.velocityFn(_dynamicVelocity.y, _options.threshold) * _scrollIntentions.vertical);
             getSetElementScroll(_scrollableParent, 1, scrollDiffY);
         }
         if (isTopLevel) {
@@ -148,14 +148,27 @@ var MobileDragAndDropPolyfill;
         }
     }
     function isScrollable(el) {
-        return el && ((el.scrollHeight > el.offsetHeight) || (el.scrollWidth > el.offsetWidth));
+        var cs = getComputedStyle(el);
+        if (el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto")) {
+            return true;
+        }
+        if (el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto")) {
+            return true;
+        }
+        return false;
     }
     function findScrollableParent(el) {
         do {
+            if (!el) {
+                return undefined;
+            }
             if (isScrollable(el)) {
                 return el;
             }
-        } while ((el = el.parentNode) && el !== document.documentElement);
+            if (el === document.documentElement) {
+                return undefined;
+            }
+        } while (el = el.parentNode);
         return undefined;
     }
     function determineScrollIntention(currentCoordinate, size, threshold) {
