@@ -37,8 +37,14 @@
     this.customDragImage = null;
     this.customDragImageX = null;
     this.customDragImageY = null;
+    this.origBoundingClientRect = null;
     this.el = el || event.target;
 
+    var touch = event.changedTouches[0];
+    this.initialTouch = {
+      x: touch[coordinateSystemForElementFromPoint + 'X'],
+      y: touch[coordinateSystemForElementFromPoint + 'Y']
+    };
     log("dragstart");
 
     if (this.dispatchDragStart()) {
@@ -65,6 +71,7 @@
           this.dragImage = null;
           this.dragImageTransform = null;
           this.dragImageWebKitTransform = null;
+          this.origBoundingClientRect = null;
         }
         this.customDragImage = null;
         this.customDragImageX = null;
@@ -82,8 +89,19 @@
         pageYs.push(touch.pageY);
       });
 
-      var x = average(pageXs) - (this.customDragImageX || parseInt(this.dragImage.offsetWidth, 10) / 2);
-      var y = average(pageYs) - (this.customDragImageY || parseInt(this.dragImage.offsetHeight, 10) / 2);
+      var averagePageX = average(pageXs);
+      var averagePageY = average(pageYs);
+      var x, y;
+      if (this.origBoundingClientRect) {
+        var dx = this.initialTouch.x - this.origBoundingClientRect.left;
+        var dy = this.initialTouch.y - this.origBoundingClientRect.top;
+        x = averagePageX - dx;
+        y = averagePageY - dy;
+      } else {
+        x = averagePageX - (this.customDragImageX || parseInt(this.dragImage.offsetWidth, 10) / 2);
+        y = averagePageY - (this.customDragImageY || parseInt(this.dragImage.offsetHeight, 10) / 2);
+      }
+
       this.translateDragImage(x, y);
 
       this.synthesizeEnterLeave(event);
@@ -251,7 +269,8 @@
         duplicateStyle(this.customDragImage, this.dragImage); 
       } else {
         this.dragImage = this.el.cloneNode(true);
-        duplicateStyle(this.el, this.dragImage); 
+        this.origBoundingClientRect = this.el.getBoundingClientRect();
+        duplicateStyle(this.el, this.dragImage);
       }
       this.dragImage.style.opacity = "0.5";
       this.dragImage.style.position = "absolute";
