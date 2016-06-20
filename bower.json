@@ -1,8 +1,8 @@
 {
-  "name": "drag-drop-webkit-mobile",
+  "name": "drag-drop-polyfill",
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
   "version": "2.0.0",
-  "main": ["release/mobile-drag-and-drop-polyfill.min.js", "release/mobile-drag-and-drop-polyfill.css"],
+  "main": ["release/drag-drop-polyfill.min.js", "release/drag-drop-polyfill.css"],
   "ignore": [
     "*",
     "!release/**/*",

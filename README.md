@@ -1,4 +1,3 @@
-`TODO tests? fancy state icons?`
 `TODO add notes about file size`
 
 # Polyfill for HTML 5 drag'n'drop
@@ -19,67 +18,66 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 
 Check out the demo to see it in action and monitor the console to see the events firing.
 
-
 ## Install
 
 **bower**
 
-`bower install drag-drop-webkit-mobile --save`
+`bower install drag-drop-polyfill --save`
 
 **npm**
 
-`npm install drag-drop-webkit-mobile --save`
+`npm install drag-drop-polyfill --save`
 
 **jspm**
 
-`jspm install npm:drag-drop-webkit-mobile`
+`jspm install npm:drag-drop-polyfill`
 
 ### Include
 
 **global**
 
 ```HTML
-<link rel="stylesheet" href="libs/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css">
-<script src="libs/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.min.js"></script>
+<link rel="stylesheet" href="libs/drag-drop-polyfill/drag-drop-polyfill.css">
+<script src="libs/drag-drop-polyfill/drag-drop-polyfill.min.js"></script>
 ```
 
 **SystemJS/JSPM**
 
 ```JavaScript
-System.import("drag-drop-webkit-mobile");
-System.import("drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css!");
+System.import("drag-drop-polyfill");
+System.import("drag-drop-polyfill/drag-drop-polyfill.css!");
 ```
 
 **ES6/TypeScript flavour**
 
 ```JavaScript
-import "drag-drop-webkit-mobile";
-import "drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill.css!";
+import "drag-drop-polyfill";
+import "drag-drop-polyfill/drag-drop-polyfill.css!";
 ```
 
 ### Initialize
 
 ```JavaScript
 // options are optional ;)
-MobileDragAndDropPolyfill.Initialize(options);
+DragDropPolyfill.Initialize(options);
 ```
 
 ## API & Options <a name="options"></a>
 
 ```TypeScript
-declare module MobileDragAndDropPolyfill {
+declare module DragDropPolyfill {
+
     /**
-    * polyfill config
+    * Polyfill config
     */
     interface Config {
-            // useful for when you want the default drag image but still want to apply
-            // some static offset from touch coordinates to drag image coordinates
+            // apply static offset from touch coordinates to drag image coordinates
             // defaults to (0,0)
             dragImageOffset?:Point;
             // if the dragImage shall be centered on the touch coordinates
             // defaults to false
             dragImageCenterOnTouch?:boolean;
-            // the drag-and-drop operation involves some processing. here you can specify in what interval this processing takes place.
+            // drag'n'drop operation loop interval
             // defaults to 150ms
             iterationInterval?:number;
             // hook for custom logic that decides if a drag-operation should start
@@ -88,58 +86,63 @@ declare module MobileDragAndDropPolyfill {
             dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
                                           hoverCoordinates:Point,   // the processed touch event viewport coordinates
                                           hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
-                                          translateDragImageFn:( offsetX:number, offsetY:number ) => void ) => boolean; // updates the drag image position
+                                          translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
+                                         ) => boolean; // TODO
             // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
             defaultActionOverride?:( event:TouchEvent ) => boolean;
         }
+
     /**
-    * The polyfill must be actively initialized.
-    * At this point you have the ability to pass a config.
+    * Invoke for initializing the polyfill.
     */
     function Initialize(config?: Config) => void;
 }
 ```
+
 
 ## DragImage Customization
 
 Override the classes that are applied by the polyfill. Mind the `!important`.
 
 ```CSS
-.mobile-dnd-poly-drag-image {
+.dnd-poly-drag-image {
     opacity: .5 !important;
 }
 /* applied when the drag effect is none and the operation ends */
-.mobile-dnd-poly-drag-image.snapback {
+.dnd-poly-drag-image.snapback {
     -webkit-transition: -webkit-transform 250ms ease-out !important;
     -moz-transition: -moz-transform 250ms ease-out !important;
     -o-transition: -o-transform 250ms ease-out !important;
     transition: transform 250ms ease-out !important;
 }
 /* applied always as a base class for drop effect styles */
-.mobile-dnd-poly-drag-icon {
+.dnd-poly-drag-icon {
 }
 ```
 
 CSS classes are applied to the `dragImage`-element according to the
 current drop effect: `none`, `copy`, `move`, `link`.
 
-There is a CSS-file you can drop in that defines default styles and icons.
+There is `drag-drop-polyfill-icons.css` which defines default styles and icons.
+Feel free to use this as a starting point.
 
 ```HTML
-<link rel="stylesheet" href="bower_components/drag-drop-webkit-mobile/mobile-drag-and-drop-polyfill-icons.css">
+<link rel="stylesheet" href="[...]/drag-drop-polyfill/drag-drop-polyfill-icons.css">
 ```
 
-`setDragImage()` is supported. This enables you to set a custom drag image.
+`setDragImage()`[MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported. This enables to set a custom drag image.
 
 ## Usage Examples
 
 `TODO`
+
 
 ## Known issues and limitations
 
 * Currently does not work with `iFrames`. Contributions welcome.
 
 * `dragStartConditionOverride` `TODO`
+
 
 ## Browser compatibility
 
@@ -176,9 +179,11 @@ When touch events are active drag-and-drop interaction will still work, so no ne
 **Firefox on Android: <a name="firefox-android-issues"></a>**
 No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
 
-`TODO test where support is still unknown and try to discover any issues`
 
 ## Cross-browser differences in HTML5 drag'n'drop API
+
+The drag'n'drop API is not implemented consistently in all browsers.
+This table is an effort to list all things required to make drag'n'drop work.
 
 | **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover**                          | **dragleave** | **dragexit** |
 | ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------------------------------- | ------------- | ------------ |
@@ -190,48 +195,27 @@ _empty cells mean there is nothing special to take into account_
 
 **Further notices:**
 
-*   If you don't have a `dragenter`-handler registered, drag-operation is silently allowed. Browsers don't implement `dropzone`-attribute
+*   If no `dragenter`-handler is registered the drag-operation is silently allowed. Browsers don't implement `dropzone`-attribute
     according to [caniuse](http://caniuse.com/#search=drag) so they allow it by default, which violates the spec. 
-    If you have a handler set up you have to call `event.preventDefault()` to allow dropping.
+    If a handler is set up it has to call `event.preventDefault()` to allow dropping.
     This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
     which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make it work.
-*   FF:<a name="ff-quirk"></a> If you set `effectAllowed` or `dropEffect` in `dragstart` you need to set them in `dragenter/dragover` also.
+*   FF:<a name="ff-quirk"></a> If `effectAllowed` or `dropEffect` is set in `dragstart` then `dragenter/dragover` also need to set it.
 *   When using a MS Surface tablet a drag-operation is initiated by touch and hold on a draggable.
 *   IE11 and Chrome scroll automatically when dragging close to a viewport edge.
 
 **Baseline recommendations for cross-browser/-platform support:**
 
 * Always set drag data on `dragstart` by calling `event.dataTransfer.setData(type, data)`.
-* Always handle `dragenter`-event on possible dropzones when you want to allow the drop by calling `event.preventDefault()`.
-* Handle `dragover`-event on dropzone when you want to allow the drop by calling `event.preventDefault()`, otherwise the drag-operation is aborted.
+* Always handle `dragenter`-event on possible dropzones if the drop is allowed by calling `event.preventDefault()`.
+* Handle `dragover`-event on dropzone when the drop is allowed by calling `event.preventDefault()`, otherwise the drag-operation is aborted.
 
 
 ## Contribute
 
-Contributions are welcome. There are [grunt](http://gruntjs.com) tasks for making it easy to get started.
+Contributions are welcome.
 
-The HTML5 spec on drag-and-drop should altough be your first read if you're new to the topic:
-https://html.spec.whatwg.org/multipage/interaction.html#dnd
-
-The project uses [TypeScript](http://www.typescriptlang.org) as main language for several reasons:
-* type-safety & compiler support for easier maintenance
-* easily switch to ES6 when its ready
-
-**Getting started**
-
-`npm install`
-
-`grunt` _(will start a watch on typescript files, setup a development server with live-reload and do an initial transpilation and linting)_
-
-start coding :) the browser should be automatically opened at the test page served on port 8000.
-
-**Debugging**
-
-For debugging purposes you can include the non-minified polyfill and define `var DEBUG;` before you `Initialize()`. 
-This will result in verbose console output that helps to track down issues.
-
-Set `var DEBUG = true;` and include `mobile-drag-and-drop-polyfill-debug.css` to get visual feedback on the state
-of the drag-and-drop operation.
+For more details on development setup see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 
 ## Thanks

@@ -1,4 +1,4 @@
-declare module MobileDragAndDropPolyfill {
+declare module DragDropPolyfill {
     interface ScrollOptions {
         threshold?: number;
         velocityFn: (velocity: number, threshold: number) => number;

@@ -1,5 +1,5 @@
-var MobileDragAndDropPolyfill;
-(function (MobileDragAndDropPolyfill) {
+var DragDropPolyfill;
+(function (DragDropPolyfill) {
     var _options = {
         threshold: 75,
         velocityFn: function (velocity, threshold) {
@@ -26,7 +26,7 @@ var MobileDragAndDropPolyfill;
             _options[key] = options[key];
         });
     }
-    MobileDragAndDropPolyfill.SetOptions = SetOptions;
+    DragDropPolyfill.SetOptions = SetOptions;
     function HandleDragImageTranslateOverride(event, currentCoordinates, hoveredElement, translateDragImageFn) {
         _currentCoordinates = currentCoordinates;
         _translateDragImageFn = translateDragImageFn;
@@ -44,7 +44,7 @@ var MobileDragAndDropPolyfill;
         }
         return performScrollAnimation;
     }
-    MobileDragAndDropPolyfill.HandleDragImageTranslateOverride = HandleDragImageTranslateOverride;
+    DragDropPolyfill.HandleDragImageTranslateOverride = HandleDragImageTranslateOverride;
     function scheduleScrollAnimation() {
         if (!!_scrollAnimationFrameId) {
             return;
@@ -201,5 +201,5 @@ var MobileDragAndDropPolyfill;
         }
         return true;
     }
-})(MobileDragAndDropPolyfill || (MobileDragAndDropPolyfill = {}));
-//# sourceMappingURL=mobile-drag-and-drop-polyfill-scroll-behaviour.js.map
+})(DragDropPolyfill || (DragDropPolyfill = {}));
+//# sourceMappingURL=drag-drop-polyfill-scroll-behaviour.js.map

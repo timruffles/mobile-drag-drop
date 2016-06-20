@@ -1,4 +1,4 @@
-module MobileDragAndDropPolyfill {
+module DragDropPolyfill {
 
     var _options:ScrollOptions = {
         threshold: 75,

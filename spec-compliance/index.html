@@ -6,11 +6,11 @@
     <title>iOS shim for HTML5 Drag and drop</title>
     <link rel="stylesheet" href="demo.css">
     <script src="demo.js"></script>
-    <link rel="stylesheet" href="../src/mobile-drag-and-drop-polyfill.css">
-    <link rel="stylesheet" href="../src/mobile-drag-and-drop-polyfill-icons.css">
-    <link rel="stylesheet" href="../src/mobile-drag-and-drop-polyfill-debug.css">
-    <script src="../src/mobile-drag-and-drop-polyfill.min.js"></script>
-    <script src="mobile-drag-and-drop-polyfill-scroll-behaviour.min.js"></script>
+    <link rel="stylesheet" href="../release/drag-drop-polyfill.css">
+    <link rel="stylesheet" href="../release/drag-drop-polyfill-icons.css">
+    <link rel="stylesheet" href="../release/drag-drop-polyfill-debug.css">
+    <script src="../release/drag-drop-polyfill.min.js"></script>
+    <script src="../release/drag-drop-polyfill-scroll-behaviour.min.js"></script>
 </head>
 <body>
 <section id="wrapper">
@@ -437,7 +437,7 @@
             return true;
         };
 
-        MobileDragAndDropPolyfill.Initialize({
+        DragDropPolyfill.Initialize({
 //            dragImageCenterOnTouch: true,
 //            dragImageOffset: {
 //                x: 0,
@@ -445,7 +445,7 @@
 //            },
 //            dragStartConditionOverride: allowHorizontalDragOnly,
 //            defaultActionOverride: alertAction,
-            dragImageTranslateOverride: MobileDragAndDropPolyfill.HandleDragImageTranslateOverride
+            dragImageTranslateOverride: DragDropPolyfill.HandleDragImageTranslateOverride
         });
 
         /**

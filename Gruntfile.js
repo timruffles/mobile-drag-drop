@@ -9,9 +9,9 @@ module.exports = function (grunt) {
       options: {
         mangle: true, // mangle var names
         mangleProperties: {
-          regex: /^_/
+          regex: /^_/ // this will mangle all properties starting with an underscore
         },
-        reserveDOMProperties: true, // do not mangle DOM or js props
+        reserveDOMProperties: true, // do not mangle browser props
         compress: {
           global_defs: {
             "DEBUG": false
@@ -33,28 +33,58 @@ module.exports = function (grunt) {
       main: {
         options: {
           banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */",
-          sourceMapIn: "src/mobile-drag-and-drop-polyfill.js.map"
+          sourceMapIn: "src/drag-drop-polyfill.js.map"
         },
-        src: "src/mobile-drag-and-drop-polyfill.js",
-        dest: "src/mobile-drag-and-drop-polyfill.min.js"
+        src: "src/drag-drop-polyfill.js",
+        dest: "src/drag-drop-polyfill.min.js"
       },
       scroll: {
         options: {
-          sourceMapIn: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.js.map"
+          sourceMapIn: "src/drag-drop-polyfill-scroll-behaviour.js.map"
         },
-        src: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.js",
-        dest: "src/mobile-drag-and-drop-polyfill-scroll-behaviour.min.js"
+        src: "src/drag-drop-polyfill-scroll-behaviour.js",
+        dest: "src/drag-drop-polyfill-scroll-behaviour.min.js"
       }
     },
     // http server config for development and demo page
     connect: {
-      // starts a server that will serve the development sources with priority
-      // before sources of the demo page. allows to use demo page while developing.
-      demo: {
+      // starts a server that will serve the development sources
+      // instead of the release sources.
+      dev: {
         options: {
           port: 8000,
           open: "http://localhost:8000/spec-compliance/",
-          livereload: 35731
+          livereload: 35731,
+          middleware: function (connect, options, middlewares) {
+
+            // inject a custom middleware into the array of default middlewares
+            middlewares.unshift(function (req, res, next) {
+
+              // regex matching release file urls
+              var redirectFrom = /\/release\//;
+              // src url fragment
+              var redirectTo = "/src/";
+
+              if (redirectFrom.test(req.url)) {
+
+                // modify url to point to src files
+                var srcUrl = req.url.replace(redirectFrom, redirectTo);
+                // unminified sources
+                req.url = srcUrl.replace(".min", "");
+              }
+
+              next();
+            });
+
+            return middlewares;
+          }
+        }
+      },
+      // starts a server that will serve the demo page with release sources
+      release: {
+        options: {
+          port: 8001,
+          open: "http://localhost:8001/spec-compliance/"
         }
       }
     },
@@ -92,7 +122,7 @@ module.exports = function (grunt) {
     watch: {
       ts: {
         files: ["src/**/*.ts", "!src/**/*.d.ts"],
-        tasks: ["ts", "uglify"],
+        tasks: ["ts"],
         options: {
           debounceDelay: 250,
           atBegin: true,
@@ -117,9 +147,12 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-ts");
   grunt.loadNpmTasks("grunt-tslint");
 
-  // build files, minify, copy to release folder and demo page (gh pages)
+  // compile, lint, minify, clean copy to release folder
   grunt.registerTask("release", ["ts", "tslint", "uglify", "clean", "copy"]);
 
+  // serve release files
+  grunt.registerTask("serve_release", ["connect:release"]);
+
   // default task for developers to start coding
-  grunt.registerTask("default", ["connect:demo", "watch"]);
+  grunt.registerTask("default", ["connect:dev", "watch"]);
 };

@@ -1,5 +1,5 @@
 declare var DEBUG: boolean;
-declare module MobileDragAndDropPolyfill {
+declare module DragDropPolyfill {
     interface Config {
         dragImageOffset?: Point;
         dragImageCenterOnTouch?: boolean;

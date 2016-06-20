@@ -1,5 +1,5 @@
-var MobileDragAndDropPolyfill;
-(function (MobileDragAndDropPolyfill) {
+var DragDropPolyfill;
+(function (DragDropPolyfill) {
     var detectedFeatures;
     function detectFeatures() {
         var features = {
@@ -39,7 +39,7 @@ var MobileDragAndDropPolyfill;
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
         document.addEventListener("touchstart", onTouchstart);
     }
-    MobileDragAndDropPolyfill.Initialize = Initialize;
+    DragDropPolyfill.Initialize = Initialize;
     var activeDragOperation;
     function onTouchstart(e) {
         console.log("dnd-poly: global touchstart");
@@ -697,5 +697,5 @@ var MobileDragAndDropPolyfill;
         }
         return DROP_EFFECTS[0];
     }
-})(MobileDragAndDropPolyfill || (MobileDragAndDropPolyfill = {}));
-//# sourceMappingURL=mobile-drag-and-drop-polyfill.js.map
+})(DragDropPolyfill || (DragDropPolyfill = {}));
+//# sourceMappingURL=drag-drop-polyfill.js.map

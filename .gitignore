@@ -1,10 +1,12 @@
-!/release/**/*
-!/spec-compliance/**/*
-
-node_modules/
+.idea/
 .tscache/
 tscommand*.txt
+
+node_modules/
 
 src/*.js
 src/*.map
 src/*.d.ts
+
+!/release/**/*
+!/spec-compliance/**/*
