@@ -1,6 +1,7 @@
 declare var DEBUG: boolean;
 declare module DragDropPolyfill {
     interface Config {
+        forceApply?: boolean;
         dragImageOffset?: Point;
         dragImageCenterOnTouch?: boolean;
         iterationInterval?: number;

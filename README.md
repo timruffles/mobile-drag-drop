@@ -71,26 +71,28 @@ declare module DragDropPolyfill {
     * Polyfill config
     */
     interface Config {
-            // apply static offset from touch coordinates to drag image coordinates
-            // defaults to (0,0)
-            dragImageOffset?:Point;
-            // if the dragImage shall be centered on the touch coordinates
-            // defaults to false
-            dragImageCenterOnTouch?:boolean;
-            // drag'n'drop operation loop interval
-            // defaults to 150ms
-            iterationInterval?:number;
-            // hook for custom logic that decides if a drag-operation should start
-            dragStartConditionOverride?:( event:TouchEvent ) => boolean;
-            // hook for custom logic that decides if and where the drag image should translate
-            dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
-                                          hoverCoordinates:Point,   // the processed touch event viewport coordinates
-                                          hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
-                                          translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
-                                         ) => boolean; // TODO
-            // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
-            defaultActionOverride?:( event:TouchEvent ) => boolean;
-        }
+        // flag to force the polyfill being applied and not rely on internal feature detection
+        forceApply?: boolean;
+        // apply static offset from touch coordinates to drag image coordinates
+        // defaults to (0,0)
+        dragImageOffset?:Point;
+        // if the dragImage shall be centered on the touch coordinates
+        // defaults to false
+        dragImageCenterOnTouch?:boolean;
+        // drag'n'drop operation loop interval
+        // defaults to 150ms
+        iterationInterval?:number;
+        // hook for custom logic that decides if a drag-operation should start
+        dragStartConditionOverride?:( event:TouchEvent ) => boolean;
+        // hook for custom logic that decides if and where the drag image should translate
+        dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
+                                      hoverCoordinates:Point,   // the processed touch event viewport coordinates
+                                      hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
+                                      translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
+                                     ) => boolean; // TODO
+        // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
+        defaultActionOverride?:( event:TouchEvent ) => boolean;
+    }
 
     /**
     * Invoke for initializing the polyfill.
@@ -183,7 +185,7 @@ No critical issues but UX suffers because of the constantly [scrolling location 
 ## Cross-browser differences in HTML5 drag'n'drop API
 
 The drag'n'drop API is not implemented consistently in all browsers.
-This table is an effort to list all things required to make drag'n'drop work.
+This table is an effort to list all things required to make drag'n'drop work in all browsers and with the polyfill.
 
 | **Browser** | **dragstart**                            | **drag** | **dragend** | **dragenter**                                    | **dragover**                          | **dragleave** | **dragexit** |
 | ----------- | ---------------------------------------- | -------- | ----------- | ------------------------------------------------ | ------------------------------------- | ------------- | ------------ |

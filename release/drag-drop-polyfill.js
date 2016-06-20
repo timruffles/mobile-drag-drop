@@ -1,18 +1,16 @@
 var DragDropPolyfill;
 (function (DragDropPolyfill) {
-    var detectedFeatures;
     function detectFeatures() {
         var features = {
             dragEvents: ("ondragstart" in document.documentElement),
             draggable: ("draggable" in document.documentElement),
-            isBlinkEngine: !!(window.chrome) || /chrome/i.test(navigator.userAgent),
             touchEvents: ("ontouchstart" in document.documentElement),
-            transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend",
-            userAgentNotSupportingNativeDnD: false
+            userAgentSupportingNativeDnD: undefined
         };
-        features.userAgentNotSupportingNativeDnD = ((/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
+        var isBlinkEngine = !!(window.chrome) || /chrome/i.test(navigator.userAgent);
+        features.userAgentSupportingNativeDnD = !((/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
             ||
-                ((features.touchEvents) && (features.isBlinkEngine)));
+                (isBlinkEngine && features.touchEvents));
         if (DEBUG) {
             Object.keys(features).forEach(function (key) {
                 console.log("dnd-poly: detected feature '" + key + " = " + features[key] + "'");
@@ -21,20 +19,21 @@ var DragDropPolyfill;
         return features;
     }
     var config = {
-        dragImageCenterOnTouch: false,
         iterationInterval: 150,
     };
     function Initialize(override) {
-        detectedFeatures = detectFeatures();
-        if (detectedFeatures.userAgentNotSupportingNativeDnD === false
-            && detectedFeatures.draggable
-            && detectedFeatures.dragEvents) {
-            return;
-        }
         if (override) {
             Object.keys(override).forEach(function (key) {
                 config[key] = override[key];
             });
+        }
+        if (!config.forceApply) {
+            var detectedFeatures = detectFeatures();
+            if (detectedFeatures.userAgentSupportingNativeDnD
+                && detectedFeatures.draggable
+                && detectedFeatures.dragEvents) {
+                return;
+            }
         }
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
         document.addEventListener("touchstart", onTouchstart);
