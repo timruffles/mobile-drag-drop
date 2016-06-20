@@ -12,8 +12,6 @@ module DragDropPolyfill {
         userAgentSupportingNativeDnD:boolean;
     }
 
-    var detectedFeatures:DetectedFeatures;
-
     function detectFeatures():DetectedFeatures {
 
         let features:DetectedFeatures = {
@@ -47,6 +45,8 @@ module DragDropPolyfill {
     //<editor-fold desc="public api">
 
     export interface Config {
+        // flag to force the polyfill being applied and not rely on internal feature detection
+        forceApply?:boolean;
         // useful for when you want the default drag image but still want to apply
         // some static offset from touch coordinates to drag image coordinates
         // defaults to (0,0)
@@ -70,28 +70,31 @@ module DragDropPolyfill {
 
     // default config
     const config:Config = {
-        dragImageCenterOnTouch: false,
         iterationInterval: 150,
     };
 
     export function Initialize( override?:Config ) {
-
-        // feature/browser detection
-        detectedFeatures = detectFeatures();
-
-        // check if native drag and drop support is there
-        if( detectedFeatures.userAgentSupportingNativeDnD
-            && detectedFeatures.draggable
-            && detectedFeatures.dragEvents ) {
-            // no polyfilling required
-            return;
-        }
 
         if( override ) {
             // overwrite default config with user config
             Object.keys( override ).forEach( function( key ) {
                 config[ key ] = override[ key ];
             } );
+        }
+
+        // only do feature detection when config does not force apply the polyfill
+        if( !config.forceApply ) {
+
+            // feature/browser detection
+            var detectedFeatures = detectFeatures();
+
+            // check if native drag and drop support is there
+            if( detectedFeatures.userAgentSupportingNativeDnD
+                && detectedFeatures.draggable
+                && detectedFeatures.dragEvents ) {
+                // no polyfilling required
+                return;
+            }
         }
 
         console.log( "dnd-poly: Applying mobile drag and drop polyfill." );
