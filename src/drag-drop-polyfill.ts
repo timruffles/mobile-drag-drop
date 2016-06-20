@@ -9,9 +9,7 @@ module DragDropPolyfill {
         draggable:boolean;
         dragEvents:boolean;
         touchEvents:boolean;
-        userAgentNotSupportingNativeDnD:boolean;
-        isBlinkEngine:boolean;
-        transitionEnd:string;
+        userAgentSupportingNativeDnD:boolean;
     }
 
     var detectedFeatures:DetectedFeatures;
@@ -21,18 +19,18 @@ module DragDropPolyfill {
         let features:DetectedFeatures = {
             dragEvents: ("ondragstart" in document.documentElement),
             draggable: ("draggable" in document.documentElement),
-            isBlinkEngine: !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent ),
             touchEvents: ("ontouchstart" in document.documentElement),
-            transitionEnd: ("WebkitTransition" in document.documentElement.style) ? "webkitTransitionEnd" : "transitionend",
-            userAgentNotSupportingNativeDnD: false
+            userAgentSupportingNativeDnD: undefined
         };
 
-        features.userAgentNotSupportingNativeDnD = (
-            // if is mobile safari or android browser
+        var isBlinkEngine = !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent );
+
+        features.userAgentSupportingNativeDnD = !(
+            // if is mobile safari or android browser -> no native dnd
             (/iPad|iPhone|iPod|Android/.test( navigator.userAgent ))
             || // OR
             //if is blink(chrome/opera) with touch events enabled -> no native dnd
-            ((features.touchEvents) && (features.isBlinkEngine))
+            (isBlinkEngine && features.touchEvents)
         );
 
         if( DEBUG ) {
@@ -82,7 +80,7 @@ module DragDropPolyfill {
         detectedFeatures = detectFeatures();
 
         // check if native drag and drop support is there
-        if( detectedFeatures.userAgentNotSupportingNativeDnD === false
+        if( detectedFeatures.userAgentSupportingNativeDnD
             && detectedFeatures.draggable
             && detectedFeatures.dragEvents ) {
             // no polyfilling required
@@ -210,12 +208,12 @@ module DragDropPolyfill {
     const enum DragOperationState {
         // initial state of a controller, if no movement is detected the operation ends with this state
         POTENTIAL,
-        // after movement is detected the drag operation starts and keeps this state until it ends
-        STARTED,
-        // when the drag operation ended normally
-        ENDED,
-        // when the drag operation ended with a cancelled input event
-        CANCELLED
+            // after movement is detected the drag operation starts and keeps this state until it ends
+            STARTED,
+            // when the drag operation ended normally
+            ENDED,
+            // when the drag operation ended with a cancelled input event
+            CANCELLED
     }
 
     // contains all possible values of the effectAllowed property
