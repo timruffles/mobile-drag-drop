@@ -1,5 +1,5 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
-declare var DEBUG:boolean;
+declare let DEBUG:boolean;
 
 module DragDropPolyfill {
 
@@ -21,7 +21,7 @@ module DragDropPolyfill {
             userAgentSupportingNativeDnD: undefined
         };
 
-        var isBlinkEngine = !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent );
+        const isBlinkEngine = !!((<any>window).chrome) || /chrome/i.test( navigator.userAgent );
 
         features.userAgentSupportingNativeDnD = !(
             // if is mobile safari or android browser -> no native dnd
@@ -86,7 +86,7 @@ module DragDropPolyfill {
         if( !config.forceApply ) {
 
             // feature/browser detection
-            var detectedFeatures = detectFeatures();
+            const detectedFeatures = detectFeatures();
 
             // check if native drag and drop support is there
             if( detectedFeatures.userAgentSupportingNativeDnD
@@ -108,7 +108,7 @@ module DragDropPolyfill {
     //<editor-fold desc="drag operation start/end">
 
     // reference the currently active drag operation
-    var activeDragOperation:DragOperationController;
+    let activeDragOperation:DragOperationController;
 
     /**
      * event handler listening for initial events that possibly start a drag and drop operation.
@@ -126,7 +126,7 @@ module DragDropPolyfill {
             return;
         }
 
-        var dragTarget = tryFindDraggableTarget( e );
+        let dragTarget = tryFindDraggableTarget( e );
 
         // If there is no such element, then nothing is being dragged; abort these
         // steps, the drag-and-drop operation is never started.
@@ -162,7 +162,7 @@ module DragDropPolyfill {
         // user tried to drag, that has the IDL attribute draggable set to true.
         //else {
 
-        var el = <HTMLElement>event.target;
+        let el = <HTMLElement>event.target;
 
         do {
             if( el.draggable === false ) {
@@ -376,7 +376,7 @@ module DragDropPolyfill {
                 y: null
             };
 
-            var dragImageSrc:HTMLElement = this._sourceNode;
+            let dragImageSrc:HTMLElement = this._sourceNode;
 
             this._dataTransfer = new DataTransfer( this._dragDataStore, ( element:HTMLElement, x:number, y:number ) => {
 
@@ -426,8 +426,8 @@ module DragDropPolyfill {
                 // by default initialize drag image offset the same as desktop
                 else {
 
-                    var targetRect = dragImageSrc.getBoundingClientRect();
-                    var cs = getComputedStyle( dragImageSrc );
+                    const targetRect = dragImageSrc.getBoundingClientRect();
+                    const cs = getComputedStyle( dragImageSrc );
                     this._dragImageOffset = {
                         x: targetRect.left - this._initialTouch.clientX - parseInt( cs.marginLeft, 10 ),
                         y: targetRect.top - this._initialTouch.clientY - parseInt( cs.marginTop, 10 )
@@ -496,7 +496,7 @@ module DragDropPolyfill {
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
 
                 // by default only allow a single moving finger to initiate a drag operation
-                var startDrag = (event.touches.length === 1);
+                let startDrag = (event.touches.length === 1);
 
                 // is a lifecycle hook present?
                 if( this._config.dragStartConditionOverride ) {
@@ -540,7 +540,7 @@ module DragDropPolyfill {
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
             updateCentroidCoordinatesOfTouchesIn( "page", event, this._dragImagePageCoordinates );
 
-            var handledDragImageTranslate = false;
+            let handledDragImageTranslate = false;
 
             if( this._config.dragImageTranslateOverride ) {
 
@@ -632,12 +632,12 @@ module DragDropPolyfill {
                     debug_class_drop_target    = CLASS_PREFIX + "current-drop-target";
             }
 
-            var previousDragOperation = this._currentDragOperation;
+            const previousDragOperation = this._currentDragOperation;
 
             // Fire a DND event named drag event at the source node.
             this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
             this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
-            var dragCancelled = dispatchDragEvent( "drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer );
+            const dragCancelled = dispatchDragEvent( "drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer );
             if( dragCancelled ) {
                 console.log( "dnd-poly: drag event cancelled." );
                 // If this event is canceled, the user agent must set the current drag operation to "none" (no drag operation).
@@ -648,7 +648,7 @@ module DragDropPolyfill {
             // or if the drag event was canceled, then this will be the last iteration.
             if( dragCancelled || this._dragOperationState === DragOperationState.ENDED || this._dragOperationState === DragOperationState.CANCELLED ) {
 
-                var dragFailed = this._dragOperationEnded( this._dragOperationState );
+                const dragFailed = this._dragOperationEnded( this._dragOperationState );
 
                 // if drag failed transition snap back
                 if( dragFailed ) {
@@ -667,11 +667,11 @@ module DragDropPolyfill {
 
             // If the drag event was not canceled and the user has not ended the drag-and-drop operation,
             // check the state of the drag-and-drop operation, as follows:
-            var newUserSelection:HTMLElement = <HTMLElement>document.elementFromPoint( this._currentHotspotCoordinates.x, this._currentHotspotCoordinates.y );
+            const newUserSelection:HTMLElement = <HTMLElement>document.elementFromPoint( this._currentHotspotCoordinates.x, this._currentHotspotCoordinates.y );
 
             console.log( "dnd-poly: new immediate user selection is: " + newUserSelection );
 
-            var previousTargetElement = this._currentDropTarget;
+            const previousTargetElement = this._currentDropTarget;
 
             // If the user is indicating a different immediate user selection than during the last iteration (or if this is the first iteration),
             // and if this immediate user selection is not the same as the current target element,
@@ -858,7 +858,7 @@ module DragDropPolyfill {
                 this._dragImage.classList.remove( CLASS_PREFIX + previousDragOperation );
             }
 
-            var currentDragOperationClass = CLASS_PREFIX + this._currentDragOperation;
+            const currentDragOperationClass = CLASS_PREFIX + this._currentDragOperation;
 
             if( this._dragImage.classList.contains( currentDragOperationClass ) === false ) {
                 this._dragImage.classList.add( currentDragOperationClass );
@@ -893,9 +893,9 @@ module DragDropPolyfill {
             // If the current drag operation is "none" (no drag operation), or,
             // if the user ended the drag-and-drop operation by canceling it (e.g. by hitting the Escape key), or
             // if the current target element is null, then the drag operation failed.
-            var dragFailed = (this._currentDragOperation === DROP_EFFECTS[ DROP_EFFECT.NONE ]
-                              || this._currentDropTarget === null
-                              || state === DragOperationState.CANCELLED);
+            const dragFailed = (this._currentDragOperation === DROP_EFFECTS[ DROP_EFFECT.NONE ]
+                                || this._currentDropTarget === null
+                                || state === DragOperationState.CANCELLED);
             if( dragFailed ) {
 
                 // Run these substeps:
@@ -1154,8 +1154,8 @@ module DragDropPolyfill {
     }
 
     function isTouchIdentifierContainedInTouchEvent( newTouch:TouchEvent, touchIdentifier:number ) {
-        for( var i = 0; i < newTouch.changedTouches.length; i++ ) {
-            var touch = newTouch.changedTouches[ i ];
+        for( let i = 0; i < newTouch.changedTouches.length; i++ ) {
+            const touch = newTouch.changedTouches[ i ];
             if( touch.identifier === touchIdentifier ) {
                 return true;
             }
@@ -1171,9 +1171,9 @@ module DragDropPolyfill {
                                        dataTransfer:DataTransfer,
                                        relatedTarget:Element = null ) {
 
-        var touch:Touch = e.changedTouches[ 0 ];
+        const touch:Touch = e.changedTouches[ 0 ];
 
-        var dndEvent:DragEvent = <DragEvent>new Event( type, {
+        const dndEvent:DragEvent = <DragEvent>new Event( type, {
             bubbles: true,
             cancelable: cancelable
         } );
@@ -1190,7 +1190,7 @@ module DragDropPolyfill {
         dndEvent.pageX = touch.pageX;
         dndEvent.pageY = touch.pageY;
 
-        var targetRect = targetElement.getBoundingClientRect();
+        const targetRect = targetElement.getBoundingClientRect();
         dndEvent.offsetX = dndEvent.clientX - targetRect.left;
         dndEvent.offsetY = dndEvent.clientY - targetRect.top;
 
@@ -1202,9 +1202,9 @@ module DragDropPolyfill {
      * or in viewport (screen coordinates) coordinates.
      */
     function updateCentroidCoordinatesOfTouchesIn( coordinateProp:string, event:TouchEvent, outPoint:Point ):void {
-        var pageXs:Array<number> = [], pageYs:Array<number> = [];
-        for( var i = 0; i < event.touches.length; i++ ) {
-            var touch = event.touches[ i ];
+        const pageXs:Array<number> = [], pageYs:Array<number> = [];
+        for( let i = 0; i < event.touches.length; i++ ) {
+            const touch = event.touches[ i ];
             pageXs.push( touch[ coordinateProp + "X" ] );
             pageYs.push( touch[ coordinateProp + "Y" ] );
         }
@@ -1217,9 +1217,9 @@ module DragDropPolyfill {
         if( srcNode.nodeType === 1 ) {
 
             // Clone the style
-            var cs = getComputedStyle( srcNode );
+            const cs = getComputedStyle( srcNode );
             for( let i = 0; i < cs.length; i++ ) {
-                var csName = cs[ i ];
+                const csName = cs[ i ];
                 dstNode.style.setProperty( csName, cs.getPropertyValue( csName ), cs.getPropertyPriority( csName ) );
             }
 
@@ -1245,7 +1245,7 @@ module DragDropPolyfill {
 
     function createDragImage( sourceNode:HTMLElement ):HTMLElement {
 
-        var dragImage = <HTMLElement>sourceNode.cloneNode( true );
+        const dragImage = <HTMLElement>sourceNode.cloneNode( true );
 
         // this removes any id's and stuff that could interfere with drag and drop
         prepareNodeCopyAsDragImage( sourceNode, dragImage );
@@ -1268,7 +1268,7 @@ module DragDropPolyfill {
 
         return TRANSFORM_CSS_VENDOR_PREFIXES.map( function( prefix ) {
 
-            var transform = sourceNode.style[ prefix + "transform" ];
+            let transform = sourceNode.style[ prefix + "transform" ];
 
             if( !transform || transform === "none" ) {
                 return "";
@@ -1283,7 +1283,7 @@ module DragDropPolyfill {
 
     function translateDragImage( dragImage:HTMLElement, pnt:Point, originalTransforms:string[], offset?:Point, centerOnCoordinates = true ):void {
 
-        var x = pnt.x, y = pnt.y;
+        let x = pnt.x, y = pnt.y;
 
         if( offset ) {
             x += offset.x;
@@ -1296,10 +1296,10 @@ module DragDropPolyfill {
         }
 
         // using translate3d for best performance
-        var translate = "translate3d(" + x + "px," + y + "px, 0)";
+        const translate = "translate3d(" + x + "px," + y + "px, 0)";
 
-        for( var i = 0; i < TRANSFORM_CSS_VENDOR_PREFIXES.length; i++ ) {
-            var transformProp = TRANSFORM_CSS_VENDOR_PREFIXES[ i ] + "transform";
+        for( let i = 0; i < TRANSFORM_CSS_VENDOR_PREFIXES.length; i++ ) {
+            const transformProp = TRANSFORM_CSS_VENDOR_PREFIXES[ i ] + "transform";
             dragImage.style[ transformProp ] = translate + " " + originalTransforms[ i ];
         }
     }
@@ -1310,7 +1310,7 @@ module DragDropPolyfill {
      */
     function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElement, dragImageTransforms:string[], transitionEndCb:Function ):void {
 
-        var cs = getComputedStyle( sourceEl );
+        const cs = getComputedStyle( sourceEl );
 
         if( cs.visibility === "hidden" || cs.display === "none" ) {
             console.log( "dnd-poly: source node is not visible. skipping snapback transition." );
@@ -1322,9 +1322,9 @@ module DragDropPolyfill {
         console.log( "dnd-poly: starting dragimage snap back" );
 
         // calc source node position
-        var rect = sourceEl.getBoundingClientRect();
+        const rect = sourceEl.getBoundingClientRect();
 
-        var pnt:Point = {
+        const pnt:Point = {
             x: rect.left,
             y: rect.top
         };
@@ -1340,10 +1340,10 @@ module DragDropPolyfill {
         // add class containing transition rules
         dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
 
-        var csDragImage = getComputedStyle( dragImage );
-        var durationInS = parseFloat( csDragImage.transitionDuration );
-        var delayInS = parseFloat( csDragImage.transitionDelay );
-        var durationInMs = Math.round( (durationInS + delayInS) * 1000 );
+        const csDragImage = getComputedStyle( dragImage );
+        const durationInS = parseFloat( csDragImage.transitionDuration );
+        const delayInS = parseFloat( csDragImage.transitionDelay );
+        const durationInMs = Math.round( (durationInS + delayInS) * 1000 );
 
         // apply the translate
         translateDragImage( dragImage, pnt, dragImageTransforms, undefined, false );
@@ -1425,8 +1425,8 @@ module DragDropPolyfill {
             }
         }
 
-        var leaveEvt = createDragEventFromTouch( targetElement, touchEvent, dragEvent, cancelable, document.defaultView, dataTransfer, relatedTarget );
-        var cancelled = !targetElement.dispatchEvent( leaveEvt );
+        const leaveEvt = createDragEventFromTouch( targetElement, touchEvent, dragEvent, cancelable, document.defaultView, dataTransfer, relatedTarget );
+        const cancelled = !targetElement.dispatchEvent( leaveEvt );
 
         dataStore._mode = DragDataStoreMode._DISCONNECTED;
 

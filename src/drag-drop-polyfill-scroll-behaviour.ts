@@ -1,30 +1,30 @@
 module DragDropPolyfill {
 
-    var _options:ScrollOptions = {
+    let _options:ScrollOptions = {
         threshold: 75,
         // simplified cubic-ease-in function
         velocityFn: function( velocity:number, threshold:number ) {
-            var multiplier = velocity / threshold;
-            var easeInCubic = multiplier * multiplier * multiplier;
+            const multiplier = velocity / threshold;
+            const easeInCubic = multiplier * multiplier * multiplier;
             return easeInCubic * threshold;
         }
     };
 
-    var _scrollIntentions:ScrollIntentions = {
+    let _scrollIntentions:ScrollIntentions = {
         horizontal: ScrollIntention.NONE,
         vertical: ScrollIntention.NONE
     };
 
-    var _dynamicVelocity:Point = {
+    let _dynamicVelocity:Point = {
         x: 0,
         y: 0
     };
 
-    var _scrollAnimationFrameId:any;
-    var _currentCoordinates:Point;
-    var _hoveredElement:HTMLElement;
-    var _scrollableParent:HTMLElement;
-    var _translateDragImageFn:( offsetX:number, offsetY:number ) => void;
+    let _scrollAnimationFrameId:any;
+    let _currentCoordinates:Point;
+    let _hoveredElement:HTMLElement;
+    let _scrollableParent:HTMLElement;
+    let _translateDragImageFn:( offsetX:number, offsetY:number ) => void;
 
     //<editor-fold desc="public api">
 
@@ -98,7 +98,7 @@ module DragDropPolyfill {
 
     function scrollAnimation() {
 
-        var scrollDiffX = 0,
+        let scrollDiffX = 0,
             scrollDiffY = 0,
             isTopLevel  = isTopLevelEl( _scrollableParent );
 
@@ -151,7 +151,7 @@ module DragDropPolyfill {
             return false;
         }
 
-        var scrollableParentBounds:IScrollBounds = {
+        const scrollableParentBounds:IScrollBounds = {
             x: getElementViewportOffset( scrollableParent, ScrollAxis.HORIZONTAL ),
             y: getElementViewportOffset( scrollableParent, ScrollAxis.VERTICAL ),
             width: getElementViewportSize( scrollableParent, ScrollAxis.HORIZONTAL ),
@@ -162,7 +162,7 @@ module DragDropPolyfill {
             scrollHeight: scrollableParent.scrollHeight
         };
 
-        var currentCoordinatesOffset = {
+        const currentCoordinatesOffset = {
             x: currentCoordinates.x - scrollableParentBounds.x,
             y: currentCoordinates.y - scrollableParentBounds.y
         };
@@ -230,13 +230,13 @@ module DragDropPolyfill {
     }
 
     function getElementViewportOffset( el:HTMLElement, axis:ScrollAxis ) {
-        var offset:number;
+        let offset:number;
 
         if( isTopLevelEl( el ) ) {
             offset = (axis === ScrollAxis.HORIZONTAL) ? el.clientLeft : el.clientTop;
         }
         else {
-            var bounds = el.getBoundingClientRect();
+            const bounds = el.getBoundingClientRect();
             offset = (axis === ScrollAxis.HORIZONTAL) ? bounds.left : bounds.top;
         }
 
@@ -244,7 +244,7 @@ module DragDropPolyfill {
     }
 
     function getElementViewportSize( el:HTMLElement, axis:ScrollAxis ) {
-        var size:number;
+        let size:number;
 
         if( isTopLevelEl( el ) ) {
             size = (axis === ScrollAxis.HORIZONTAL) ? window.innerWidth : window.innerHeight;
@@ -257,10 +257,10 @@ module DragDropPolyfill {
     }
 
     function getSetElementScroll( el:HTMLElement, axis:ScrollAxis, scroll?:number ) {
-        var prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
+        const prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
 
         // abstracting away compatibility issues on scroll properties of document/body
-        var isTopLevel = isTopLevelEl( el );
+        const isTopLevel = isTopLevelEl( el );
 
         if( arguments.length === 2 ) {
 
@@ -282,7 +282,7 @@ module DragDropPolyfill {
 
     //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
     function isScrollable( el:HTMLElement ):boolean {
-        var cs = getComputedStyle( el );
+        const cs = getComputedStyle( el );
 
         if( el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto") ) {
             return true;
@@ -340,13 +340,13 @@ module DragDropPolyfill {
 
     function isScrollEndReached( axis:ScrollAxis, scrollIntention:ScrollIntention, scrollBounds:IScrollBounds ) {
 
-        var currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
+        const currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
 
         // wants to scroll to the right/bottom
         if( scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM ) {
 
-            var maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? ( scrollBounds.scrollWidth - scrollBounds.width ) : ( scrollBounds.scrollHeight -
-                                                                                                                           scrollBounds.height );
+            const maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? ( scrollBounds.scrollWidth - scrollBounds.width ) : ( scrollBounds.scrollHeight -
+                                                                                                                             scrollBounds.height );
 
             // is already at the right/bottom edge
             return currentScrollOffset >= maxScrollOffset;
