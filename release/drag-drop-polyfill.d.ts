@@ -1,4 +1,4 @@
-declare var DEBUG: boolean;
+declare let DEBUG: boolean;
 declare module DragDropPolyfill {
     interface Config {
         forceApply?: boolean;
