@@ -151,7 +151,7 @@ module.exports = function (grunt) {
         push: true,
         gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
         globalReplace: false,
-        prereleaseName: false,
+        prereleaseName: "beta",
         metadata: "",
         regExp: false
       }
