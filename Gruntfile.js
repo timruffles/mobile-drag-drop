@@ -136,6 +136,25 @@ module.exports = function (grunt) {
           livereload: 35731
         }
       }
+    },
+    // bump version, commit, tag
+    bump: {
+      options: {
+        files: ["package.json", "bower.json"],
+        updateConfigs: ["pkg"],
+        commit: true,
+        commitMessage: "Release v%VERSION%",
+        commitFiles: ["package.json", "bower.json", "CHANGELOG.md", "release"],
+        createTag: true,
+        tagName: "v%VERSION%",
+        tagMessage: "Version %VERSION%",
+        push: true,
+        gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
+        globalReplace: false,
+        prereleaseName: false,
+        metadata: "",
+        regExp: false
+      }
     }
   });
 
@@ -146,12 +165,23 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ts");
   grunt.loadNpmTasks("grunt-tslint");
+  grunt.loadNpmTasks('grunt-npm');
+  grunt.loadNpmTasks('grunt-bump');
 
   // compile, lint, minify, clean copy to release folder
-  grunt.registerTask("release", ["ts", "tslint", "uglify", "clean", "copy"]);
+  grunt.registerTask("prepare-release", "Prepare a release by building release files and bumping version", function (bump) {
+    if (!bump) {
+      grunt.log.error("You must specify the version bump! See https://github.com/vojtajina/grunt-bump/tree/v0.7.0");
+      return;
+    }
+    grunt.task.run("bump-only:" + bump, "ts", "tslint", "uglify", "clean", "copy");
+  });
 
   // serve release files
-  grunt.registerTask("serve_release", ["connect:release"]);
+  grunt.registerTask("serve-release", "serve release files for checking that release files have no issues", ["connect:release"]);
+
+  // publish a prepared release
+  grunt.registerTask("publish-release", ["bump-commit", "npm-publish"]);
 
   // default task for developers to start coding
   grunt.registerTask("default", ["connect:dev", "watch"]);

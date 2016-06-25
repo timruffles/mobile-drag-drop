@@ -1,5 +1,5 @@
 
-# Contribute
+# Contributing
 
 There are [grunt](http://gruntjs.com) tasks for making it easy to get started:
 
@@ -16,7 +16,9 @@ https://html.spec.whatwg.org/multipage/interaction.html#dnd
 The project uses [TypeScript](http://www.typescriptlang.org) as main language for several reasons:
 * type-safety & compiler support for easier maintenance
 * easily switch to ES6 when its ready
-* API documentation through types in place
+* inline documentation through types in place
+* easily document API
+
 
 ## Debugging
 
@@ -26,6 +28,13 @@ This will result in verbose console output that helps to track down issues.
 To get visual feedback on the state of the drag-and-drop operation additionaly include `drag-drop-polyfill-debug.css`.
 
 
-## Release
+## Releasing
+_for maintainers only_
 
-`TODO how to release`
+[grunt-bump](https://github.com/vojtajina/grunt-bump/tree/v0.7.0) is used for raising version numbers in package.json and bower.json, committing and tagging.
+
+* make sure repo is in a clean state (after having merged PRs or committed changes to sources)
+* run `grunt prepare_release:VERSION_BUMP` where `VERSION_BUMP` is the raise of version (`patch`, `minor`, `major`, ...)
+* run `grunt serve_release` to check if everything runs fine (here would be the right place for automated tests)
+* update `CHANGELOG.md` with notes about the prepared release
+* run `grunt publish_release` to commit, tag and push the release
