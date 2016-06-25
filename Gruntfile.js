@@ -178,7 +178,7 @@ module.exports = function (grunt) {
   });
 
   // serve release files
-  grunt.registerTask("serve-release", "serve release files for checking that release files have no issues", ["connect:release"]);
+  grunt.registerTask("serve-release", "serve release files for checking that release files have no issues", ["connect:release", "watch:resources"]);
 
   // publish a prepared release
   grunt.registerTask("publish-release", ["bump-commit", "npm-publish"]);
