@@ -91,13 +91,14 @@ declare module DragDropPolyfill {
         // defaults to 150ms
         iterationInterval?:number;
         // hook for custom logic that decides if a drag-operation should start
+        // returning falsy will result in drag operation cancel
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
         // hook for custom logic that decides if and where the drag image should translate
         dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
                                       hoverCoordinates:Point,   // the processed touch event viewport coordinates
                                       hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
                                       translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
-                                     ) => boolean; // TODO
+                                     ) => boolean;
         // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
         defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
@@ -149,9 +150,7 @@ Feel free to use this as a starting point.
 
 ## Known issues and limitations
 
-* Currently does not work with `iFrames`. Contributions welcome.
-
-* `dragStartConditionOverride` `TODO`
+`iFrames` are currently not supported. Contributions welcome. Please see https://github.com/timruffles/ios-html5-drag-drop-shim/issues/5 for the current state.
 
 
 ## Browser compatibility

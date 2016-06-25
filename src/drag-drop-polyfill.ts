@@ -505,13 +505,8 @@ module DragDropPolyfill {
                         startDrag = this._config.dragStartConditionOverride( event );
                     }
                     catch( e ) {
-                        console.log( "dnd-poly: error in dragStartConditionOverride hook: " + e );
-                    }
-
-                    // we got undefined or some other unspecific value so we just do nothing
-                    // the hook has to return a boolean
-                    if( typeof startDrag !== "boolean" ) {
-                        return;
+                        console.error( "dnd-poly: error in dragStartConditionOverride hook: " + e );
+                        startDrag = false;
                     }
                 }
 
