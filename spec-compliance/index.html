@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset=utf-8>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>iOS shim for HTML5 Drag and drop</title>
+    <link rel="stylesheet" href="demo.css">
+    <script src="demo.js"></script>
+    <link rel="stylesheet" href="../release/drag-drop-polyfill.css">
+    <link rel="stylesheet" href="../release/drag-drop-polyfill-icons.css">
+    <link rel="stylesheet" href="../release/drag-drop-polyfill-debug.css">
+    <script src="../release/drag-drop-polyfill.min.js"></script>
+    <script src="../release/drag-drop-polyfill-scroll-behaviour.min.js"></script>
+</head>
+<body>
+<section id="wrapper">
+    <header>
+        <h1>iOS shim for HTML5 Drag and drop</h1>
+    </header>
+    <article>
+        <p>Drag the list items over the dustbin, and drop them to have the bin eat the item</p>
+
+        <div id="bin">
+            <div id="innerBin"></div>
+        </div>
+        <ul>
+            <li><a href="#" id="one"><span style="display: inline-block; background: lightblue">one</span></a></li>
+            <li><a href="#" id="two">two</a></li>
+            <li><a href="#" id="three">three</a></li>
+            <li><a href="#" id="four">four</a></li>
+            <li><a href="#" id="five">five</a></li>
+            <li>
+                <a id="six">six
+                    <label>
+                        nested select
+                        <select>
+                            <option>1</option>
+                            <option>2</option>
+                        </select>
+                    </label>
+                </a>
+            </li>
+            <li>
+                <a id="seven">seven
+                    <label>
+                        nested input
+                        <input type="text"/>
+                    </label>
+                </a>
+                <a id="nine">nine
+                    <label>
+                        nested input
+                        <input type="radio"/>
+                    </label>
+                </a>
+                <a id="ten">ten
+                    <label>
+                        nested input
+                        <input type="checkbox"/>
+                    </label>
+                </a>
+            </li>
+            <li>
+                <a id="eight">eight
+                    <label>
+                        nested textarea
+                        <textarea>Blub</textarea>
+                    </label>
+                </a>
+            </li>
+        </ul>
+        <hr/>
+        <h4>box-sizing: border-box</h4>
+        <ul class="border-boxed">
+            <li><a href="#" id="eleven"><span style="display: inline-block; background: lightblue">eleven</span></a></li>
+            <li><a href="#" id="twelve">twelve</a></li>
+            <li><a href="#" id="thirteen">thirteen</a></li>
+            <li><a href="#" id="fourteen">fourteen</a></li>
+            <li><a href="#" id="fifteen">fifteen</a></li>
+            <li></li>
+        </ul>
+        <hr/>
+        <h4>flex-box children</h4>
+        <ul class="flex-boxed">
+            <li><a href="#"><span style="display: inline-block; background: lightblue">eleven</span></a></li>
+            <li><a href="#">twelve</a></li>
+            <li><a href="#">thirteen</a></li>
+            <li><a href="#">fourteen</a></li>
+            <li><a href="#">fifteen</a></li>
+            <li>not explicitly draggable</li>
+        </ul>
+        <hr/>
+        <h4>nested flex-box</h4>
+        <ul class="flex-boxed dropzone">
+            <ul draggable="true" class="dropzone">
+                <li><h3>DRAGGABLE CONTAINER</h3></li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+            </ul>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div draggable="true">DRAG ME!</div>
+            </li>
+        </ul>
+        <ul class="flex-boxed dropzone">
+            <ul class="flex-boxed dropzone">
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+                <li class="flex-boxed">
+                    <div draggable="true">DRAG ME!</div>
+                </li>
+            </ul>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+            <li class="flex-boxed">
+                <div>DRAG ME!</div>
+            </li>
+        </ul>
+        <hr/>
+        <h4>Notes</h4>
+        <ol>
+            <li>The blue bordered item ('one') is a child inside a draggable element. If you drag the child, we should still drag the whole element.</li>
+        </ol>
+        <hr/>
+        <div>
+            <h3>New Elements</h3>
+            <ul>
+                <!-- The toolbox only allows to copy objects, not move it. After a new
+                element was created, dnd-copied is invoked and we generate the next id -->
+                <li class="test" draggable="true">
+                    <button type="button" class="btn btn-default btn-lg">some content</button>
+                </li>
+            </ul>
+        </div>
+        <hr/>
+        <div>
+            <div class="det draggable" draggable="true">
+                <div class="det-icon">
+                    <figure class="oic draggable" draggable="true">
+                        <figcaption>
+                            <div>Institute Of Contemporary Arts</div>
+                        </figcaption>
+                        <img class="oic-image" draggable="false" src="http://placehold.it/350x350">
+                    </figure>
+                </div>
+            </div>
+            <div class="det draggable" draggable="true">
+                <div class="det-icon">
+                    <figure class="oic draggable rotate" draggable="true">
+                        <figcaption>
+                            <div>Institute Of Contemporary Arts #2</div>
+                        </figcaption>
+                        <img class="oic-image" draggable="true" src="http://placehold.it/350x350" onclick="alert('clicked image');">
+                    </figure>
+                </div>
+            </div>
+        </div>
+        <hr/>
+        <div>
+            <h3>Custom Drag Image</h3>
+            <ul>
+                <li draggable="true" class="custom">draggable with..</li>
+            </ul>
+        </div>
+
+        <ul class="scroll-container">
+            <li class="draggable" id="aksjd">
+                <div class="no-drag">
+                    <div class=drag-handle>O</div>
+                    <div>one</div>
+                </div>
+            </li>
+            <li class="draggable no-drag" id="aksjd2">
+                <div class="drag-handle">O</div>
+                <div>two</div>
+            </li>
+            <li class="draggable" id="aksj123d5">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">three</div>
+            </li>
+            <li class="draggable" id="aksjd2">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">four</div>
+            </li>
+            <li class="draggable" id="aks1jd2">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">five</div>
+            </li>
+            <li class="draggable" id="1six">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">six</div>
+            </li>
+            <li class="draggable" id="123">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">seven</div>
+            </li>
+            <li class="draggable" id="eig5425ht">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">eight</div>
+            </li>
+            <li class="draggable no-drag" id="1232">
+                <div class="drag-handle">O</div>
+                <div>nine</div>
+            </li>
+            <li class="draggable" id="te634563n">
+                <div class="drag-handle">O</div>
+                <div class="no-drag">ten</div>
+            </li>
+        </ul>
+
+        <ul class="scroll-container">
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div>dummy</div>
+                </div>
+            </li>
+        </ul>
+    </article>
+    <script>
+
+        var DEBUG = false;
+
+        var allowDragWithTwoFingersOnly = function (event) {
+
+            // only allow drag with two fingers
+            return (event.touches.length === 2);
+        };
+
+        var threshold = 10;
+        var startX, startY;
+
+        var allowHorizontalDragOnly = function (event) {
+
+            var touch = event.touches[0];
+
+            if (startX === undefined || startY === undefined) {
+                startX = touch.clientX;
+                startY = touch.clientY;
+
+                // we are uncertain if we shall start a drag operation.. return undefined
+                return;
+            }
+
+            var deltaX = Math.abs(startX - touch.clientX),
+                    deltaY = Math.abs(startY - touch.clientY);
+
+            console.log("startX: " + startX);
+            console.log("startY: " + startY);
+
+            console.log("deltaX: " + deltaX);
+            console.log("deltaY: " + deltaY);
+
+            if (deltaX > threshold || deltaY > threshold) {
+
+                console.log("threshold reached.");
+
+                // reset our initial values
+                startX = undefined;
+                startY = undefined;
+
+                if (deltaX > deltaY) {
+
+                    console.log('horizontal drag detected, starting drag');
+                    // we know for sure to start it, return true
+                    return true;
+                }
+                else {
+
+                    console.log('vertical scroll detected, aborting drag');
+                    // we know for sure to abort it, return false
+                    return false;
+                }
+            }
+        };
+
+        var alertAction = function (event) {
+
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            alert("I'm your default action override");
+            return true;
+        };
+
+        DragDropPolyfill.Initialize({
+//            dragImageCenterOnTouch: true,
+//            dragImageOffset: {
+//                x: 0,
+//                y: 0
+//            },
+//            dragStartConditionOverride: allowHorizontalDragOnly,
+//            defaultActionOverride: alertAction,
+            dragImageTranslateOverride: DragDropPolyfill.HandleDragImageTranslateOverride
+        });
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        var missed = ['hey!', 'missed it :(', 'that was close..', 'ARRRR'];
+        var eat = ['yum!', 'gulp', 'burp!', 'nom'];
+        var yum = document.createElement('p');
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        var links = document.querySelectorAll('li > a'), el = null;
+        for (var i = 0; i < links.length; i++) {
+            el = links[i];
+
+            el.setAttribute('draggable', 'true');
+
+            addEvent(el, 'dragstart', function (e) {
+                console.log('dragstart');
+
+                e.dataTransfer.effectAllowed = 'copyLink';
+
+                //TODO fails on desktop safari because drag is immediately aborted
+//                this.style.display = "none";
+
+                console.log('setting data: ' + this.id);
+
+                e.dataTransfer.setData('Text', this.id); // required otherwise doesn't work
+            });
+
+            addEvent(el, 'drag', function (e) {
+                console.log('drag');
+            });
+
+            addEvent(el, 'dragend', function (e) {
+
+//                this.style.display = "block";
+
+                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
+            });
+
+            addEvent(el, 'click', function (e) {
+                console.log('clicked on draggable');
+
+                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+            });
+        }
+
+        var draggables = document.querySelectorAll('.draggable');
+        var dragHandles = document.querySelectorAll('.drag-handle');
+        var noDrags = document.querySelectorAll('.no-drag');
+
+        for (var i = 0; i < draggables.length; i++) {
+            makeElementDraggable(draggables[i]);
+        }
+
+        for (var i = 0; i < dragHandles.length; i++) {
+            makeElementDragHandle(dragHandles[i]);
+        }
+
+        for (var i = 0; i < noDrags.length; i++) {
+
+            makeElementNoDrag(noDrags[i]);
+        }
+
+        function makeElementDraggable(element) {
+
+            element.setAttribute('draggable', 'true');
+
+            addEvent(element, 'dragstart', function (e) {
+
+                // Check whether the element is draggable, since dragstart might be triggered on a child.
+                if (element.getAttribute('draggable') == 'false') return true;
+
+                console.log('dragstart');
+
+                e.dataTransfer.effectAllowed = 'copyLink';
+
+                console.log('setting data: ' + this.id);
+
+                e.dataTransfer.setData('Text', this.id); // required otherwise doesn't work
+
+                // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
+                if (e._dndHandle && e.dataTransfer.setDragImage) {
+
+                    e.dataTransfer.setDragImage(element);
+                }
+            });
+
+            addEvent(element, 'drag', function (e) {
+                console.log('drag');
+            });
+
+            addEvent(element, 'dragend', function (e) {
+                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
+            });
+
+            addEvent(element, 'click', function (e) {
+                console.log('clicked on draggable');
+            });
+        }
+
+        function makeElementDragHandle(element) {
+            element.setAttribute('draggable', 'true');
+
+            addEvent(element, 'dragstart', function (event) {
+                console.log("drag handle start");
+                event._dndHandle = true;
+            });
+
+            addEvent(element, 'dragend', function (event) {
+                console.log("drag handle end");
+                event._dndHandle = true;
+            });
+        }
+
+        function makeElementNoDrag(element) {
+
+            // Set as draggable so that we can cancel the events explicitly
+            element.setAttribute('draggable', 'true');
+
+            /**
+             * Since the element is draggable, the browser's default operation is to drag it on dragstart.
+             * We will prevent that and also stop the event from bubbling up.
+             */
+            addEvent(element, 'dragstart', function (event) {
+
+                console.log("nodrag: dragstart");
+
+                if (!event._dndHandle) {
+
+                    console.log("nodrag: no dnd handle");
+                    // If a child element already reacted to dragstart and set a dataTransfer object, we will
+                    // allow that. For example, this is the case for user selections inside of input elements.
+                    if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
+
+                        console.log("nodrag: prevent default");
+                        event.preventDefault();
+                    }
+                    console.log("nodrag: stopPropagation");
+                    event.stopPropagation();
+                }
+            });
+
+            /**
+             * Stop propagation of dragend events, otherwise dnd-moved might be triggered and the element
+             * would be removed.
+             */
+            addEvent(element, 'dragend', function (event) {
+                if (!event._dndHandle) {
+                    event.stopPropagation();
+                }
+            });
+        }
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        var bin = document.querySelector('#bin');
+
+        addEvent(bin, 'dragenter', function (e) {
+            console.log('bin dragenter');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+
+            e.preventDefault();
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.add('over');
+
+        });
+
+        addEvent(bin, 'dragover', function (e) {
+            console.log('bin dragover');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+
+            e.preventDefault(); // allows us to drop
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            e.dataTransfer.dropEffect = 'link'; // we have to set it for firefox to be happy
+        });
+
+        addEvent(bin, 'dragexit', function (e) {
+            console.log('bin dragexit');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+        });
+
+        addEvent(bin, 'dragleave', function (e) {
+            console.log('bin dragleave');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('over');
+        });
+
+        addEvent(bin, 'drop', function (e) {
+            console.log('bin drop');
+
+            console.log('bin offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            // stupid nom text + fade effect
+            yum.innerHTML = missed[parseInt(Math.random() * missed.length)];
+
+            var y = yum.cloneNode(true);
+            bin.appendChild(y);
+
+            setTimeout(function () {
+                y.classList.add('fadeout');
+            }, 250);
+        });
+
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        var innerBin = document.querySelector('#innerBin');
+
+        bin.classList.add('zoom');
+
+        addEvent(innerBin, 'dragenter', function (e) {
+            console.log('apperture dragenter');
+
+            e.preventDefault();
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.add('in');
+        });
+
+        addEvent(innerBin, 'dragover', function (e) {
+            console.log('apperture dragover');
+
+            e.preventDefault(); // allows us to drop
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        addEvent(innerBin, 'dragexit', function (e) {
+            console.log('apperture dragexit');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
+        });
+
+        addEvent(innerBin, 'dragleave', function (e) {
+            console.log('apperture dragleave');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
+        });
+
+        addEvent(innerBin, 'drop', function (e) {
+            console.log('apperture drop');
+
+            e.stopPropagation(); // stop it here to prevent it bubble up
+
+            bin.classList.remove('in');
+
+            var el = document.getElementById(e.dataTransfer.getData('Text'));
+
+            el.parentNode.removeChild(el);
+
+            // stupid nom text + fade effect
+            yum.innerHTML = eat[parseInt(Math.random() * eat.length)];
+
+            var y = yum.cloneNode(true);
+            bin.appendChild(y);
+
+            setTimeout(function () {
+                y.classList.add('fadeout');
+            }, 250);
+        });
+
+
+        //        /**
+        //         * ---------------------------------------------------------------------------------------------------------
+        //         */
+        //
+        //
+        //        var flexboxedDraggables = document.querySelectorAll('ul > li.flex-boxed');
+        //        for (var k = 0; k < flexboxedDraggables.length; k++) {
+        //            var flexboxedDraggable = flexboxedDraggables[k];
+        //
+        //            if (flexboxedDraggable.hasAttribute('draggable') === false) {
+        //                console.log('setting flexboxed item draggable programmatically');
+        //
+        //                flexboxedDraggable.setAttribute('draggable', 'true');
+        //            }
+        //
+        //            addEvent(flexboxedDraggable, 'dragstart', function (e) {
+        //                console.log('dragstart');
+        //
+        //                e.dataTransfer.effectAllowed = 'copyMove';
+        //                e.dataTransfer.setData('Text', "Test"); // required otherwise doesn't work
+        //            });
+        //
+        //            addEvent(flexboxedDraggable, 'drag', function (e) {
+        //                console.log('drag');
+        //            });
+        //
+        //            addEvent(flexboxedDraggable, 'dragend', function (e) {
+        //                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
+        //            });
+        //
+        //            addEvent(el, 'click', function (e) {
+        //                console.log('clicked on draggable');
+        //
+        //                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+        //            });
+        //        }
+        //
+        //
+        //        var flexboxedDropzones = document.querySelectorAll('.flex-boxed.dropzone');
+        //
+        //        for (var j = 0; j < flexboxedDropzones.length; j++) {
+        //            var flexboxedDropzone = flexboxedDropzones[j];
+        //
+        //            addEvent(flexboxedDropzone, 'dragenter', function (e) {
+        //                console.log('flexbox dropzone dragenter');
+        //
+        //                e.preventDefault();
+        //                e.stopPropagation(); // stop it here to prevent it bubble up
+        //            });
+        //
+        //            addEvent(flexboxedDropzone, 'dragover', function (e) {
+        //                console.log('flexbox dropzone dragover');
+        //
+        //                e.preventDefault(); // allows us to drop
+        //                e.stopPropagation(); // stop it here to prevent it bubble up
+        //
+        //                e.dataTransfer.dropEffect = 'copy';
+        //            });
+        //
+        //            addEvent(flexboxedDropzone, 'dragexit', function (e) {
+        //                console.log('flexbox dropzone dragexit');
+        //
+        //                e.stopPropagation(); // stop it here to prevent it bubble up
+        //            });
+        //
+        //            addEvent(flexboxedDropzone, 'dragleave', function (e) {
+        //                console.log('flexbox dropzone dragleave');
+        //
+        //                e.stopPropagation(); // stop it here to prevent it bubble up
+        //            });
+        //
+        //            addEvent(flexboxedDropzone, 'drop', function (e) {
+        //                console.log('flexbox dropzone drop');
+        //
+        //                e.stopPropagation(); // stop it here to prevent it bubble up
+        //            });
+        //
+        //        }
+        //
+        //        /**
+        //         * ---------------------------------------------------------------------------------------------------------
+        //         */
+        //
+        //        var complexDraggables = document.querySelectorAll('.det.draggable');
+        //        var nestedComplexDraggables = document.querySelectorAll('.oic.draggable');
+        //
+        //        var allComplexDraggables = [].concat(nestedComplexDraggables).concat(complexDraggables);
+        //
+        //        allComplexDraggables.forEach(function (item) {
+        //
+        //            addEvent(item, 'dragstart', function (event) {
+        //
+        ////            this.isInProgress = true;  // Progress styling
+        //                event.dataTransfer.effectAllowed = 'move';
+        //                event.dataTransfer.setData('text', 'foo');
+        //
+        ////        this.onDragStart.trigger(event); // Custom event
+        //            });
+        //
+        //            addEvent(item, 'dragend', function (event) {
+        //
+        ////            this.isInProgress = false; // Progress styling
+        //                var dropOccurred = event.dataTransfer.dropEffect !== 'none';
+        //
+        ////        this.onDragEnd.trigger(event.create(dropOccurred)); // Custom event
+        //            });
+        //
+        //            addEvent(item, 'click', function (event) {
+        //
+        //                alert('clicked on complex draggable');
+        //            });
+        //        });
+        //
+        //        /**
+        //         * ---------------------------------------------------------------------------------------------------------
+        //         */
+        //
+        //        var customDragImageDraggable = document.querySelectorAll('ul > li.custom');
+        //        for (var k = 0; k < flexboxedDraggables.length; k++) {
+        //            var customDragImage = customDragImageDraggable[k];
+        //            var clone;
+        //            addEvent(customDragImage, 'dragstart', function (event) {
+        //
+        //                event.dataTransfer.effectAllowed = 'move';
+        //                event.dataTransfer.setData('text', 'foo');
+        //
+        //                clone = this.cloneNode(true);
+        //                clone.innerHTML = "im custom!";
+        //                clone.style.backgroundColor = "red";
+        //
+        //                document.body.appendChild(clone);
+        //
+        //                event.dataTransfer.setDragImage(clone, 10, 10);
+        //            });
+        //
+        //            addEvent(customDragImage, 'dragend', function (event) {
+        //
+        //                document.body.removeChild(clone);
+        //                clone = null;
+        //            });
+        //        }
+
+    </script>
+    <footer>
+        <a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built" href="http://twitter.com/rem">original demo by
+        @rem</a>/<a href="#view-source">source</a>
+    </footer>
+</section>
+
+<a href="https://github.com/timruffles/ios-html5-drag-drop-shim">
+    <img style="position: absolute; top: 0; left: 0; border: 0;"
+         src="http://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
+         alt="Fork me on GitHub"/>
+</a>
+
+</body>
+</html>
+
+

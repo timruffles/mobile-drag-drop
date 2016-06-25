@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "suppressImplicitAnyIndexErrors": true
+  },
+  "files": [
+    "./src/drag-drop-polyfill.ts",
+    "./src/drag-drop-polyfill-scroll-behaviour.ts"
+  ]
+}
