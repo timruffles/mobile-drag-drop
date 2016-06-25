@@ -1,4 +1,14 @@
-`TODO add notes about file size`
+![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
+![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
+
+[![npmversion](https://img.shields.io/npm/v/drag-drop-polyfill.svg)](https://www.npmjs.com/package/drag-drop-polyfill)
+[![bowerversion](https://img.shields.io/bower/v/drag-drop-polyfill.svg)]
+![license](https://img.shields.io/npm/l/drag-drop-polyfill.svg)
+![issues](https://img.shields.io/github/issues/timruffles/ios-html5-drag-drop-shim.svg)
+
+![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/drag-drop-polyfill.min.js)
+![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/drag-drop-polyfill.min.js?compression=gzip)
+
 
 # Polyfill for HTML 5 drag'n'drop
 
@@ -229,4 +239,4 @@ To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-
 
 ## License
 
-[BSD 2 License](LICENSE)
+[BSD-2-Clause](LICENSE)
