@@ -26,11 +26,12 @@ this package in your page your existing HTML 5 drag'n'drop code should just work
 
 Check out the demo to see it in action and monitor the console to see the events firing.
 
+
 ## Install
 
 **bower**
 
-`bower install drag-drop-polyfill --save`
+`bower install drag-drop-polyfill#2.0.0-beta.0 --save`
 
 **npm**
 
@@ -39,6 +40,7 @@ Check out the demo to see it in action and monitor the console to see the events
 **jspm**
 
 `jspm install npm:drag-drop-polyfill`
+
 
 ### Include
 
@@ -63,12 +65,14 @@ import "drag-drop-polyfill";
 import "drag-drop-polyfill/drag-drop-polyfill.css!";
 ```
 
+
 ### Initialize
 
 ```JavaScript
 // options are optional ;)
 DragDropPolyfill.Initialize(options);
 ```
+
 
 ## API & Options <a name="options"></a>
 
@@ -100,6 +104,7 @@ declare module DragDropPolyfill {
                                       translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
                                      ) => boolean;
         // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
+        // should return true if handled default action, returning falsy will let the browser do its default thing
         defaultActionOverride?:( event:TouchEvent ) => boolean;
     }
 
@@ -141,11 +146,7 @@ Feel free to use this as a starting point.
 <link rel="stylesheet" href="[...]/drag-drop-polyfill/drag-drop-polyfill-icons.css">
 ```
 
-`setDragImage()`[MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported. This enables to set a custom drag image.
-
-## Usage Examples
-
-`TODO`
+[setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported.
 
 
 ## Known issues and limitations
