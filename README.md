@@ -79,39 +79,50 @@ DragDropPolyfill.Initialize(options);
 ```TypeScript
 declare module DragDropPolyfill {
 
-    /**
-    * Polyfill config
-    */
-    interface Config {
+    // function signature for the dragImageTranslateOverride hook
+    export type DragImageTranslateOverrideFn = (
+        // corresponding touchmove event
+        event:TouchEvent,
+        // the processed touch event viewport coordinates
+        hoverCoordinates:Point,
+        // the element under the calculated touch coordinates
+        hoveredElement:HTMLElement,
+        // callback for updating the drag image offset
+        translateDragImageFn:( offsetX:number, offsetY:number ) => void
+    ) => void;
+
+    // polyfill config
+    export interface Config {
+
         // flag to force the polyfill being applied and not rely on internal feature detection
-        forceApply?: boolean;
-        // apply static offset from touch coordinates to drag image coordinates
+        forceApply?:boolean;
+
+        // useful for when you want the default drag image but still want to apply
+        // some static offset from touch coordinates to drag image coordinates
         // defaults to (0,0)
         dragImageOffset?:Point;
+
         // if the dragImage shall be centered on the touch coordinates
         // defaults to false
         dragImageCenterOnTouch?:boolean;
-        // drag'n'drop operation loop interval
+
+        // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
         // defaults to 150ms
         iterationInterval?:number;
-        // hook for custom logic that decides if a drag-operation should start
-        // returning falsy will result in drag operation cancel
+
+        // hook for custom logic that decides if a drag operation should start
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
-        // hook for custom logic that decides if and where the drag image should translate
-        dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
-                                      hoverCoordinates:Point,   // the processed touch event viewport coordinates
-                                      hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
-                                      translateDragImageFn:( offsetX:number, offsetY:number ) => void   // updates the drag image position
-                                     ) => boolean;
-        // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
-        // should return true if handled default action, returning falsy will let the browser do its default thing
-        defaultActionOverride?:( event:TouchEvent ) => boolean;
+
+        // hook for custom logic that can manipulate the drag image translate offset
+        dragImageTranslateOverride?:DragImageTranslateOverrideFn;
+
+        // hook for custom logic that can override the default action based on the original touch event when the drag never started
+        // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
+        defaultActionOverride?:( event:TouchEvent ) => void;
     }
 
-    /**
-    * Invoke for initializing the polyfill.
-    */
-    function Initialize(config?: Config) => void;
+    // invoke for initializing the polyfill
+    export function Initialize(config?: Config) => void;
 }
 ```
 

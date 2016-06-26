@@ -26,31 +26,13 @@ module DragDropPolyfill {
     let _scrollableParent:HTMLElement;
     let _translateDragImageFn:( offsetX:number, offsetY:number ) => void;
 
-    //<editor-fold desc="public api">
-
-    export interface ScrollOptions {
-        // threshold in px. when distance between scrollable element edge and touch position is smaller start programmatic scroll.
-        // defaults to 75px
-        threshold?:number;
-        // function to customize the scroll velocity
-        // velocity param: distance to scrollable element edge
-        // threshold: the threshold used to determine when scrolling should start
-        // defaults to cubic-ease-in.
-        velocityFn:( velocity:number, threshold:number ) => number;
-    }
-
-    export function SetOptions( options:ScrollOptions ):void {
-
-        // overwrite defaults with input options
-        Object.keys( options ).forEach( function( key ) {
-            _options[ key ] = options[ key ];
-        } );
-    }
-
-    export function HandleDragImageTranslateOverride( event:TouchEvent,
-                                                      currentCoordinates:Point,
-                                                      hoveredElement:HTMLElement,
-                                                      translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ):boolean {
+    /**
+     * core handler function
+     */
+    function handleDragImageTranslateOverride( event:TouchEvent,
+                                               currentCoordinates:Point,
+                                               hoveredElement:HTMLElement,
+                                               translateDragImageFn:( scrollDiffX:number, scrollDiffY:number ) => void ):void {
 
         _currentCoordinates = currentCoordinates;
         _translateDragImageFn = translateDragImageFn;
@@ -64,7 +46,7 @@ module DragDropPolyfill {
 
         // update scroll intention and check if we should scroll at all
         //TODO implement scroll chaining? if scroll end is reached continue to look for scrollable parent
-        var performScrollAnimation = updateScrollIntentions( _currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity );
+        const performScrollAnimation = updateScrollIntentions( _currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity );
 
         // no animation in progress but scroll is intended
         if( performScrollAnimation ) {
@@ -75,13 +57,9 @@ module DragDropPolyfill {
         else if( !!_scrollAnimationFrameId ) {
 
             window.cancelAnimationFrame( _scrollAnimationFrameId );
-            _scrollAnimationFrameId = undefined;
+            _scrollAnimationFrameId = null;
         }
-
-        return performScrollAnimation;
     }
-
-    //</editor-fold>
 
     //<editor-fold desc="programmatic scroll animation frame handler">
 
@@ -124,7 +102,7 @@ module DragDropPolyfill {
         }
 
         // reset to make sure we can re-schedule scroll animation
-        _scrollAnimationFrameId = undefined;
+        _scrollAnimationFrameId = null;
 
         // check if we should continue scrolling
         //TODO implement scroll chaining? if scroll end is reached continue to look for scrollable parent
@@ -198,8 +176,8 @@ module DragDropPolyfill {
     //<editor-fold desc="static scroll utils">
 
     interface ScrollIntentions {
-        horizontal: ScrollIntention;
-        vertical: ScrollIntention;
+        horizontal:ScrollIntention;
+        vertical:ScrollIntention;
     }
 
     interface IScrollBounds {
@@ -304,10 +282,10 @@ module DragDropPolyfill {
                 return el;
             }
             if( el === document.documentElement ) {
-                return undefined;
+                return null;
             }
         } while( el = <HTMLElement>el.parentNode );
-        return undefined;
+        return null;
     }
 
     function determineScrollIntention( currentCoordinate:number, size:number, threshold:number ):ScrollIntention {
@@ -360,6 +338,31 @@ module DragDropPolyfill {
         // no scroll
         return true;
     }
+
+    //</editor-fold>
+
+    //<editor-fold desc="public api">
+
+    export interface ScrollOptions {
+        // threshold in px. when distance between scrollable element edge and touch position is smaller start programmatic scroll.
+        // defaults to 75px
+        threshold?:number;
+        // function to customize the scroll velocity
+        // velocity param: distance to scrollable element edge
+        // threshold: the threshold used to determine when scrolling should start
+        // defaults to cubic-ease-in.
+        velocityFn:( velocity:number, threshold:number ) => number;
+    }
+
+    export function SetOptions( options:ScrollOptions ):void {
+
+        // overwrite defaults with input options
+        Object.keys( options ).forEach( function( key ) {
+            _options[ key ] = options[ key ];
+        } );
+    }
+
+    export const HandleDragImageTranslateOverride:DragImageTranslateOverrideFn = handleDragImageTranslateOverride;
 
     //</editor-fold>
 }

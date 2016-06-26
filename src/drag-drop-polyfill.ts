@@ -44,6 +44,18 @@ module DragDropPolyfill {
 
     //<editor-fold desc="public api">
 
+    // function signature for the dragImageTranslateOverride hook
+    export type DragImageTranslateOverrideFn = (
+        // corresponding touchmove event
+        event:TouchEvent,
+        // the processed touch event viewport coordinates
+        hoverCoordinates:Point,
+        // the element under the calculated touch coordinates
+        hoveredElement:HTMLElement,
+        // callback for updating the drag image offset
+        translateDragImageFn:( offsetX:number, offsetY:number ) => void
+    ) => void;
+
     export interface Config {
         // flag to force the polyfill being applied and not rely on internal feature detection
         forceApply?:boolean;
@@ -59,13 +71,11 @@ module DragDropPolyfill {
         iterationInterval?:number;
         // hook for custom logic that decides if a drag operation should start
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
-        // hook for custom logic that decides if and where the drag image should translate
-        dragImageTranslateOverride?:( event:TouchEvent,         // touchmove event
-                                      hoverCoordinates:Point,   // the processed touch event viewport coordinates
-                                      hoveredElement:HTMLElement,   // the element under the calculated touch coordinates
-                                      translateDragImageFn:( offsetX:number, offsetY:number ) => void ) => boolean; // updates the drag image position
-        // hook for custom logic that can trigger a default event based on the original touch event when the drag never started
-        defaultActionOverride?:( event:TouchEvent ) => boolean;
+        // hook for custom logic that can manipulate the drag image translate offset
+        dragImageTranslateOverride?:DragImageTranslateOverrideFn;
+        // hook for custom logic that can override the default action based on the original touch event when the drag never started
+        // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
+        defaultActionOverride?:( event:TouchEvent ) => void;
     }
 
     // default config
@@ -186,12 +196,19 @@ module DragDropPolyfill {
 
             // when lifecycle hook is present
             if( _config.defaultActionOverride ) {
+
                 try {
-                    if( _config.defaultActionOverride( event ) ) {
-                        console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action." );
+
+                    _config.defaultActionOverride( event );
+
+                    if( event.defaultPrevented ) {
+
+                        console.log( "dnd-poly: defaultActionOverride has taken care of triggering the default action. preventing default on original event" );
                     }
+
                 }
                 catch( e ) {
+
                     console.log( "dnd-poly: error in defaultActionOverride: " + e );
                 }
             }
@@ -495,8 +512,7 @@ module DragDropPolyfill {
             // drag operation did not start yet but on movement it should start
             if( this._dragOperationState === DragOperationState.POTENTIAL ) {
 
-                // by default only allow a single moving finger to initiate a drag operation
-                let startDrag = (event.touches.length === 1);
+                let startDrag:boolean;
 
                 // is a lifecycle hook present?
                 if( this._config.dragStartConditionOverride ) {
@@ -509,8 +525,14 @@ module DragDropPolyfill {
                         startDrag = false;
                     }
                 }
+                else {
+
+                    // by default only allow a single moving finger to initiate a drag operation
+                    startDrag = (event.touches.length === 1);
+                }
 
                 if( !startDrag ) {
+
                     this._cleanup();
                     return;
                 }
@@ -535,12 +557,13 @@ module DragDropPolyfill {
             updateCentroidCoordinatesOfTouchesIn( "client", event, this._currentHotspotCoordinates );
             updateCentroidCoordinatesOfTouchesIn( "page", event, this._dragImagePageCoordinates );
 
-            let handledDragImageTranslate = false;
-
             if( this._config.dragImageTranslateOverride ) {
 
                 try {
-                    handledDragImageTranslate = this._config.dragImageTranslateOverride(
+
+                    let handledDragImageTranslate = false;
+
+                    this._config.dragImageTranslateOverride(
                         event,
                         {
                             x: this._currentHotspotCoordinates.x,
@@ -553,6 +576,8 @@ module DragDropPolyfill {
                             if( !this._dragImage ) {
                                 return;
                             }
+
+                            handledDragImageTranslate = true;
 
                             this._currentHotspotCoordinates.x += offsetX;
                             this._currentHotspotCoordinates.y += offsetY;
