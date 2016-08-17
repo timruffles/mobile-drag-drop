@@ -12,9 +12,7 @@ just work.
 - [drag drop](http://timruffles.github.io/ios-html5-drag-drop-shim/demo/)
 - [drag drop with enter leave support](http://timruffles.github.io/ios-html5-drag-drop-shim/enter-leave/)
 
-Check out the demo to see it in action. It should work on Android, but I
-don't have an Android phone to test. Let me know <a
-href="http://twitter.com/timruffles">@timruffles</a>.
+Check out the demo to see it in action. It also [works on Android](https://twitter.com/TheFabulousMac/status/765913850151567360).
 
 ## Install/config
 
