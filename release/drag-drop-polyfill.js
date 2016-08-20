@@ -1,3 +1,4 @@
+var DEBUG;
 var DragDropPolyfill;
 (function (DragDropPolyfill) {
     function detectFeatures() {
@@ -74,8 +75,9 @@ var DragDropPolyfill;
             console.log("dnd-poly: Drag never started. Last event was " + event.type);
             if (_config.defaultActionOverride) {
                 try {
-                    if (_config.defaultActionOverride(event)) {
-                        console.log("dnd-poly: defaultActionOverride has taken care of triggering the default action.");
+                    _config.defaultActionOverride(event);
+                    if (event.defaultPrevented) {
+                        console.log("dnd-poly: defaultActionOverride has taken care of triggering the default action. preventing default on original event");
                     }
                 }
                 catch (e) {
@@ -207,17 +209,18 @@ var DragDropPolyfill;
             }
             this._lastTouchEvent = event;
             if (this._dragOperationState === 0) {
-                var startDrag = (event.touches.length === 1);
+                var startDrag = void 0;
                 if (this._config.dragStartConditionOverride) {
                     try {
                         startDrag = this._config.dragStartConditionOverride(event);
                     }
                     catch (e) {
-                        console.log("dnd-poly: error in dragStartConditionOverride hook: " + e);
+                        console.error("dnd-poly: error in dragStartConditionOverride hook: " + e);
+                        startDrag = false;
                     }
-                    if (typeof startDrag !== "boolean") {
-                        return;
-                    }
+                }
+                else {
+                    startDrag = (event.touches.length === 1);
                 }
                 if (!startDrag) {
                     this._cleanup();
@@ -233,23 +236,24 @@ var DragDropPolyfill;
             event.preventDefault();
             updateCentroidCoordinatesOfTouchesIn("client", event, this._currentHotspotCoordinates);
             updateCentroidCoordinatesOfTouchesIn("page", event, this._dragImagePageCoordinates);
-            var handledDragImageTranslate = false;
             if (this._config.dragImageTranslateOverride) {
                 try {
-                    handledDragImageTranslate = this._config.dragImageTranslateOverride(event, {
+                    var handledDragImageTranslate_1 = false;
+                    this._config.dragImageTranslateOverride(event, {
                         x: this._currentHotspotCoordinates.x,
                         y: this._currentHotspotCoordinates.y
                     }, this._immediateUserSelection, function (offsetX, offsetY) {
                         if (!_this._dragImage) {
                             return;
                         }
+                        handledDragImageTranslate_1 = true;
                         _this._currentHotspotCoordinates.x += offsetX;
                         _this._currentHotspotCoordinates.y += offsetY;
                         _this._dragImagePageCoordinates.x += offsetX;
                         _this._dragImagePageCoordinates.y += offsetY;
                         translateDragImage(_this._dragImage, _this._dragImagePageCoordinates, _this._dragImageTransforms, _this._dragImageOffset, _this._config.dragImageCenterOnTouch);
                     });
-                    if (handledDragImageTranslate) {
+                    if (handledDragImageTranslate_1) {
                         return;
                     }
                 }

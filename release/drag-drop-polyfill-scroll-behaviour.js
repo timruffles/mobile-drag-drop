@@ -21,13 +21,7 @@ var DragDropPolyfill;
     var _hoveredElement;
     var _scrollableParent;
     var _translateDragImageFn;
-    function SetOptions(options) {
-        Object.keys(options).forEach(function (key) {
-            _options[key] = options[key];
-        });
-    }
-    DragDropPolyfill.SetOptions = SetOptions;
-    function HandleDragImageTranslateOverride(event, currentCoordinates, hoveredElement, translateDragImageFn) {
+    function handleDragImageTranslateOverride(event, currentCoordinates, hoveredElement, translateDragImageFn) {
         _currentCoordinates = currentCoordinates;
         _translateDragImageFn = translateDragImageFn;
         if (_hoveredElement !== hoveredElement) {
@@ -40,11 +34,9 @@ var DragDropPolyfill;
         }
         else if (!!_scrollAnimationFrameId) {
             window.cancelAnimationFrame(_scrollAnimationFrameId);
-            _scrollAnimationFrameId = undefined;
+            _scrollAnimationFrameId = null;
         }
-        return performScrollAnimation;
     }
-    DragDropPolyfill.HandleDragImageTranslateOverride = HandleDragImageTranslateOverride;
     function scheduleScrollAnimation() {
         if (!!_scrollAnimationFrameId) {
             return;
@@ -67,7 +59,7 @@ var DragDropPolyfill;
         else {
             _translateDragImageFn(0, 0);
         }
-        _scrollAnimationFrameId = undefined;
+        _scrollAnimationFrameId = null;
         if (updateScrollIntentions(_currentCoordinates, _scrollableParent, _options.threshold, _scrollIntentions, _dynamicVelocity)) {
             scheduleScrollAnimation();
         }
@@ -166,10 +158,10 @@ var DragDropPolyfill;
                 return el;
             }
             if (el === document.documentElement) {
-                return undefined;
+                return null;
             }
         } while (el = el.parentNode);
-        return undefined;
+        return null;
     }
     function determineScrollIntention(currentCoordinate, size, threshold) {
         if (currentCoordinate < threshold) {
@@ -201,5 +193,12 @@ var DragDropPolyfill;
         }
         return true;
     }
+    function SetOptions(options) {
+        Object.keys(options).forEach(function (key) {
+            _options[key] = options[key];
+        });
+    }
+    DragDropPolyfill.SetOptions = SetOptions;
+    DragDropPolyfill.HandleDragImageTranslateOverride = handleDragImageTranslateOverride;
 })(DragDropPolyfill || (DragDropPolyfill = {}));
 //# sourceMappingURL=drag-drop-polyfill-scroll-behaviour.js.map
