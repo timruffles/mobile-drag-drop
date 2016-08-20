@@ -31,7 +31,7 @@ Check out the demo to see it in action and monitor the console to see the events
 
 **bower**
 
-`bower install drag-drop-polyfill#2.0.0-beta.0 --save`
+`bower install drag-drop-polyfill#2.0.0-beta.1 --save`
 
 **npm**
 
@@ -111,6 +111,8 @@ declare module DragDropPolyfill {
         iterationInterval?:number;
 
         // hook for custom logic that decides if a drag operation should start
+        // executed once with the initial touchmove and if true is returned the drag-operation initializes.
+        // defaults to (event.touches.length === 1) 
         dragStartConditionOverride?:( event:TouchEvent ) => boolean;
 
         // hook for custom logic that can manipulate the drag image translate offset
