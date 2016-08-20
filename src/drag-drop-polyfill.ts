@@ -187,7 +187,7 @@ module DragDropPolyfill {
     /**
      * Implements callback invoked when a drag operation has ended or crashed.
      */
-    function dragOperationEnded( config:Config, event:TouchEvent, state:DragOperationState ) {
+    function dragOperationEnded( _config:Config, event:TouchEvent, state:DragOperationState ) {
 
         // we need to make the default action happen only when no drag operation took place
         if( state === DragOperationState.POTENTIAL ) {
@@ -195,11 +195,11 @@ module DragDropPolyfill {
             console.log( "dnd-poly: Drag never started. Last event was " + event.type );
 
             // when lifecycle hook is present
-            if( config.defaultActionOverride ) {
+            if( _config.defaultActionOverride ) {
 
                 try {
 
-                    config.defaultActionOverride( event );
+                    _config.defaultActionOverride( event );
 
                     if( event.defaultPrevented ) {
 
