@@ -13,9 +13,6 @@ module.exports = function (grunt) {
         },
         reserveDOMProperties: true, // do not mangle browser props
         compress: {
-          global_defs: {
-            "DEBUG": false
-          },
           drop_console: true, // remove console log statements
           drop_debugger: true, // remove debugger statements
           dead_code: true, // removes unreachable code

@@ -1,5 +1,5 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
-declare let DEBUG:boolean;
+let DEBUG:boolean;
 
 module DragDropPolyfill {
 
@@ -187,7 +187,7 @@ module DragDropPolyfill {
     /**
      * Implements callback invoked when a drag operation has ended or crashed.
      */
-    function dragOperationEnded( _config:Config, event:TouchEvent, state:DragOperationState ) {
+    function dragOperationEnded( config:Config, event:TouchEvent, state:DragOperationState ) {
 
         // we need to make the default action happen only when no drag operation took place
         if( state === DragOperationState.POTENTIAL ) {
@@ -195,11 +195,11 @@ module DragDropPolyfill {
             console.log( "dnd-poly: Drag never started. Last event was " + event.type );
 
             // when lifecycle hook is present
-            if( _config.defaultActionOverride ) {
+            if( config.defaultActionOverride ) {
 
                 try {
 
-                    _config.defaultActionOverride( event );
+                    config.defaultActionOverride( event );
 
                     if( event.defaultPrevented ) {
 
