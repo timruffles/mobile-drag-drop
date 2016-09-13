@@ -31,7 +31,7 @@ Check out the demo to see it in action and monitor the console to see the events
 
 **bower**
 
-`bower install drag-drop-polyfill#2.0.0-beta.1 --save`
+`bower install drag-drop-polyfill#2.0.0-beta.2 --save`
 
 **npm**
 
