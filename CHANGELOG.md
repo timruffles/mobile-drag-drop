@@ -1,4 +1,9 @@
 
+<a name"2.0.0-beta.2"></a>
+## 2.0.0-beta.2 (2016-09-13)
+
+* package.json no longer uses `directories.lib` since it had no effect, `main` now points to `release/drag-drop-polyfill.min.js`.
+
 <a name"2.0.0-beta.1"></a>
 ## 2.0.0-beta.1 (2016-08-20)
 
