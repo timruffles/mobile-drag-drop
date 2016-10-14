@@ -24,6 +24,14 @@ var iosDragDropShim = { enableEnterLeave: true }
 </script>
 <script src="vendor/ios-drag-drop.js"></script>
 ```
+If you want to the user to hold to drag, add a config object to the page before you include the shim.
+
+```html
+<script>
+var iosDragDropShim = { holdToDrag: 300 } //Adds 300ms delay before draging
+</script>
+<script src="vendor/ios-drag-drop.js"></script>
+```
 
 ## Shim behaviour
 
