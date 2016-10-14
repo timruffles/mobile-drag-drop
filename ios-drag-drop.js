@@ -293,20 +293,22 @@
       var el = evt.target;
 
       if (el.draggable === true) {
-
         var heldItem = function() {
-          el.removeEventListener('touchend', onReleasedItem);
+          end.off();
+          cancel.off();
           touchstart(evt);
         };
 
         var onReleasedItem = function() {
-          el.removeEventListener('touchend', onReleasedItem);
+          end.off();
+          cancel.off();
           clearTimeout(timer);
         };
 
         var timer = setTimeout(heldItem, delay);
 
-        el.addEventListener('touchend', onReleasedItem, false);
+        var end = onEvt(el, 'touchend', onReleasedItem, this);
+        var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
       }
     };
   };
