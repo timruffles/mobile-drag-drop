@@ -296,12 +296,14 @@
         var heldItem = function() {
           end.off();
           cancel.off();
+          scroll.off();
           touchstart(evt);
         };
 
         var onReleasedItem = function() {
           end.off();
           cancel.off();
+          scroll.off();
           clearTimeout(timer);
         };
 
@@ -309,6 +311,7 @@
 
         var end = onEvt(el, 'touchend', onReleasedItem, this);
         var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
+        var scroll = onEvt(window, 'scroll', onReleasedItem, this);
       }
     };
   };
