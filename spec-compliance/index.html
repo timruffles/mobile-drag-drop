@@ -876,6 +876,9 @@
         //            });
         //        }
 
+        // tmp fix for iOS10 touchmove bug (https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77)
+        window.addEventListener( 'touchmove', function() {})
+
     </script>
     <footer>
         <a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built" href="http://twitter.com/rem">original demo by

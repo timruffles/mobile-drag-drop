@@ -177,7 +177,8 @@ Feel free to use this as a starting point.
 | Opera                            |  Native                  |  Same as Chrome.                               |
 | Internet Explorer 11             |  Native                  |  No known issues.                              |
 | Edge                             |  **Unknown**             |  **Unknown**                                   |
-| Mobile Safari                    |  Polyfill                |  No known issues.                              |
+| Mobile Safari (<iOS 10)          |  Polyfill                |  No known issues.                              |
+| Mobile Safari (iOS 10)           |  Polyfill                |  [#77](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77) |
 | Chrome on iOS                    |  Polyfill                |  No known issues.                              |
 | Chrome on Android                |  Polyfill                |  No known issues.                              |
 | Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
@@ -200,6 +201,7 @@ As of today (FF39.0) touch behavior is off.
 When touch events are active drag-and-drop interaction will still work, so no need to polyfill.
 
 **Firefox on Android: <a name="firefox-android-issues"></a>**
+`TODO check if this is still the case`
 No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
 
 
