@@ -37,7 +37,7 @@ var iosDragDropShim = { holdToDrag: 300 } //Adds 300ms delay before draging
 
 iOS10 introduced a regression on `touchmove` handling where `event.preventDefault()` is not respected.
 
-If you run into a situation where dragging and scrolling occur simultaneously apply the fix mentioned in #77.
+If you run into a situation where dragging and scrolling occur simultaneously apply the fix mentioned in [#77](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77).
 
 ## Shim behaviour
 
