@@ -24,7 +24,12 @@
       DragDrop.prototype.synthesizeEnterLeave = noop;
     }
 
-    doc.addEventListener("touchstart", touchstart);
+    if(config.holdToDrag){
+      doc.addEventListener("touchstart", touchstartDelay(config.holdToDrag));
+    }
+    else {
+      doc.addEventListener("touchstart", touchstart);
+    }
   }
 
   function DragDrop(event, el) {
@@ -76,6 +81,7 @@
       }
     },
     move: function(event) {
+      event.preventDefault();
       var pageXs = [], pageYs = [];
       [].forEach.call(event.changedTouches, function(touch) {
         pageXs.push(touch.pageX);
@@ -279,6 +285,35 @@
 
       doc.body.appendChild(this.dragImage);
     }
+  };
+
+  // delayed touch start event
+  function touchstartDelay(delay) {
+    return function(evt){
+      var el = evt.target;
+
+      if (el.draggable === true) {
+        var heldItem = function() {
+          end.off();
+          cancel.off();
+          scroll.off();
+          touchstart(evt);
+        };
+
+        var onReleasedItem = function() {
+          end.off();
+          cancel.off();
+          scroll.off();
+          clearTimeout(timer);
+        };
+
+        var timer = setTimeout(heldItem, delay);
+
+        var end = onEvt(el, 'touchend', onReleasedItem, this);
+        var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
+        var scroll = onEvt(window, 'scroll', onReleasedItem, this);
+      }
+    };
   };
 
   // event listeners

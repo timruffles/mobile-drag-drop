@@ -6,6 +6,9 @@
 <title>iOS shim for HTML5 Drag and drop</title>
 <link rel="stylesheet" href="demo.css">
 <script src="demo.js"></script></head>
+<script>
+var iosDragDropShim = { holdToDrag: 300 } //Adds 300ms delay before draging
+</script>
 <script src="../ios-drag-drop.js" type="text/javascript" charset="utf-8"></script>
 <body>
 <section id="wrapper">
@@ -18,7 +21,7 @@ li {
   list-style: none;
 }
 
-li a {
+li > span {
   text-decoration: none;
   color: #000;
   margin: 10px;
@@ -39,7 +42,7 @@ li a {
   background-color: rgba(238,238,238, 0.5);
 }
 
-li a:hover:after {
+li span:hover:after {
   content: ' (drag me)';
 }
 
@@ -82,11 +85,11 @@ li.over {
   <p>Drag the list items over the dustbin, and drop them to have the bin eat the item</p>
   <div id="bin"></div>
   <ul>
-    <li><a id="one" href="#"><span style="display: inline-block; background: lightblue">one</span></a></li>
-    <li><a href="#" id="two">two</a></li>
-    <li><a href="#" id="three">three</a></li>
-    <li><a href="#" id="four">four</a></li>
-    <li><a href="#" id="five">five</a></li>
+    <li><span id="one"><span style="display: inline-block; background: lightblue">one</span></span></li>
+    <li><span id="two">two</span></li>
+    <li><span id="three">three</span></li>
+    <li><span id="four">four</span></li>
+    <li><span id="five">five</span></li>
   </ul>
   <h4>Notes</h2>
   <ol>
@@ -99,7 +102,7 @@ li.over {
   var msie = /*@cc_on!@*/0;
   yum.style.opacity = 1;
 
-  var links = document.querySelectorAll('li > a'), el = null;
+  var links = document.querySelectorAll('li > span'), el = null;
   for (var i = 0; i < links.length; i++) {
     el = links[i];
   
@@ -131,7 +134,8 @@ li.over {
   });
 
   addEvent(bin, 'drop', function (e) {
-    if (e.stopPropagation) e.stopPropagation(); // stops the browser from redirecting...why???
+    if (e.stopPropagation){ e.stopPropagation(); } // stops the browser from redirecting...why???
+    e.preventDefault();
 
     var el = document.getElementById(e.dataTransfer.getData('Text'));
     
@@ -167,5 +171,3 @@ li.over {
 
 </body>
 </html>
-
-
