@@ -435,9 +435,10 @@ module DragDropPolyfill {
                 // center drag image on touch coordinates
                 else if( this._config.dragImageCenterOnTouch ) {
 
+                    const cs = getComputedStyle( dragImageSrc );
                     this._dragImageOffset = {
-                        x: 0,
-                        y: 0
+                        x: 0 - parseInt( cs.marginLeft, 10 ),
+                        y: 0 - parseInt( cs.marginTop, 10 )
                     };
                 }
                 // by default initialize drag image offset the same as desktop
@@ -446,8 +447,8 @@ module DragDropPolyfill {
                     const targetRect = dragImageSrc.getBoundingClientRect();
                     const cs = getComputedStyle( dragImageSrc );
                     this._dragImageOffset = {
-                        x: targetRect.left - this._initialTouch.clientX - parseInt( cs.marginLeft, 10 ),
-                        y: targetRect.top - this._initialTouch.clientY - parseInt( cs.marginTop, 10 )
+                        x: targetRect.left - this._initialTouch.clientX - parseInt( cs.marginLeft, 10 ) + targetRect.width / 2,
+                        y: targetRect.top - this._initialTouch.clientY - parseInt( cs.marginTop, 10 ) + targetRect.height / 2
                     };
                 }
             }
