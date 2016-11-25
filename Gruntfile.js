@@ -172,7 +172,7 @@ module.exports = function (grunt) {
       grunt.log.error("You must specify the version bump! See https://github.com/vojtajina/grunt-bump/tree/v0.7.0");
       return;
     }
-    grunt.task.run("ts", "tslint", "bump-only:" + bump, "uglify", "clean", "copy");
+    grunt.task.run("ts", "tslint", "uglify", "clean", "copy", "bump-only:" + bump);
   });
 
   // serve release files
