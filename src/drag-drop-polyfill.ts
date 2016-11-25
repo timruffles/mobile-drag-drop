@@ -1,6 +1,23 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
 let DEBUG:boolean;
 
+//TODO temporary definition of new event listener signature, TS2.1 will have it in lib.d.ts
+
+interface WhatWGEventListenerArgs {
+    capture?: boolean;
+}
+
+interface WhatWGAddEventListenerArgs extends WhatWGEventListenerArgs {
+    passive?: boolean;
+    once?: boolean;
+}
+
+type WhatWGAddEventListener = (
+    type: string,
+    listener: (event:Event) => void,
+    options?: WhatWGAddEventListenerArgs
+) => void;
+
 module DragDropPolyfill {
 
     //<editor-fold desc="feature detection">
@@ -38,6 +55,25 @@ module DragDropPolyfill {
         }
 
         return features;
+    }
+
+    let supportsPassive:boolean;
+
+    function supportsPassiveEventListener():boolean {
+
+        let supportsPassive = false;
+
+        // reference https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
+        try {
+            let opts = Object.defineProperty({}, 'passive', {
+                get: function() {
+                    supportsPassive = true;
+                }
+            });
+            window.addEventListener("test", null, opts);
+        } catch (e) {}
+
+        return supportsPassive;
     }
 
     //</editor-fold>
@@ -109,8 +145,10 @@ module DragDropPolyfill {
 
         console.log( "dnd-poly: Applying mobile drag and drop polyfill." );
 
+        supportsPassive = supportsPassiveEventListener();
+
         // add listeners suitable for detecting a potential drag operation
-        document.addEventListener( "touchstart", onTouchstart );
+        addDocumentListener( "touchstart", onTouchstart, false );
     }
 
     //</editor-fold>
@@ -311,9 +349,9 @@ module DragDropPolyfill {
             // create bound event listeners
             this._touchMoveHandler = this._onTouchMove.bind( this );
             this._touchEndOrCancelHandler = this._onTouchEndOrCancel.bind( this );
-            document.addEventListener( "touchmove", this._touchMoveHandler );
-            document.addEventListener( "touchend", this._touchEndOrCancelHandler );
-            document.addEventListener( "touchcancel", this._touchEndOrCancelHandler );
+            addDocumentListener( "touchmove", this._touchMoveHandler, false );
+            addDocumentListener( "touchend", this._touchEndOrCancelHandler, false );
+            addDocumentListener( "touchcancel", this._touchEndOrCancelHandler, false );
 
             // the only thing we do is setup the touch listeners. if drag will really start is decided in touch move handler.
 
@@ -484,9 +522,9 @@ module DragDropPolyfill {
                 this._iterationIntervalId = null;
             }
 
-            document.removeEventListener( "touchmove", this._touchMoveHandler );
-            document.removeEventListener( "touchend", this._touchEndOrCancelHandler );
-            document.removeEventListener( "touchcancel", this._touchEndOrCancelHandler );
+            removeDocumentListener( "touchmove", this._touchMoveHandler );
+            removeDocumentListener( "touchend", this._touchEndOrCancelHandler );
+            removeDocumentListener( "touchcancel", this._touchEndOrCancelHandler );
 
             if( this._dragImage ) {
                 this._dragImage.parentNode.removeChild( this._dragImage );
@@ -1159,6 +1197,14 @@ module DragDropPolyfill {
     export interface Point {
         x:number;
         y:number;
+    }
+
+    function addDocumentListener( ev:string, handler:EventListener, passive:boolean = true ) {
+        (document.addEventListener as WhatWGAddEventListener)( ev, handler, supportsPassive ? { passive:passive } : false );
+    }
+
+    function removeDocumentListener( ev:string, handler:EventListener ) {
+        document.removeEventListener( ev, handler );
     }
 
     function average( array:Array<number> ) {
