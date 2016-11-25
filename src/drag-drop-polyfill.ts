@@ -61,19 +61,21 @@ module DragDropPolyfill {
 
     function supportsPassiveEventListener():boolean {
 
-        let supportsPassive = false;
+        let supportsPassiveEventListeners = false;
 
         // reference https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
         try {
-            let opts = Object.defineProperty({}, 'passive', {
+            let opts = Object.defineProperty({}, "passive", {
                 get: function() {
-                    supportsPassive = true;
+                    supportsPassiveEventListeners = true;
                 }
             });
             window.addEventListener("test", null, opts);
-        } catch (e) {}
+        }
+        // tslint:disable-next-line:no-empty
+        catch (e) {}
 
-        return supportsPassive;
+        return supportsPassiveEventListeners;
     }
 
     //</editor-fold>

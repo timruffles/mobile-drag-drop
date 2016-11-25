@@ -34,7 +34,7 @@ _for maintainers only_
 [grunt-bump](https://github.com/vojtajina/grunt-bump/tree/v0.7.0) is used for raising version numbers in package.json and bower.json, committing and tagging.
 
 * make sure repo is in a clean state (after having merged PRs or committed changes to sources)
-* run `grunt prepare-release:VERSION_BUMP` where `VERSION_BUMP` is the raise of version (`patch`, `minor`, `major`, `prerelease`, ``, ...)
+* run `grunt prepare-release:VERSION_BUMP` where `VERSION_BUMP` is the raise of version (`patch`, `minor`, `major`, `prerelease`, ...)
 * run `grunt serve-release` to check if everything runs fine (here would be the right place for automated tests)
 * update `CHANGELOG.md` with notes about the prepared release
 * run `grunt publish-release` to commit, tag and push the release
