@@ -1,4 +1,16 @@
 
+<a name"2.0.0-beta.3"></a>
+## 2.0.0-beta.3 (2016-11-25)
+
+* **fix(DragImageOffset)**: fixed wrong drag image offset
+
+* **fix(PassiveEventListener)**: added feature detection for passive event listeners on document
+
+  Enables to register document level event listener as active i.e. listeners that propably call event.preventDefault()
+
+  Required since future versions of Chrome and current stable Chromium will default to passive event listeners at document level to ensure smooth scrolling experience.
+  
+  
 <a name"2.0.0-beta.2"></a>
 ## 2.0.0-beta.2 (2016-09-13)
 

@@ -19,6 +19,20 @@ var DragDropPolyfill;
         }
         return features;
     }
+    var supportsPassive;
+    function supportsPassiveEventListener() {
+        var supportsPassiveEventListeners = false;
+        try {
+            var opts = Object.defineProperty({}, "passive", {
+                get: function () {
+                    supportsPassiveEventListeners = true;
+                }
+            });
+            window.addEventListener("test", null, opts);
+        }
+        catch (e) { }
+        return supportsPassiveEventListeners;
+    }
     var config = {
         iterationInterval: 150,
     };
@@ -37,7 +51,8 @@ var DragDropPolyfill;
             }
         }
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
-        document.addEventListener("touchstart", onTouchstart);
+        supportsPassive = supportsPassiveEventListener();
+        addDocumentListener("touchstart", onTouchstart, false);
     }
     DragDropPolyfill.Initialize = Initialize;
     var activeDragOperation;
@@ -108,9 +123,9 @@ var DragDropPolyfill;
             this._initialTouch = _initialEvent.changedTouches[0];
             this._touchMoveHandler = this._onTouchMove.bind(this);
             this._touchEndOrCancelHandler = this._onTouchEndOrCancel.bind(this);
-            document.addEventListener("touchmove", this._touchMoveHandler);
-            document.addEventListener("touchend", this._touchEndOrCancelHandler);
-            document.addEventListener("touchcancel", this._touchEndOrCancelHandler);
+            addDocumentListener("touchmove", this._touchMoveHandler, false);
+            addDocumentListener("touchend", this._touchEndOrCancelHandler, false);
+            addDocumentListener("touchcancel", this._touchEndOrCancelHandler, false);
         }
         DragOperationController.prototype._setup = function () {
             var _this = this;
@@ -160,17 +175,18 @@ var DragDropPolyfill;
                     };
                 }
                 else if (this._config.dragImageCenterOnTouch) {
+                    var cs = getComputedStyle(dragImageSrc);
                     this._dragImageOffset = {
-                        x: 0,
-                        y: 0
+                        x: 0 - parseInt(cs.marginLeft, 10),
+                        y: 0 - parseInt(cs.marginTop, 10)
                     };
                 }
                 else {
                     var targetRect = dragImageSrc.getBoundingClientRect();
                     var cs = getComputedStyle(dragImageSrc);
                     this._dragImageOffset = {
-                        x: targetRect.left - this._initialTouch.clientX - parseInt(cs.marginLeft, 10),
-                        y: targetRect.top - this._initialTouch.clientY - parseInt(cs.marginTop, 10)
+                        x: targetRect.left - this._initialTouch.clientX - parseInt(cs.marginLeft, 10) + targetRect.width / 2,
+                        y: targetRect.top - this._initialTouch.clientY - parseInt(cs.marginTop, 10) + targetRect.height / 2
                     };
                 }
             }
@@ -193,9 +209,9 @@ var DragDropPolyfill;
                 clearInterval(this._iterationIntervalId);
                 this._iterationIntervalId = null;
             }
-            document.removeEventListener("touchmove", this._touchMoveHandler);
-            document.removeEventListener("touchend", this._touchEndOrCancelHandler);
-            document.removeEventListener("touchcancel", this._touchEndOrCancelHandler);
+            removeDocumentListener("touchmove", this._touchMoveHandler);
+            removeDocumentListener("touchend", this._touchEndOrCancelHandler);
+            removeDocumentListener("touchcancel", this._touchEndOrCancelHandler);
             if (this._dragImage) {
                 this._dragImage.parentNode.removeChild(this._dragImage);
                 this._dragImage = null;
@@ -504,6 +520,13 @@ var DragDropPolyfill;
         });
         return DataTransfer;
     }());
+    function addDocumentListener(ev, handler, passive) {
+        if (passive === void 0) { passive = true; }
+        document.addEventListener(ev, handler, supportsPassive ? { passive: passive } : false);
+    }
+    function removeDocumentListener(ev, handler) {
+        document.removeEventListener(ev, handler);
+    }
     function average(array) {
         if (array.length === 0) {
             return 0;

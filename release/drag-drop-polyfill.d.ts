@@ -1,4 +1,12 @@
 declare let DEBUG: boolean;
+interface WhatWGEventListenerArgs {
+    capture?: boolean;
+}
+interface WhatWGAddEventListenerArgs extends WhatWGEventListenerArgs {
+    passive?: boolean;
+    once?: boolean;
+}
+declare type WhatWGAddEventListener = (type: string, listener: (event: Event) => void, options?: WhatWGAddEventListenerArgs) => void;
 declare module DragDropPolyfill {
     type DragImageTranslateOverrideFn = (event: TouchEvent, hoverCoordinates: Point, hoveredElement: HTMLElement, translateDragImageFn: (offsetX: number, offsetY: number) => void) => void;
     interface Config {

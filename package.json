@@ -1,6 +1,6 @@
 {
   "name": "drag-drop-polyfill",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
   "main": "release/drag-drop-polyfill.min.js",
   "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
