@@ -47,6 +47,6 @@
     "grunt-ts": "^5.3.2",
     "grunt-tslint": "^3.0.3",
     "tslint": "^3.4.0",
-    "typescript": "^1.8.2"
+    "typescript": "^2.0.10"
   }
 }

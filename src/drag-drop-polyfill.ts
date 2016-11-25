@@ -1246,20 +1246,20 @@ module DragDropPolyfill {
         } );
 
         // cast our polyfill
-        dndEvent.dataTransfer = <any>dataTransfer;
-        dndEvent.relatedTarget = relatedTarget;
+        (dndEvent as any).dataTransfer = <any>dataTransfer;
+        (dndEvent as any).relatedTarget = relatedTarget;
 
         // set the coordinates
-        dndEvent.screenX = touch.screenX;
-        dndEvent.screenY = touch.screenY;
-        dndEvent.clientX = touch.clientX;
-        dndEvent.clientY = touch.clientY;
-        dndEvent.pageX = touch.pageX;
-        dndEvent.pageY = touch.pageY;
+        (dndEvent as any).screenX = touch.screenX;
+        (dndEvent as any).screenY = touch.screenY;
+        (dndEvent as any).clientX = touch.clientX;
+        (dndEvent as any).clientY = touch.clientY;
+        (dndEvent as any).pageX = touch.pageX;
+        (dndEvent as any).pageY = touch.pageY;
 
         const targetRect = targetElement.getBoundingClientRect();
-        dndEvent.offsetX = dndEvent.clientX - targetRect.left;
-        dndEvent.offsetY = dndEvent.clientY - targetRect.top;
+        (dndEvent as any).offsetX = dndEvent.clientX - targetRect.left;
+        (dndEvent as any).offsetY = dndEvent.clientY - targetRect.top;
 
         return dndEvent;
     }
