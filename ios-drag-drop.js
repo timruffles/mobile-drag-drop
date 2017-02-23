@@ -1,11 +1,12 @@
 (function(doc) {
-
+  var shimConfig;
   log = noop; // noOp, remove this line to enable debugging
 
   var coordinateSystemForElementFromPoint;
 
   function main(config) {
     config = config || {};
+    shimConfig = config;
 
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
 
@@ -325,12 +326,16 @@
         // Otherwise plain old vanilla links will stop working.
         // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
         if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a") {
+          if(shimConfig.ignoreAnchorTouch){
+            continue;
+          }else{
           var clickEvt = document.createEvent("MouseEvents");
           clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
             evt.screenX, evt.screenY, evt.clientX, evt.clientY,
             evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
           el.dispatchEvent(clickEvt);
           log("Simulating click to anchor");
+          }
         }
         evt.preventDefault();
         new DragDrop(evt,el);

@@ -33,6 +33,16 @@ var iosDragDropShim = { holdToDrag: 300 } //Adds 300ms delay before draging
 <script src="vendor/ios-drag-drop.js"></script>
 ```
 
+```
+By default the shim will simulate a mouseclick when a user touches an anchor.  See [here](https://www.html5rocks.com/en/mobile/touchandmouse/#toc-1) for more details.  Sometimes we want to disable that functionality since it can lead to unintended clicks during a scroll, and you may have other libraries in place to ensure the appropriate response. You can do that with the 'ignoreAnchorTouch' option.
+
+```html
+<script>
+var iosDragDropShim = { ignoreAnchorTouch: true }
+</script>
+<script src="vendor/ios-drag-drop.js"></script>
+```
+
 #### Known issues
 
 iOS10 introduced a regression on `touchmove` handling where `event.preventDefault()` is not respected.
