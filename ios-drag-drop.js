@@ -292,27 +292,30 @@
     return function(evt){
       var el = evt.target;
 
-      if (el.draggable === true) {
-        var heldItem = function() {
-          end.off();
-          cancel.off();
-          scroll.off();
-          touchstart(evt);
-        };
+      do {
+        if (el.draggable === true) {
+          var heldItem = function() {
+            end.off();
+            cancel.off();
+            scroll.off();
+            touchstart(evt);
+          };
 
-        var onReleasedItem = function() {
-          end.off();
-          cancel.off();
-          scroll.off();
-          clearTimeout(timer);
-        };
+          var onReleasedItem = function() {
+            end.off();
+            cancel.off();
+            scroll.off();
+            clearTimeout(timer);
+          };
 
-        var timer = setTimeout(heldItem, delay);
+          var timer = setTimeout(heldItem, delay);
 
-        var end = onEvt(el, 'touchend', onReleasedItem, this);
-        var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
-        var scroll = onEvt(window, 'scroll', onReleasedItem, this);
-      }
+          var end = onEvt(el, 'touchend', onReleasedItem, this);
+          var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
+          var scroll = onEvt(window, 'scroll', onReleasedItem, this);
+          break;
+        }
+      } while((el = el.parentNode) && el !== doc.body);
     };
   };
 
