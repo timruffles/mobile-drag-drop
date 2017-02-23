@@ -326,9 +326,9 @@
         // Otherwise plain old vanilla links will stop working.
         // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
         if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a") {
-          if(shimConfig.ignoreAnchorTouch){
+          if (shimConfig.ignoreAnchorTouch){
             continue;
-          }else{
+          } else{
           var clickEvt = document.createEvent("MouseEvents");
           clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
             evt.screenX, evt.screenY, evt.clientX, evt.clientY,
