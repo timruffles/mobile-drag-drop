@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "module": "umd",
+    "pretty": true,
     "sourceMap": true,
+    "inlineSources": true,
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,

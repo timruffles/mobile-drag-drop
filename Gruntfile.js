@@ -111,7 +111,7 @@ module.exports = function (grunt) {
       release: {
         files: [
           // includes files within path
-          {expand: true, cwd: "src", src: ["*.css", "*.d.ts", "*.js"], dest: "release/", filter: "isFile", flatten: true}
+          {expand: true, cwd: "src", src: ["*.css", "*.d.ts", "*.js", "*.map"], dest: "release/", filter: "isFile", flatten: true}
         ]
       }
     },

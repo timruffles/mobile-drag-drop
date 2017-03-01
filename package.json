@@ -5,7 +5,8 @@
   "main": "release/drag-drop-polyfill.min.js",
   "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dist": "tsc -p ."
   },
   "repository": {
     "type": "git",
@@ -44,9 +45,9 @@
     "grunt-contrib-uglify": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-npm": "0.0.2",
-    "grunt-ts": "^5.3.2",
-    "grunt-tslint": "^3.0.3",
+    "grunt-ts": "^6.0.0-beta.11",
+    "grunt-tslint": "^4.0.0",
     "tslint": "^3.15.1",
-    "typescript": "^2.0.10"
+    "typescript": "^2.2.0"
   }
 }
