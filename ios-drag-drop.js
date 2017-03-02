@@ -1,10 +1,11 @@
 (function(doc) {
+function _exposeIosHtml5DragDropShim(config) {
 
   log = noop; // noOp, remove this line to enable debugging
 
   var coordinateSystemForElementFromPoint;
 
-  function main(config) {
+  function main() {
     config = config || {};
 
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
@@ -424,7 +425,13 @@
 
   function noop() {}
 
-  main(window.iosDragDropShim);
+  main();
 
+};
 
+if (typeof module === 'object' && typeof module.exports === 'object') {
+  module.exports = _exposeIosHtml5DragDropShim;
+} else if (typeof window !== 'undefined') {
+  _exposeIosHtml5DragDropShim(window.iosDragDropShim);
+}
 })(document);
