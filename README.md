@@ -43,6 +43,17 @@ var iosDragDropShim = { ignoreAnchorTouch: true }
 <script src="vendor/ios-drag-drop.js"></script>
 ```
 
+With npm:
+```shell
+npm install --save drag-drop-webkit-mobile
+```
+
+```javascript
+var iosDragDropShim = require('drag-drop-webkit-mobile');
+// options are optional ;)
+iosDragDropShim(options);
+```
+
 #### Known issues
 
 iOS10 introduced a regression on `touchmove` handling where `event.preventDefault()` is not respected.

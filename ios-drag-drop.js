@@ -1,10 +1,13 @@
 (function(doc) {
+
+  
+function _exposeIosHtml5DragDropShim(config) {
   var shimConfig;
   log = noop; // noOp, remove this line to enable debugging
 
   var coordinateSystemForElementFromPoint;
 
-  function main(config) {
+  function main() {
     config = config || {};
     shimConfig = config;
 
@@ -26,10 +29,10 @@
     }
 
     if(config.holdToDrag){
-      doc.addEventListener("touchstart", touchstartDelay(config.holdToDrag));
+      doc.addEventListener("touchstart", touchstartDelay(config.holdToDrag), {passive:false});
     }
     else {
-      doc.addEventListener("touchstart", touchstart);
+      doc.addEventListener("touchstart", touchstart, {passive:false});
     }
   }
 
@@ -367,7 +370,7 @@
     if(context) {
       handler = handler.bind(context);
     }
-    el.addEventListener(event, handler);
+    el.addEventListener(event, handler, {passive:false});
     return {
       off: function() {
         return el.removeEventListener(event, handler);
@@ -429,7 +432,13 @@
 
   function noop() {}
 
-  main(window.iosDragDropShim);
+  main();
 
+};
 
+if (typeof module === 'object' && typeof module.exports === 'object') {
+  module.exports = _exposeIosHtml5DragDropShim;
+} else if (typeof window !== 'undefined') {
+  _exposeIosHtml5DragDropShim(window.iosDragDropShim);
+}
 })(document);
