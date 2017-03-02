@@ -26,10 +26,10 @@ function _exposeIosHtml5DragDropShim(config) {
     }
 
     if(config.holdToDrag){
-      doc.addEventListener("touchstart", touchstartDelay(config.holdToDrag));
+      doc.addEventListener("touchstart", touchstartDelay(config.holdToDrag), {passive:false});
     }
     else {
-      doc.addEventListener("touchstart", touchstart);
+      doc.addEventListener("touchstart", touchstart, {passive:false});
     }
   }
 
@@ -363,7 +363,7 @@ function _exposeIosHtml5DragDropShim(config) {
     if(context) {
       handler = handler.bind(context);
     }
-    el.addEventListener(event, handler);
+    el.addEventListener(event, handler, {passive:false});
     return {
       off: function() {
         return el.removeEventListener(event, handler);
