@@ -1,4 +1,6 @@
-import { DragDropPolyfill as polyfill, Point, DragImageTranslateOverrideFn, Config } from './drag-drop-polyfill.js';
+import { DragDropPolyfill as polyfill, Point, DragImageTranslateOverrideFn, Config } from "./drag-drop-polyfill.js";
+
+declare let config: Config; // Silence lint warning about unused Config import
 
 let _options:ScrollOptions = {
     threshold: 75,
