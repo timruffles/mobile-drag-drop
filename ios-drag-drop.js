@@ -1,12 +1,14 @@
 (function(doc) {
-function _exposeIosHtml5DragDropShim(config) {
 
+  
+function _exposeIosHtml5DragDropShim(config) {
   log = noop; // noOp, remove this line to enable debugging
 
   var coordinateSystemForElementFromPoint;
 
   function main() {
     config = config || {};
+    if (!config.hasOwnProperty("simulateAnchorClick")) config.simulateAnchorClick = true;
 
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
 
@@ -325,7 +327,7 @@ function _exposeIosHtml5DragDropShim(config) {
         // If draggable isn't explicitly set for anchors, then simulate a click event.
         // Otherwise plain old vanilla links will stop working.
         // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
-        if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a") {
+        if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a" && config.simulateAnchorClick) {
           var clickEvt = document.createEvent("MouseEvents");
           clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
             evt.screenX, evt.screenY, evt.clientX, evt.clientY,
