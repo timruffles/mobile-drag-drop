@@ -445,8 +445,8 @@ function _exposeIosHtml5DragDropShim(config) {
   function average(arr) {
     if (arr.length === 0) return 0;
     return arr.reduce((function(s, v) {
-        return v + s;
-      }), 0) / arr.length;
+      return v + s;
+    }), 0) / arr.length;
   }
 
   function noop() {}
