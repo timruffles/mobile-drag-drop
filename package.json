@@ -19,7 +19,7 @@
     "mobile"
   ],
   "author": "Tim Ruffles <me@truffles.me.uk>",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/timruffles/ios-html5-drag-drop-shim/issues"
   },
