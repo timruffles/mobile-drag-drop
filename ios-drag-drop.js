@@ -342,7 +342,7 @@ function _exposeIosHtml5DragDropShim(config) {
     // if an element has been explicitly set to be draggable we're good to go
     if(el.hasAttribute("draggable")) return true;
 
-    // otherwise we investigate the implicit options
+    // otherwise we investigate the implicit option
     return (!config.requireExplicitDraggable);
   }
 
