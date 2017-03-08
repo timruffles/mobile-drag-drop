@@ -327,9 +327,8 @@ function _exposeIosHtml5DragDropShim(config) {
     var el = evt.target;
     do {
       if (elementIsDraggable(el)) {
-        if (elementIsAnchor(el)) {
-          handleTouchStartOnAnchor(el);
-        }
+        handleTouchStartOnAnchor(el);
+
         evt.preventDefault();
         new DragDrop(evt,el);
         break;
@@ -339,7 +338,7 @@ function _exposeIosHtml5DragDropShim(config) {
 
   function elementIsDraggable(el){
     // if an element is not draggable either explicitly or implicitly we can exit immediately
-    if(!el.draggable === true) return false;
+    if(!el.draggable) return false;
 
     // if an element has been explicitly set to be draggable we're good to go
     if(el.hasAttribute("draggable")) return true;
