@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
   },
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "moduleType": [
     "globals"
   ]
