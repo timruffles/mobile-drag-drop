@@ -1,6 +1,5 @@
 (function(doc) {
 
-  
 function _exposeIosHtml5DragDropShim(config) {
   log = noop; // noOp, remove this line to enable debugging
 
@@ -20,7 +19,7 @@ function _exposeIosHtml5DragDropShim(config) {
     log((needsPatch ? "" : "not ") + "patching html5 drag drop");
 
     if(!needsPatch) {
-        return;
+      return;
     }
 
     if(!config.enableEnterLeave) {
@@ -167,7 +166,7 @@ function _exposeIosHtml5DragDropShim(config) {
         dropEffect: "move"
       };
       dropEvt.preventDefault = function() {
-         // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
+        // https://www.w3.org/Bugs/Public/show_bug.cgi?id=14638 - if we don't cancel it, we'll snap back
       }.bind(this);
 
       once(doc, "drop", function() {
@@ -257,10 +256,10 @@ function _exposeIosHtml5DragDropShim(config) {
     createDragImage: function() {
       if (this.customDragImage) {
         this.dragImage = this.customDragImage.cloneNode(true);
-        duplicateStyle(this.customDragImage, this.dragImage); 
+        duplicateStyle(this.customDragImage, this.dragImage);
       } else {
         this.dragImage = this.el.cloneNode(true);
-        duplicateStyle(this.el, this.dragImage); 
+        duplicateStyle(this.el, this.dragImage);
       }
       this.dragImage.style.opacity = "0.5";
       this.dragImage.style.position = "absolute";
@@ -296,7 +295,7 @@ function _exposeIosHtml5DragDropShim(config) {
       var el = evt.target;
 
       do {
-        if (el.draggable === true) {
+        if (elementIsDraggable(el)) {
           var heldItem = function() {
             end.off();
             cancel.off();
@@ -317,7 +316,7 @@ function _exposeIosHtml5DragDropShim(config) {
           var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
           var scroll = onEvt(window, 'scroll', onReleasedItem, this);
           break;
-        }        
+        }
       } while ((el = el.parentNode) && el !== doc.body);
     };
   };
@@ -326,23 +325,43 @@ function _exposeIosHtml5DragDropShim(config) {
   function touchstart(evt) {
     var el = evt.target;
     do {
-      if (el.draggable === true) {
-        // If draggable isn't explicitly set for anchors, then simulate a click event.
-        // Otherwise plain old vanilla links will stop working.
-        // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
-        if (!el.hasAttribute("draggable") && el.tagName.toLowerCase() == "a" && config.simulateAnchorClick) {
-          var clickEvt = document.createEvent("MouseEvents");
-          clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
-            evt.screenX, evt.screenY, evt.clientX, evt.clientY,
-            evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
-          el.dispatchEvent(clickEvt);
-          log("Simulating click to anchor");
-        }
+      if (elementIsDraggable(el)) {
+        handleTouchStartOnAnchor(el);
+
         evt.preventDefault();
         new DragDrop(evt,el);
         break;
       }
     } while((el = el.parentNode) && el !== doc.body);
+  }
+
+  function elementIsDraggable(el){
+    // if an element is not draggable either explicitly or implicitly we can exit immediately
+    if(!el.draggable) return false;
+
+    // if an element has been explicitly set to be draggable we're good to go
+    if(el.hasAttribute("draggable")) return true;
+
+    // otherwise we investigate the implicit option
+    return (!config.requireExplicitDraggable);
+  }
+
+  function elementIsAnchor(el){
+    return el.tagName.toLowerCase() == "a";
+  }
+
+  function handleTouchStartOnAnchor(el){
+    // If draggable isn't explicitly set for anchors, then simulate a click event.
+    // Otherwise plain old vanilla links will stop working.
+    // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
+    if (!el.hasAttribute("draggable") && elementIsAnchor(el) && config.simulateAnchorClick) {
+      var clickEvt = document.createEvent("MouseEvents");
+      clickEvt.initMouseEvent("click", true, true, el.ownerDocument.defaultView, 1,
+        evt.screenX, evt.screenY, evt.clientX, evt.clientY,
+        evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
+      el.dispatchEvent(clickEvt);
+      log("Simulating click to anchor");
+    }
   }
 
   // DOM helpers
