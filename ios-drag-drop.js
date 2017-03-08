@@ -8,7 +8,6 @@ function _exposeIosHtml5DragDropShim(config) {
   function main() {
     config = config || {};
     if (!config.hasOwnProperty("simulateAnchorClick")) config.simulateAnchorClick = true;
-    if (!config.hasOwnProperty("enableAnchorImplicitDrag")) config.enableAnchorImplicitDrag = true;
 
     coordinateSystemForElementFromPoint = navigator.userAgent.match(/OS [1-4](?:_\d+)+ like Mac/) ? "page" : "client";
 
@@ -344,7 +343,7 @@ function _exposeIosHtml5DragDropShim(config) {
     if(el.hasAttribute("draggable")) return true;
 
     // otherwise we investigate the implicit options
-    return (elementIsAnchor(el) && config.enableAnchorImplicitDrag);
+    return (!config.requireExplicitDraggable);
   }
 
   function elementIsAnchor(el){

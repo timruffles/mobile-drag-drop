@@ -42,11 +42,11 @@ var iosDragDropShim = { simulateAnchorClick: false }
 <script src="vendor/ios-drag-drop.js"></script>
 ```
 
-To match the HTML5 and and drop spec, all anchors are implicitly treated as draggable. You can turn off this behavior by setting 'enableAnchorImplicitDrag' to 'false'.  This way, only elements with the `draggable` attribute set to `true` will be draggable.
+To match the HTML5 and and drop spec, links and images are implicitly treated as draggable. You can turn off this behavior by setting 'requireExplicitDraggable' to 'true'.  This way, only elements with the `draggable` attribute set to `true` will be draggable.
 
 ```html
 <script>
-var iosDragDropShim = { enableAnchorImplicitDrag: false }
+var iosDragDropShim = { requireExplicitDraggable: true }
 </script>
 <script src="vendor/ios-drag-drop.js"></script>
 ```
