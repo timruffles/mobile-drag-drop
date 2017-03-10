@@ -390,7 +390,7 @@ function _exposeIosHtml5DragDropShim(config) {
     el.addEventListener(event, handler, {passive:false});
     return {
       off: function() {
-        return el.removeEventListener(event, handler);
+        return el.removeEventListener(event, handler, {passive:false});
       }
     };
   }
