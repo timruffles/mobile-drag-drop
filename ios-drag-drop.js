@@ -342,7 +342,7 @@ function _exposeIosHtml5DragDropShim(config) {
     var el = evt.target;
     do {
       if (elementIsDraggable(el)) {
-        handleTouchStartOnAnchor(el);
+        handleTouchStartOnAnchor(evt, el);
 
         evt.preventDefault();
         new DragDrop(evt,el);
@@ -366,7 +366,7 @@ function _exposeIosHtml5DragDropShim(config) {
     return el.tagName.toLowerCase() == "a";
   }
 
-  function handleTouchStartOnAnchor(el){
+  function handleTouchStartOnAnchor(evt, el){
     // If draggable isn't explicitly set for anchors, then simulate a click event.
     // Otherwise plain old vanilla links will stop working.
     // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events#Handling_clicks
