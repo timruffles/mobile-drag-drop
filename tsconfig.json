@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "sourceMap": true,
+    "module": "es6",
+    "outDir": "src",
+    "pretty": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,

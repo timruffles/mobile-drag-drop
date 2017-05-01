@@ -61,7 +61,7 @@ System.import("drag-drop-polyfill/drag-drop-polyfill.css!");
 **ES6/TypeScript flavour**
 
 ```JavaScript
-import "drag-drop-polyfill";
+import { DragDropPolyfill } from "drag-drop-polyfill";
 import "drag-drop-polyfill/drag-drop-polyfill.css!";
 ```
 
