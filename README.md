@@ -7,6 +7,8 @@ Luckily, WebKit gives us enough tools to shim seamlessly. If you drop
 this script in your page your existing HTML 5 drag'n'drop code should
 just work.
 
+There are two versions to consider - this one, and the [v2](https://github.com/timruffles/ios-html5-drag-drop-shim/tree/rewrite). V2 has more features, bug fixes and supports TypeScript!
+
 ## Demos
 
 - [drag drop](http://timruffles.github.io/ios-html5-drag-drop-shim/demo/)
