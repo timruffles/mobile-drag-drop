@@ -75,6 +75,13 @@ If you run into a situation where dragging and scrolling occur simultaneously ap
 - all drag events, with `dragenter`, `dragover` and `dragleave` enabled via config flag
 - creates a partially transparent drag image based on the dragged element
 
+The shim is implemented only if:
+  - DOM nodes _do not_ have a 'draggable' property, OR
+  - the User Agent resolves to an iOS / Android device
+
+The patch can be forced to run through the config object, but this will lead to unintended results on popular devices if you aren't doing your own sniffing.
+`{ needsPatch: true }`
+
 ## Thanks
 
 To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-shim/graphs/contributors) who've provided massive extensions and fixes to the original.
