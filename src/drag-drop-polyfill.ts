@@ -1387,6 +1387,16 @@ module DragDropPolyfill {
             transitionEndCb();
             return;
         }
+        // add class containing transition rules
+        dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
+
+        const csDragImage = getComputedStyle( dragImage );
+        const durationInS = parseFloat( csDragImage.transitionDuration );
+        if (durationInS === NaN || durationInS ====0) {
+            console.log( "dnd-poly: no transition used - skipping snapback" );
+            transitionEndCb();
+            return;
+        }
 
         console.log( "dnd-poly: starting dragimage snap back" );
 
@@ -1406,11 +1416,6 @@ module DragDropPolyfill {
         pnt.x -= parseInt( cs.marginLeft, 10 );
         pnt.y -= parseInt( cs.marginTop, 10 );
 
-        // add class containing transition rules
-        dragImage.classList.add( CLASS_DRAG_IMAGE_SNAPBACK );
-
-        const csDragImage = getComputedStyle( dragImage );
-        const durationInS = parseFloat( csDragImage.transitionDuration );
         const delayInS = parseFloat( csDragImage.transitionDelay );
         const durationInMs = Math.round( (durationInS + delayInS) * 1000 );
 
