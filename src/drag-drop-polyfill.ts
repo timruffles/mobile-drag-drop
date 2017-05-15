@@ -1392,7 +1392,7 @@ module DragDropPolyfill {
 
         const csDragImage = getComputedStyle( dragImage );
         const durationInS = parseFloat( csDragImage.transitionDuration );
-        if (isNan(durationInS) || durationInS ===0) {
+        if (isNaN(durationInS) || durationInS ===0) {
             console.log( "dnd-poly: no transition used - skipping snapback" );
             transitionEndCb();
             return;
