@@ -1,23 +1,6 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact.
 let DEBUG:boolean;
 
-//TODO temporary definition of new event listener signature, TS2.1 will have it in lib.d.ts
-
-interface WhatWGEventListenerArgs {
-    capture?: boolean;
-}
-
-interface WhatWGAddEventListenerArgs extends WhatWGEventListenerArgs {
-    passive?: boolean;
-    once?: boolean;
-}
-
-type WhatWGAddEventListener = (
-    type: string,
-    listener: (event:Event) => void,
-    options?: WhatWGAddEventListenerArgs
-) => void;
-
 module DragDropPolyfill {
 
     //<editor-fold desc="feature detection">
@@ -1202,7 +1185,8 @@ module DragDropPolyfill {
     }
 
     function addDocumentListener( ev:string, handler:EventListener, passive:boolean = true ) {
-        (document.addEventListener as WhatWGAddEventListener)( ev, handler, supportsPassive ? { passive:passive } : false );
+
+        (document as EventTarget).addEventListener( ev, handler, supportsPassive ? { passive:passive } : false );
     }
 
     function removeDocumentListener( ev:string, handler:EventListener ) {
