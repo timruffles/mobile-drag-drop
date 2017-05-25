@@ -1118,7 +1118,7 @@ module DragDropPolyfill {
         //    return undefined;
         //}
 
-        public get types():Array<string> {
+        public get types():ReadonlyArray<string> {
             if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED ) {
                 return Object.freeze( this._dataStore._types );
             }

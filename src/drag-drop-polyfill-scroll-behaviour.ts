@@ -1,5 +1,173 @@
 module DragDropPolyfill {
 
+    //<editor-fold desc="static scroll utils">
+
+    interface ScrollIntentions {
+        horizontal:ScrollIntention;
+        vertical:ScrollIntention;
+    }
+
+    interface IScrollBounds {
+        x:number;
+        y:number;
+        width:number;
+        height:number;
+        scrollX:number;
+        scrollY:number;
+        scrollHeight:number;
+        scrollWidth:number;
+    }
+
+    const enum ScrollIntention {
+        NONE            = 0,
+        LEFT_OR_TOP     = -1,
+        RIGHT_OR_BOTTOM = 1
+    }
+
+    const enum ScrollAxis {
+        HORIZONTAL,
+        VERTICAL
+    }
+
+    function isTopLevelEl( el:HTMLElement ):boolean {
+
+        return (el === document.body || el === document.documentElement);
+    }
+
+    function getElementViewportOffset( el:HTMLElement, axis:ScrollAxis ) {
+        let offset:number;
+
+        if( isTopLevelEl( el ) ) {
+            offset = (axis === ScrollAxis.HORIZONTAL) ? el.clientLeft : el.clientTop;
+        }
+        else {
+            const bounds = el.getBoundingClientRect();
+            offset = (axis === ScrollAxis.HORIZONTAL) ? bounds.left : bounds.top;
+        }
+
+        return offset;
+    }
+
+    function getElementViewportSize( el:HTMLElement, axis:ScrollAxis ) {
+        let size:number;
+
+        if( isTopLevelEl( el ) ) {
+            size = (axis === ScrollAxis.HORIZONTAL) ? window.innerWidth : window.innerHeight;
+        }
+        else {
+            size = (axis === ScrollAxis.HORIZONTAL) ? el.clientWidth : el.clientHeight;
+        }
+
+        return size;
+    }
+
+    function getSetElementScroll( el:HTMLElement, axis:ScrollAxis, scroll?:number ) {
+        const prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
+
+        // abstracting away compatibility issues on scroll properties of document/body
+        const isTopLevel = isTopLevelEl( el );
+
+        if( arguments.length === 2 ) {
+
+            if( isTopLevel ) {
+                return document.body[ prop ] || document.documentElement[ prop ];
+            }
+
+            return el[ prop ];
+        }
+
+        if( isTopLevel ) {
+            document.documentElement[ prop ] += scroll;
+            document.body[ prop ] += scroll;
+        }
+        else {
+            el[ prop ] += scroll;
+        }
+    }
+
+    //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
+    function isScrollable( el:HTMLElement ):boolean {
+        const cs = getComputedStyle( el );
+
+        if( el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto") ) {
+            return true;
+        }
+
+        if( el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto") ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function findScrollableParent( el:HTMLElement ):HTMLElement {
+        do {
+            if( !el ) {
+                return undefined;
+            }
+            if( isScrollable( el ) ) {
+                return el;
+            }
+            if( el === document.documentElement ) {
+                return null;
+            }
+        } while( el = <HTMLElement>el.parentNode );
+        return null;
+    }
+
+    function determineScrollIntention( currentCoordinate:number, size:number, threshold:number ):ScrollIntention {
+
+        // LEFT / TOP
+        if( currentCoordinate < threshold ) {
+            return ScrollIntention.LEFT_OR_TOP;
+        }
+        // RIGHT / BOTTOM
+        else if( size - currentCoordinate < threshold ) {
+            return ScrollIntention.RIGHT_OR_BOTTOM;
+        }
+        // NONE
+        return ScrollIntention.NONE;
+    }
+
+    function determineDynamicVelocity( scrollIntention:ScrollIntention, currentCoordinate:number, size:number, threshold:number ):number {
+
+        if( scrollIntention === ScrollIntention.LEFT_OR_TOP ) {
+
+            return Math.abs( currentCoordinate - threshold );
+        }
+        else if( scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM ) {
+
+            return Math.abs( size - currentCoordinate - threshold );
+        }
+
+        return 0;
+    }
+
+    function isScrollEndReached( axis:ScrollAxis, scrollIntention:ScrollIntention, scrollBounds:IScrollBounds ) {
+
+        const currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
+
+        // wants to scroll to the right/bottom
+        if( scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM ) {
+
+            const maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? ( scrollBounds.scrollWidth - scrollBounds.width ) : ( scrollBounds.scrollHeight -
+                                                                                                                             scrollBounds.height );
+
+            // is already at the right/bottom edge
+            return currentScrollOffset >= maxScrollOffset;
+        }
+        // wants to scroll to the left/top
+        else if( scrollIntention === ScrollIntention.LEFT_OR_TOP ) {
+
+            // is already at left/top edge
+            return (currentScrollOffset <= 0);
+        }
+        // no scroll
+        return true;
+    }
+
+    //</editor-fold>
+
     let _options:ScrollOptions = {
         threshold: 75,
         // simplified cubic-ease-in function
@@ -169,174 +337,6 @@ module DragDropPolyfill {
         }
 
         return !!(scrollIntentions.horizontal || scrollIntentions.vertical);
-    }
-
-    //</editor-fold>
-
-    //<editor-fold desc="static scroll utils">
-
-    interface ScrollIntentions {
-        horizontal:ScrollIntention;
-        vertical:ScrollIntention;
-    }
-
-    interface IScrollBounds {
-        x:number;
-        y:number;
-        width:number;
-        height:number;
-        scrollX:number;
-        scrollY:number;
-        scrollHeight:number;
-        scrollWidth:number;
-    }
-
-    const enum ScrollIntention {
-        NONE            = 0,
-        LEFT_OR_TOP     = -1,
-        RIGHT_OR_BOTTOM = 1
-    }
-
-    const enum ScrollAxis {
-        HORIZONTAL,
-        VERTICAL
-    }
-
-    function isTopLevelEl( el:HTMLElement ):boolean {
-
-        return (el === document.body || el === document.documentElement);
-    }
-
-    function getElementViewportOffset( el:HTMLElement, axis:ScrollAxis ) {
-        let offset:number;
-
-        if( isTopLevelEl( el ) ) {
-            offset = (axis === ScrollAxis.HORIZONTAL) ? el.clientLeft : el.clientTop;
-        }
-        else {
-            const bounds = el.getBoundingClientRect();
-            offset = (axis === ScrollAxis.HORIZONTAL) ? bounds.left : bounds.top;
-        }
-
-        return offset;
-    }
-
-    function getElementViewportSize( el:HTMLElement, axis:ScrollAxis ) {
-        let size:number;
-
-        if( isTopLevelEl( el ) ) {
-            size = (axis === ScrollAxis.HORIZONTAL) ? window.innerWidth : window.innerHeight;
-        }
-        else {
-            size = (axis === ScrollAxis.HORIZONTAL) ? el.clientWidth : el.clientHeight;
-        }
-
-        return size;
-    }
-
-    function getSetElementScroll( el:HTMLElement, axis:ScrollAxis, scroll?:number ) {
-        const prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
-
-        // abstracting away compatibility issues on scroll properties of document/body
-        const isTopLevel = isTopLevelEl( el );
-
-        if( arguments.length === 2 ) {
-
-            if( isTopLevel ) {
-                return document.body[ prop ] || document.documentElement[ prop ];
-            }
-
-            return el[ prop ];
-        }
-
-        if( isTopLevel ) {
-            document.documentElement[ prop ] += scroll;
-            document.body[ prop ] += scroll;
-        }
-        else {
-            el[ prop ] += scroll;
-        }
-    }
-
-    //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
-    function isScrollable( el:HTMLElement ):boolean {
-        const cs = getComputedStyle( el );
-
-        if( el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto") ) {
-            return true;
-        }
-
-        if( el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto") ) {
-            return true;
-        }
-
-        return false;
-    }
-
-    function findScrollableParent( el:HTMLElement ):HTMLElement {
-        do {
-            if( !el ) {
-                return undefined;
-            }
-            if( isScrollable( el ) ) {
-                return el;
-            }
-            if( el === document.documentElement ) {
-                return null;
-            }
-        } while( el = <HTMLElement>el.parentNode );
-        return null;
-    }
-
-    function determineScrollIntention( currentCoordinate:number, size:number, threshold:number ):ScrollIntention {
-
-        // LEFT / TOP
-        if( currentCoordinate < threshold ) {
-            return ScrollIntention.LEFT_OR_TOP;
-        }
-        // RIGHT / BOTTOM
-        else if( size - currentCoordinate < threshold ) {
-            return ScrollIntention.RIGHT_OR_BOTTOM;
-        }
-        // NONE
-        return ScrollIntention.NONE;
-    }
-
-    function determineDynamicVelocity( scrollIntention:ScrollIntention, currentCoordinate:number, size:number, threshold:number ):number {
-
-        if( scrollIntention === ScrollIntention.LEFT_OR_TOP ) {
-
-            return Math.abs( currentCoordinate - threshold );
-        }
-        else if( scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM ) {
-
-            return Math.abs( size - currentCoordinate - threshold );
-        }
-
-        return 0;
-    }
-
-    function isScrollEndReached( axis:ScrollAxis, scrollIntention:ScrollIntention, scrollBounds:IScrollBounds ) {
-
-        const currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
-
-        // wants to scroll to the right/bottom
-        if( scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM ) {
-
-            const maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? ( scrollBounds.scrollWidth - scrollBounds.width ) : ( scrollBounds.scrollHeight -
-                                                                                                                             scrollBounds.height );
-
-            // is already at the right/bottom edge
-            return currentScrollOffset >= maxScrollOffset;
-        }
-        // wants to scroll to the left/top
-        else if( scrollIntention === ScrollIntention.LEFT_OR_TOP ) {
-
-            // is already at left/top edge
-            return (currentScrollOffset <= 0);
-        }
-        // no scroll
-        return true;
     }
 
     //</editor-fold>
