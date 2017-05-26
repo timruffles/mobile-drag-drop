@@ -47,85 +47,97 @@ Check out the demo to see it in action and monitor the console to see the events
 **global**
 
 ```HTML
-<link rel="stylesheet" href="libs/drag-drop-polyfill/drag-drop-polyfill.css">
-<script src="libs/drag-drop-polyfill/drag-drop-polyfill.min.js"></script>
+<link rel="stylesheet" href="libs/drag-drop-polyfill/release/drag-drop-polyfill.css">
+<script src="libs/drag-drop-polyfill/release/drag-drop-polyfill.min.js"></script>
+
+<!--optional import of scroll behaviour-->
+<script src="libs/drag-drop-polyfill/release/drag-drop-polyfill-scroll-behaviour.min.js"></script>
+
+<script>
+    // options are optional ;)
+    DragDropPolyfill.polyfill({
+        // use this to make use of the scroll behaviour
+        dragImageTranslateOverride: DragDropPolyfill.scrollBehaviourDragImageTranslateOverride
+    });
+</script>
 ```
 
 **SystemJS/JSPM**
 
 ```JavaScript
 System.import("drag-drop-polyfill");
+// import css if using system-js css loader plugin 
 System.import("drag-drop-polyfill/drag-drop-polyfill.css!");
 ```
 
-**ES6/TypeScript flavour**
+**ES2015/TypeScript/webpack**
 
 ```JavaScript
-import "drag-drop-polyfill";
-import "drag-drop-polyfill/drag-drop-polyfill.css!";
+import {polyfill} from "drag-drop-polyfill/release/drag-drop-polyfill";
+
+// optional import of scroll behaviour
+import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/release/drag-drop-polyfill-scroll-behaviour";
+
+// options are optional ;)
+polyfill({
+    // use this to make use of the scroll behaviour
+    dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride
+});
 ```
 
+**webpack/scss**
 
-### Initialize
-
-```JavaScript
-// options are optional ;)
-DragDropPolyfill.Initialize(options);
+```SCSS
+@import "~drag-drop-polyfill/release/drag-drop-polyfill.css";
 ```
 
 
 ## API & Options <a name="options"></a>
 
 ```TypeScript
-declare module DragDropPolyfill {
-
-    // function signature for the dragImageTranslateOverride hook
-    export type DragImageTranslateOverrideFn = (
-        // corresponding touchmove event
-        event:TouchEvent,
-        // the processed touch event viewport coordinates
-        hoverCoordinates:Point,
-        // the element under the calculated touch coordinates
-        hoveredElement:HTMLElement,
-        // callback for updating the drag image offset
-        translateDragImageFn:( offsetX:number, offsetY:number ) => void
-    ) => void;
-
-    // polyfill config
-    export interface Config {
-
-        // flag to force the polyfill being applied and not rely on internal feature detection
-        forceApply?:boolean;
-
-        // useful for when you want the default drag image but still want to apply
-        // some static offset from touch coordinates to drag image coordinates
-        // defaults to (0,0)
-        dragImageOffset?:Point;
-
-        // if the dragImage shall be centered on the touch coordinates
-        // defaults to false
-        dragImageCenterOnTouch?:boolean;
-
-        // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
-        // defaults to 150ms
-        iterationInterval?:number;
-
-        // hook for custom logic that decides if a drag operation should start
-        // executed once with the initial touchmove and if true is returned the drag-operation initializes.
-        // defaults to (event.touches.length === 1) 
-        dragStartConditionOverride?:( event:TouchEvent ) => boolean;
-
-        // hook for custom logic that can manipulate the drag image translate offset
-        dragImageTranslateOverride?:DragImageTranslateOverrideFn;
-
-        // hook for custom logic that can override the default action based on the original touch event when the drag never started
-        // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
-        defaultActionOverride?:( event:TouchEvent ) => void;
-    }
-
-    // invoke for initializing the polyfill
-    export function Initialize(config?: Config) => void;
+export interface Point {
+    x: number;
+    y: number;
 }
+
+// function signature for the dragImageTranslateOverride hook
+export type DragImageTranslateOverrideFn = (
+    // corresponding touchmove event
+    event: TouchEvent, 
+    // the processed touch event viewport coordinates
+    hoverCoordinates: Point, 
+    // the element under the calculated touch coordinates
+    hoveredElement: HTMLElement, 
+    // callback for updating the drag image offset
+    translateDragImageFn: (offsetX: number, offsetY: number) => void) => void;
+) => void;
+
+export interface Config {
+    // flag to force the polyfill being applied and not rely on internal feature detection
+    forceApply?: boolean;
+    // useful for when you want the default drag image but still want to apply
+    // some static offset from touch coordinates to drag image coordinates
+    // defaults to (0,0)
+    dragImageOffset?: Point;
+    // if the dragImage shall be centered on the touch coordinates
+    // defaults to false
+    dragImageCenterOnTouch?: boolean;
+    // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
+    // defaults to 150ms
+    iterationInterval?: number;
+    // hook for custom logic that decides if a drag operation should start
+    // executed once with the initial touchmove and if true is returned the drag-operation initializes.
+    // defaults to (event.touches.length === 1) 
+    dragStartConditionOverride?: (event: TouchEvent) => boolean;
+    // hook for custom logic that can manipulate the drag image translate offset
+    dragImageTranslateOverride?: DragImageTranslateOverrideFn;
+    // hook for custom logic that can override the default action based on the original touch event when the drag never started
+    // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
+    defaultActionOverride?: (event: TouchEvent) => void;
+}
+
+// invoke for initializing the polyfill
+export function polyfill(override?: Config): void;
 ```
 
 
