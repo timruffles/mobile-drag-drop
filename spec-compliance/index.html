@@ -374,7 +374,7 @@
     </article>
     <script>
 
-        var DEBUG = false;
+//        var DEBUG = false;
 
         var allowDragWithTwoFingersOnly = function (event) {
 
@@ -437,7 +437,7 @@
             return true;
         };
 
-        DragDropPolyfill.Initialize({
+        DragDropPolyfill.polyfill({
 //            dragImageCenterOnTouch: true,
 //            dragImageOffset: {
 //                x: 0,
@@ -445,7 +445,7 @@
 //            },
 //            dragStartConditionOverride: allowHorizontalDragOnly,
 //            defaultActionOverride: alertAction,
-            dragImageTranslateOverride: DragDropPolyfill.HandleDragImageTranslateOverride
+            dragImageTranslateOverride: DragDropPolyfill.scrollBehaviourDragImageTranslateOverride
         });
 
         /**

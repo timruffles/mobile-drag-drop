@@ -1,6 +1,10 @@
-var DEBUG;
-var DragDropPolyfill;
-(function (DragDropPolyfill) {
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (factory((global.DragDropPolyfill = global.DragDropPolyfill || {})));
+}(this, (function (exports) { 'use strict';
+
+    var DEBUG = false;
     function detectFeatures() {
         var features = {
             dragEvents: ("ondragstart" in document.documentElement),
@@ -30,13 +34,14 @@ var DragDropPolyfill;
             });
             window.addEventListener("test", null, opts);
         }
-        catch (e) { }
+        catch (e) {
+        }
         return supportsPassiveEventListeners;
     }
     var config = {
         iterationInterval: 150,
     };
-    function Initialize(override) {
+    function polyfill(override) {
         if (override) {
             Object.keys(override).forEach(function (key) {
                 config[key] = override[key];
@@ -54,7 +59,6 @@ var DragDropPolyfill;
         supportsPassive = supportsPassiveEventListener();
         addDocumentListener("touchstart", onTouchstart, false);
     }
-    DragDropPolyfill.Initialize = Initialize;
     var activeDragOperation;
     function onTouchstart(e) {
         console.log("dnd-poly: global touchstart");
@@ -639,6 +643,14 @@ var DragDropPolyfill;
             transitionEndCb();
             return;
         }
+        dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
+        var csDragImage = getComputedStyle(dragImage);
+        var durationInS = parseFloat(csDragImage.transitionDuration);
+        if (isNaN(durationInS) || durationInS === 0) {
+            console.log("dnd-poly: no transition used - skipping snapback");
+            transitionEndCb();
+            return;
+        }
         console.log("dnd-poly: starting dragimage snap back");
         var rect = sourceEl.getBoundingClientRect();
         var pnt = {
@@ -649,9 +661,6 @@ var DragDropPolyfill;
         pnt.y += (document.body.scrollTop || document.documentElement.scrollTop);
         pnt.x -= parseInt(cs.marginLeft, 10);
         pnt.y -= parseInt(cs.marginTop, 10);
-        dragImage.classList.add(CLASS_DRAG_IMAGE_SNAPBACK);
-        var csDragImage = getComputedStyle(dragImage);
-        var durationInS = parseFloat(csDragImage.transitionDuration);
         var delayInS = parseFloat(csDragImage.transitionDelay);
         var durationInMs = Math.round((durationInS + delayInS) * 1000);
         translateDragImage(dragImage, pnt, dragImageTransforms, undefined, false);
@@ -723,5 +732,11 @@ var DragDropPolyfill;
         }
         return DROP_EFFECTS[0];
     }
-})(DragDropPolyfill || (DragDropPolyfill = {}));
+
+    exports.polyfill = polyfill;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
+
 //# sourceMappingURL=drag-drop-polyfill.js.map

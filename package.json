@@ -3,6 +3,7 @@
   "version": "2.0.0-beta.3",
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
   "main": "release/drag-drop-polyfill.min.js",
+  "types": "release/drag-drop-polyfill.d.ts",
   "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -44,9 +45,11 @@
     "grunt-contrib-uglify": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-npm": "0.0.2",
-    "grunt-ts": "^5.3.2",
-    "grunt-tslint": "^3.0.3",
-    "tslint": "^3.15.1",
-    "typescript": "^2.0.10"
+    "grunt-rollup": "^1.0.1",
+    "grunt-ts": "^5.5.1",
+    "grunt-tslint": "^5.0.1",
+    "rollup-plugin-sourcemaps": "^0.4.2",
+    "tslint": "^5.3.0",
+    "typescript": "^2.3.0"
   }
 }

@@ -1,5 +1,104 @@
-var DragDropPolyfill;
-(function (DragDropPolyfill) {
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (factory((global.DragDropPolyfill = global.DragDropPolyfill || {})));
+}(this, (function (exports) { 'use strict';
+
+    function isTopLevelEl(el) {
+        return (el === document.body || el === document.documentElement);
+    }
+    function getElementViewportOffset(el, axis) {
+        var offset;
+        if (isTopLevelEl(el)) {
+            offset = (axis === 0) ? el.clientLeft : el.clientTop;
+        }
+        else {
+            var bounds = el.getBoundingClientRect();
+            offset = (axis === 0) ? bounds.left : bounds.top;
+        }
+        return offset;
+    }
+    function getElementViewportSize(el, axis) {
+        var size;
+        if (isTopLevelEl(el)) {
+            size = (axis === 0) ? window.innerWidth : window.innerHeight;
+        }
+        else {
+            size = (axis === 0) ? el.clientWidth : el.clientHeight;
+        }
+        return size;
+    }
+    function getSetElementScroll(el, axis, scroll) {
+        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
+        var isTopLevel = isTopLevelEl(el);
+        if (arguments.length === 2) {
+            if (isTopLevel) {
+                return document.body[prop] || document.documentElement[prop];
+            }
+            return el[prop];
+        }
+        if (isTopLevel) {
+            document.documentElement[prop] += scroll;
+            document.body[prop] += scroll;
+        }
+        else {
+            el[prop] += scroll;
+        }
+    }
+    function isScrollable(el) {
+        var cs = getComputedStyle(el);
+        if (el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto")) {
+            return true;
+        }
+        if (el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto")) {
+            return true;
+        }
+        return false;
+    }
+    function findScrollableParent(el) {
+        do {
+            if (!el) {
+                return undefined;
+            }
+            if (isScrollable(el)) {
+                return el;
+            }
+            if (el === document.documentElement) {
+                return null;
+            }
+        } while (el = el.parentNode);
+        return null;
+    }
+    function determineScrollIntention(currentCoordinate, size, threshold) {
+        if (currentCoordinate < threshold) {
+            return -1;
+        }
+        else if (size - currentCoordinate < threshold) {
+            return 1;
+        }
+        return 0;
+    }
+    function determineDynamicVelocity(scrollIntention, currentCoordinate, size, threshold) {
+        if (scrollIntention === -1) {
+            return Math.abs(currentCoordinate - threshold);
+        }
+        else if (scrollIntention === 1) {
+            return Math.abs(size - currentCoordinate - threshold);
+        }
+        return 0;
+    }
+    function isScrollEndReached(axis, scrollIntention, scrollBounds) {
+        var currentScrollOffset = (axis === 0) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
+        if (scrollIntention === 1) {
+            var maxScrollOffset = (axis === 0) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
+                scrollBounds.height);
+            return currentScrollOffset >= maxScrollOffset;
+        }
+        else if (scrollIntention === -1) {
+            return (currentScrollOffset <= 0);
+        }
+        return true;
+    }
     var _options = {
         threshold: 75,
         velocityFn: function (velocity, threshold) {
@@ -98,107 +197,12 @@ var DragDropPolyfill;
         }
         return !!(scrollIntentions.horizontal || scrollIntentions.vertical);
     }
-    function isTopLevelEl(el) {
-        return (el === document.body || el === document.documentElement);
-    }
-    function getElementViewportOffset(el, axis) {
-        var offset;
-        if (isTopLevelEl(el)) {
-            offset = (axis === 0) ? el.clientLeft : el.clientTop;
-        }
-        else {
-            var bounds = el.getBoundingClientRect();
-            offset = (axis === 0) ? bounds.left : bounds.top;
-        }
-        return offset;
-    }
-    function getElementViewportSize(el, axis) {
-        var size;
-        if (isTopLevelEl(el)) {
-            size = (axis === 0) ? window.innerWidth : window.innerHeight;
-        }
-        else {
-            size = (axis === 0) ? el.clientWidth : el.clientHeight;
-        }
-        return size;
-    }
-    function getSetElementScroll(el, axis, scroll) {
-        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
-        var isTopLevel = isTopLevelEl(el);
-        if (arguments.length === 2) {
-            if (isTopLevel) {
-                return document.body[prop] || document.documentElement[prop];
-            }
-            return el[prop];
-        }
-        if (isTopLevel) {
-            document.documentElement[prop] += scroll;
-            document.body[prop] += scroll;
-        }
-        else {
-            el[prop] += scroll;
-        }
-    }
-    function isScrollable(el) {
-        var cs = getComputedStyle(el);
-        if (el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto")) {
-            return true;
-        }
-        if (el.scrollWidth > el.clientWidth && (cs.overflowX === "scroll" || cs.overflowX === "auto")) {
-            return true;
-        }
-        return false;
-    }
-    function findScrollableParent(el) {
-        do {
-            if (!el) {
-                return undefined;
-            }
-            if (isScrollable(el)) {
-                return el;
-            }
-            if (el === document.documentElement) {
-                return null;
-            }
-        } while (el = el.parentNode);
-        return null;
-    }
-    function determineScrollIntention(currentCoordinate, size, threshold) {
-        if (currentCoordinate < threshold) {
-            return -1;
-        }
-        else if (size - currentCoordinate < threshold) {
-            return 1;
-        }
-        return 0;
-    }
-    function determineDynamicVelocity(scrollIntention, currentCoordinate, size, threshold) {
-        if (scrollIntention === -1) {
-            return Math.abs(currentCoordinate - threshold);
-        }
-        else if (scrollIntention === 1) {
-            return Math.abs(size - currentCoordinate - threshold);
-        }
-        return 0;
-    }
-    function isScrollEndReached(axis, scrollIntention, scrollBounds) {
-        var currentScrollOffset = (axis === 0) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
-        if (scrollIntention === 1) {
-            var maxScrollOffset = (axis === 0) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
-                scrollBounds.height);
-            return currentScrollOffset >= maxScrollOffset;
-        }
-        else if (scrollIntention === -1) {
-            return (currentScrollOffset <= 0);
-        }
-        return true;
-    }
-    function SetOptions(options) {
-        Object.keys(options).forEach(function (key) {
-            _options[key] = options[key];
-        });
-    }
-    DragDropPolyfill.SetOptions = SetOptions;
-    DragDropPolyfill.HandleDragImageTranslateOverride = handleDragImageTranslateOverride;
-})(DragDropPolyfill || (DragDropPolyfill = {}));
+    var scrollBehaviourDragImageTranslateOverride = handleDragImageTranslateOverride;
+
+    exports.scrollBehaviourDragImageTranslateOverride = scrollBehaviourDragImageTranslateOverride;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
+
 //# sourceMappingURL=drag-drop-polyfill-scroll-behaviour.js.map
