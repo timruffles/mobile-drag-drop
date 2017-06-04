@@ -3,6 +3,7 @@
     "target": "es5",
     "module": "es2015",
     "sourceMap": true,
+    "inlineSources": true,
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,

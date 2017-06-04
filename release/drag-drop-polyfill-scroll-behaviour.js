@@ -4,43 +4,32 @@
     (factory((global.DragDropPolyfill = global.DragDropPolyfill || {})));
 }(this, (function (exports) { 'use strict';
 
-    var ScrollIntention;
-    (function (ScrollIntention) {
-        ScrollIntention[ScrollIntention["NONE"] = 0] = "NONE";
-        ScrollIntention[ScrollIntention["LEFT_OR_TOP"] = -1] = "LEFT_OR_TOP";
-        ScrollIntention[ScrollIntention["RIGHT_OR_BOTTOM"] = 1] = "RIGHT_OR_BOTTOM";
-    })(ScrollIntention || (ScrollIntention = {}));
-    var ScrollAxis;
-    (function (ScrollAxis) {
-        ScrollAxis[ScrollAxis["HORIZONTAL"] = 0] = "HORIZONTAL";
-        ScrollAxis[ScrollAxis["VERTICAL"] = 1] = "VERTICAL";
-    })(ScrollAxis || (ScrollAxis = {}));
     function isTopLevelEl(el) {
         return (el === document.body || el === document.documentElement);
     }
     function getElementViewportOffset(el, axis) {
         var offset;
         if (isTopLevelEl(el)) {
-            offset = (axis === ScrollAxis.HORIZONTAL) ? el.clientLeft : el.clientTop;
+            offset = (axis === 0) ? el.clientLeft : el.clientTop;
         }
         else {
             var bounds = el.getBoundingClientRect();
-            offset = (axis === ScrollAxis.HORIZONTAL) ? bounds.left : bounds.top;
+            offset = (axis === 0) ? bounds.left : bounds.top;
         }
         return offset;
     }
     function getElementViewportSize(el, axis) {
         var size;
         if (isTopLevelEl(el)) {
-            size = (axis === ScrollAxis.HORIZONTAL) ? window.innerWidth : window.innerHeight;
+            size = (axis === 0) ? window.innerWidth : window.innerHeight;
         }
         else {
-            size = (axis === ScrollAxis.HORIZONTAL) ? el.clientWidth : el.clientHeight;
+            size = (axis === 0) ? el.clientWidth : el.clientHeight;
         }
         return size;
     }
     function getSetElementScroll(el, axis, scroll) {
-        var prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
+        var prop = (axis === 0) ? "scrollLeft" : "scrollTop";
         var isTopLevel = isTopLevelEl(el);
         if (arguments.length === 2) {
             if (isTopLevel) {
@@ -82,30 +71,30 @@
     }
     function determineScrollIntention(currentCoordinate, size, threshold) {
         if (currentCoordinate < threshold) {
-            return ScrollIntention.LEFT_OR_TOP;
+            return -1;
         }
         else if (size - currentCoordinate < threshold) {
-            return ScrollIntention.RIGHT_OR_BOTTOM;
+            return 1;
         }
-        return ScrollIntention.NONE;
+        return 0;
     }
     function determineDynamicVelocity(scrollIntention, currentCoordinate, size, threshold) {
-        if (scrollIntention === ScrollIntention.LEFT_OR_TOP) {
+        if (scrollIntention === -1) {
             return Math.abs(currentCoordinate - threshold);
         }
-        else if (scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM) {
+        else if (scrollIntention === 1) {
             return Math.abs(size - currentCoordinate - threshold);
         }
         return 0;
     }
     function isScrollEndReached(axis, scrollIntention, scrollBounds) {
-        var currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
-        if (scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM) {
-            var maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
+        var currentScrollOffset = (axis === 0) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
+        if (scrollIntention === 1) {
+            var maxScrollOffset = (axis === 0) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
                 scrollBounds.height);
             return currentScrollOffset >= maxScrollOffset;
         }
-        else if (scrollIntention === ScrollIntention.LEFT_OR_TOP) {
+        else if (scrollIntention === -1) {
             return (currentScrollOffset <= 0);
         }
         return true;
@@ -119,8 +108,8 @@
         }
     };
     var _scrollIntentions = {
-        horizontal: ScrollIntention.NONE,
-        vertical: ScrollIntention.NONE
+        horizontal: 0,
+        vertical: 0
     };
     var _dynamicVelocity = {
         x: 0,
@@ -155,13 +144,13 @@
     }
     function scrollAnimation() {
         var scrollDiffX = 0, scrollDiffY = 0, isTopLevel = isTopLevelEl(_scrollableParent);
-        if (_scrollIntentions.horizontal !== ScrollIntention.NONE) {
+        if (_scrollIntentions.horizontal !== 0) {
             scrollDiffX = Math.round(_options.velocityFn(_dynamicVelocity.x, _options.threshold) * _scrollIntentions.horizontal);
-            getSetElementScroll(_scrollableParent, ScrollAxis.HORIZONTAL, scrollDiffX);
+            getSetElementScroll(_scrollableParent, 0, scrollDiffX);
         }
-        if (_scrollIntentions.vertical !== ScrollIntention.NONE) {
+        if (_scrollIntentions.vertical !== 0) {
             scrollDiffY = Math.round(_options.velocityFn(_dynamicVelocity.y, _options.threshold) * _scrollIntentions.vertical);
-            getSetElementScroll(_scrollableParent, ScrollAxis.VERTICAL, scrollDiffY);
+            getSetElementScroll(_scrollableParent, 1, scrollDiffY);
         }
         if (isTopLevel) {
             _translateDragImageFn(scrollDiffX, scrollDiffY);
@@ -179,12 +168,12 @@
             return false;
         }
         var scrollableParentBounds = {
-            x: getElementViewportOffset(scrollableParent, ScrollAxis.HORIZONTAL),
-            y: getElementViewportOffset(scrollableParent, ScrollAxis.VERTICAL),
-            width: getElementViewportSize(scrollableParent, ScrollAxis.HORIZONTAL),
-            height: getElementViewportSize(scrollableParent, ScrollAxis.VERTICAL),
-            scrollX: getSetElementScroll(scrollableParent, ScrollAxis.HORIZONTAL),
-            scrollY: getSetElementScroll(scrollableParent, ScrollAxis.VERTICAL),
+            x: getElementViewportOffset(scrollableParent, 0),
+            y: getElementViewportOffset(scrollableParent, 1),
+            width: getElementViewportSize(scrollableParent, 0),
+            height: getElementViewportSize(scrollableParent, 1),
+            scrollX: getSetElementScroll(scrollableParent, 0),
+            scrollY: getSetElementScroll(scrollableParent, 1),
             scrollWidth: scrollableParent.scrollWidth,
             scrollHeight: scrollableParent.scrollHeight
         };
@@ -194,14 +183,14 @@
         };
         scrollIntentions.horizontal = determineScrollIntention(currentCoordinatesOffset.x, scrollableParentBounds.width, threshold);
         scrollIntentions.vertical = determineScrollIntention(currentCoordinatesOffset.y, scrollableParentBounds.height, threshold);
-        if (scrollIntentions.horizontal && isScrollEndReached(ScrollAxis.HORIZONTAL, scrollIntentions.horizontal, scrollableParentBounds)) {
-            scrollIntentions.horizontal = ScrollIntention.NONE;
+        if (scrollIntentions.horizontal && isScrollEndReached(0, scrollIntentions.horizontal, scrollableParentBounds)) {
+            scrollIntentions.horizontal = 0;
         }
         else if (scrollIntentions.horizontal) {
             dynamicVelocity.x = determineDynamicVelocity(scrollIntentions.horizontal, currentCoordinatesOffset.x, scrollableParentBounds.width, threshold);
         }
-        if (scrollIntentions.vertical && isScrollEndReached(ScrollAxis.VERTICAL, scrollIntentions.vertical, scrollableParentBounds)) {
-            scrollIntentions.vertical = ScrollIntention.NONE;
+        if (scrollIntentions.vertical && isScrollEndReached(1, scrollIntentions.vertical, scrollableParentBounds)) {
+            scrollIntentions.vertical = 0;
         }
         else if (scrollIntentions.vertical) {
             dynamicVelocity.y = determineDynamicVelocity(scrollIntentions.vertical, currentCoordinatesOffset.y, scrollableParentBounds.height, threshold);

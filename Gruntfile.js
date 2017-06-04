@@ -1,8 +1,7 @@
 /* jshint node:true */
 "use strict";
 
-var typescript = require('typescript');
-var rollupTypescriptPlugin = require('rollup-plugin-typescript');
+var sourcemaps = require("rollup-plugin-sourcemaps");
 
 var fileName = "drag-drop-polyfill";
 var umdName = "DragDropPolyfill";
@@ -121,16 +120,14 @@ module.exports = function (grunt) {
                 moduleName: umdName,
                 plugins: function () {
                     return [
-                        rollupTypescriptPlugin({
-                            typescript: typescript
-                        })
+                        sourcemaps()
                     ]
                 }
             },
             build: {
                 files: {
-                    "src/drag-drop-polyfill.js": "src/drag-drop-polyfill.ts",
-                    "src/drag-drop-polyfill-scroll-behaviour.js": "src/drag-drop-polyfill-scroll-behaviour.ts"
+                    "src/drag-drop-polyfill.js": "src/drag-drop-polyfill.js",
+                    "src/drag-drop-polyfill-scroll-behaviour.js": "src/drag-drop-polyfill-scroll-behaviour.js"
                 }
             }
         },
@@ -154,7 +151,7 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: "src",
-                        src: ["*.css", "*.d.ts", "*.js"],
+                        src: ["*.css", "*.d.ts", "*.js", "*.map"],
                         dest: "release/",
                         filter: "isFile",
                         flatten: true
@@ -243,7 +240,6 @@ module.exports = function (grunt) {
         });
     });
 
-    // running ts although rollup uses typescript plugin because otherwise no declarations are generated
     grunt.registerTask("compile", ["ts", "rollup", "append:umdDeclaration"]);
 
     grunt.registerTask("build-release", ["compile", "tslint", "uglify", "clean", "copy"]);

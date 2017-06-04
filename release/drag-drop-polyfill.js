@@ -74,7 +74,7 @@
             activeDragOperation = new DragOperationController(e, config, dragTarget, dragOperationEnded);
         }
         catch (err) {
-            dragOperationEnded(config, e, DragOperationState.CANCELLED);
+            dragOperationEnded(config, e, 3);
             throw err;
         }
     }
@@ -90,7 +90,7 @@
         } while ((el = el.parentNode) && el !== document.body);
     }
     function dragOperationEnded(_config, event, state) {
-        if (state === DragOperationState.POTENTIAL) {
+        if (state === 0) {
             console.log("dnd-poly: Drag never started. Last event was " + event.type);
             if (_config.defaultActionOverride) {
                 try {
@@ -106,32 +106,7 @@
         }
         activeDragOperation = null;
     }
-    var DragOperationState;
-    (function (DragOperationState) {
-        DragOperationState[DragOperationState["POTENTIAL"] = 0] = "POTENTIAL";
-        DragOperationState[DragOperationState["STARTED"] = 1] = "STARTED";
-        DragOperationState[DragOperationState["ENDED"] = 2] = "ENDED";
-        DragOperationState[DragOperationState["CANCELLED"] = 3] = "CANCELLED";
-    })(DragOperationState || (DragOperationState = {}));
-    var EFFECT_ALLOWED;
-    (function (EFFECT_ALLOWED) {
-        EFFECT_ALLOWED[EFFECT_ALLOWED["NONE"] = 0] = "NONE";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["COPY"] = 1] = "COPY";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["COPY_LINK"] = 2] = "COPY_LINK";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["COPY_MOVE"] = 3] = "COPY_MOVE";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["LINK"] = 4] = "LINK";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["LINK_MOVE"] = 5] = "LINK_MOVE";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["MOVE"] = 6] = "MOVE";
-        EFFECT_ALLOWED[EFFECT_ALLOWED["ALL"] = 7] = "ALL";
-    })(EFFECT_ALLOWED || (EFFECT_ALLOWED = {}));
     var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all"];
-    var DROP_EFFECT;
-    (function (DROP_EFFECT) {
-        DROP_EFFECT[DROP_EFFECT["NONE"] = 0] = "NONE";
-        DROP_EFFECT[DROP_EFFECT["COPY"] = 1] = "COPY";
-        DROP_EFFECT[DROP_EFFECT["MOVE"] = 2] = "MOVE";
-        DROP_EFFECT[DROP_EFFECT["LINK"] = 3] = "LINK";
-    })(DROP_EFFECT || (DROP_EFFECT = {}));
     var DROP_EFFECTS = ["none", "copy", "move", "link"];
     var TRANSFORM_CSS_VENDOR_PREFIXES = ["", "-webkit-"];
     var CLASS_PREFIX = "dnd-poly-";
@@ -144,7 +119,7 @@
             this._config = _config;
             this._sourceNode = _sourceNode;
             this._dragOperationEndedCb = _dragOperationEndedCb;
-            this._dragOperationState = DragOperationState.POTENTIAL;
+            this._dragOperationState = 0;
             this._immediateUserSelection = null;
             this._currentDropTarget = null;
             console.log("dnd-poly: setting up potential drag operation..");
@@ -159,12 +134,12 @@
         DragOperationController.prototype._setup = function () {
             var _this = this;
             console.log("dnd-poly: starting drag and drop operation");
-            this._dragOperationState = DragOperationState.STARTED;
-            this._currentDragOperation = DROP_EFFECTS[DROP_EFFECT.NONE];
+            this._dragOperationState = 1;
+            this._currentDragOperation = DROP_EFFECTS[0];
             this._dragDataStore = {
                 _data: {},
                 _effectAllowed: undefined,
-                _mode: DragDataStoreMode.PROTECTED,
+                _mode: 3,
                 _types: [],
             };
             this._currentHotspotCoordinates = {
@@ -185,11 +160,11 @@
                     };
                 }
             });
-            this._dragDataStore._mode = DragDataStoreMode.READWRITE;
-            this._dataTransfer.dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+            this._dragDataStore._mode = 2;
+            this._dataTransfer.dropEffect = DROP_EFFECTS[0];
             if (dispatchDragEvent("dragstart", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer)) {
                 console.log("dnd-poly: dragstart cancelled");
-                this._dragOperationState = DragOperationState.CANCELLED;
+                this._dragOperationState = 3;
                 this._cleanup();
                 return false;
             }
@@ -253,7 +228,7 @@
                 return;
             }
             this._lastTouchEvent = event;
-            if (this._dragOperationState === DragOperationState.POTENTIAL) {
+            if (this._dragOperationState === 0) {
                 var startDrag = void 0;
                 if (this._config.dragStartConditionOverride) {
                     try {
@@ -321,12 +296,12 @@
                     console.log("dnd-poly: error in dragImageTranslateOverride hook: " + e);
                 }
             }
-            if (this._dragOperationState === DragOperationState.POTENTIAL) {
+            if (this._dragOperationState === 0) {
                 this._cleanup();
                 return;
             }
             event.preventDefault();
-            this._dragOperationState = (event.type === "touchcancel") ? DragOperationState.CANCELLED : DragOperationState.ENDED;
+            this._dragOperationState = (event.type === "touchcancel") ? 3 : 2;
         };
         DragOperationController.prototype._dragAndDropProcessModelIteration = function () {
             var _this = this;
@@ -334,14 +309,14 @@
                 var debug_class = CLASS_PREFIX + "debug", debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection", debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
             }
             var previousDragOperation = this._currentDragOperation;
-            this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-            this._dataTransfer.dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+            this._dragDataStore._mode = 3;
+            this._dataTransfer.dropEffect = DROP_EFFECTS[0];
             var dragCancelled = dispatchDragEvent("drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer);
             if (dragCancelled) {
                 console.log("dnd-poly: drag event cancelled.");
-                this._currentDragOperation = DROP_EFFECTS[DROP_EFFECT.NONE];
+                this._currentDragOperation = DROP_EFFECTS[0];
             }
-            if (dragCancelled || this._dragOperationState === DragOperationState.ENDED || this._dragOperationState === DragOperationState.CANCELLED) {
+            if (dragCancelled || this._dragOperationState === 2 || this._dragOperationState === 3) {
                 var dragFailed = this._dragOperationEnded(this._dragOperationState);
                 if (dragFailed) {
                     applyDragImageSnapback(this._sourceNode, this._dragImage, this._dragImageTransforms, function () {
@@ -367,8 +342,8 @@
                 }
                 this._immediateUserSelection = newUserSelection;
                 if (this._currentDropTarget !== null) {
-                    this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-                    this._dataTransfer.dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+                    this._dragDataStore._mode = 3;
+                    this._dataTransfer.dropEffect = DROP_EFFECTS[0];
                     dispatchDragEvent("dragexit", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
                 }
                 if (this._immediateUserSelection === null) {
@@ -376,7 +351,7 @@
                     console.log("dnd-poly: current drop target changed to null");
                 }
                 else {
-                    this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+                    this._dragDataStore._mode = 3;
                     this._dataTransfer.dropEffect = determineDropEffect(this._dragDataStore._effectAllowed, this._sourceNode);
                     if (dispatchDragEvent("dragenter", this._immediateUserSelection, this._lastTouchEvent, this._dragDataStore, this._dataTransfer)) {
                         console.log("dnd-poly: dragenter default prevented");
@@ -395,8 +370,8 @@
                     previousTargetElement.classList.remove(debug_class_drop_target);
                 }
                 console.log("dnd-poly: current drop target changed.");
-                this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-                this._dataTransfer.dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+                this._dragDataStore._mode = 3;
+                this._dataTransfer.dropEffect = DROP_EFFECTS[0];
                 dispatchDragEvent("dragleave", previousTargetElement, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false, this._currentDropTarget);
             }
             if (isDOMElement(this._currentDropTarget)) {
@@ -404,11 +379,11 @@
                     this._currentDropTarget.classList.add(debug_class);
                     this._currentDropTarget.classList.add(debug_class_drop_target);
                 }
-                this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+                this._dragDataStore._mode = 3;
                 this._dataTransfer.dropEffect = determineDropEffect(this._dragDataStore._effectAllowed, this._sourceNode);
                 if (dispatchDragEvent("dragover", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer) === false) {
                     console.log("dnd-poly: dragover not prevented on possible drop-target.");
-                    this._currentDragOperation = DROP_EFFECTS[DROP_EFFECT.NONE];
+                    this._currentDragOperation = DROP_EFFECTS[0];
                 }
                 else {
                     console.log("dnd-poly: dragover prevented.");
@@ -435,26 +410,26 @@
                     this._immediateUserSelection.classList.remove(debug_class_user_selection);
                 }
             }
-            var dragFailed = (this._currentDragOperation === DROP_EFFECTS[DROP_EFFECT.NONE]
+            var dragFailed = (this._currentDragOperation === DROP_EFFECTS[0]
                 || this._currentDropTarget === null
-                || state === DragOperationState.CANCELLED);
+                || state === 3);
             if (dragFailed) {
                 if (isDOMElement(this._currentDropTarget)) {
-                    this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-                    this._dataTransfer.dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+                    this._dragDataStore._mode = 3;
+                    this._dataTransfer.dropEffect = DROP_EFFECTS[0];
                     dispatchDragEvent("dragleave", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
                 }
             }
             else {
                 if (isDOMElement(this._currentDropTarget)) {
-                    this._dragDataStore._mode = DragDataStoreMode.READONLY;
+                    this._dragDataStore._mode = 1;
                     this._dataTransfer.dropEffect = this._currentDragOperation;
                     if (dispatchDragEvent("drop", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer) ===
                         true) {
                         this._currentDragOperation = this._dataTransfer.dropEffect;
                     }
                     else {
-                        this._currentDragOperation = DROP_EFFECTS[DROP_EFFECT.NONE];
+                        this._currentDragOperation = DROP_EFFECTS[0];
                     }
                 }
             }
@@ -462,30 +437,23 @@
         };
         DragOperationController.prototype._finishDragOperation = function () {
             console.log("dnd-poly: dragimage snap back transition ended");
-            this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+            this._dragDataStore._mode = 3;
             this._dataTransfer.dropEffect = this._currentDragOperation;
             dispatchDragEvent("dragend", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false);
-            this._dragOperationState = DragOperationState.ENDED;
+            this._dragOperationState = 2;
             this._cleanup();
         };
         return DragOperationController;
     }());
-    var DragDataStoreMode;
-    (function (DragDataStoreMode) {
-        DragDataStoreMode[DragDataStoreMode["_DISCONNECTED"] = 0] = "_DISCONNECTED";
-        DragDataStoreMode[DragDataStoreMode["READONLY"] = 1] = "READONLY";
-        DragDataStoreMode[DragDataStoreMode["READWRITE"] = 2] = "READWRITE";
-        DragDataStoreMode[DragDataStoreMode["PROTECTED"] = 3] = "PROTECTED";
-    })(DragDataStoreMode || (DragDataStoreMode = {}));
     var DataTransfer = (function () {
         function DataTransfer(_dataStore, _setDragImageHandler) {
             this._dataStore = _dataStore;
             this._setDragImageHandler = _setDragImageHandler;
-            this._dropEffect = DROP_EFFECTS[DROP_EFFECT.NONE];
+            this._dropEffect = DROP_EFFECTS[0];
         }
         Object.defineProperty(DataTransfer.prototype, "types", {
             get: function () {
-                if (this._dataStore._mode !== DragDataStoreMode._DISCONNECTED) {
+                if (this._dataStore._mode !== 0) {
                     return Object.freeze(this._dataStore._types);
                 }
             },
@@ -493,7 +461,7 @@
             configurable: true
         });
         DataTransfer.prototype.setData = function (type, data) {
-            if (this._dataStore._mode === DragDataStoreMode.READWRITE) {
+            if (this._dataStore._mode === 2) {
                 if (type.indexOf(" ") > -1) {
                     throw new Error("illegal arg: type contains space");
                 }
@@ -504,13 +472,13 @@
             }
         };
         DataTransfer.prototype.getData = function (type) {
-            if (this._dataStore._mode === DragDataStoreMode.READONLY
-                || this._dataStore._mode === DragDataStoreMode.READWRITE) {
+            if (this._dataStore._mode === 1
+                || this._dataStore._mode === 2) {
                 return this._dataStore._data[type] || "";
             }
         };
         DataTransfer.prototype.clearData = function (format) {
-            if (this._dataStore._mode === DragDataStoreMode.READWRITE) {
+            if (this._dataStore._mode === 2) {
                 if (format && this._dataStore._data[format]) {
                     delete this._dataStore._data[format];
                     var index = this._dataStore._types.indexOf(format);
@@ -524,7 +492,7 @@
             }
         };
         DataTransfer.prototype.setDragImage = function (image, x, y) {
-            if (this._dataStore._mode === DragDataStoreMode.READWRITE) {
+            if (this._dataStore._mode === 2) {
                 this._setDragImageHandler(image, x, y);
             }
         };
@@ -533,7 +501,7 @@
                 return this._dataStore._effectAllowed;
             },
             set: function (value) {
-                if (this._dataStore._mode === DragDataStoreMode.READWRITE
+                if (this._dataStore._mode === 2
                     && ALLOWED_EFFECTS.indexOf(value) > -1) {
                     this._dataStore._effectAllowed = value;
                 }
@@ -546,7 +514,7 @@
                 return this._dropEffect;
             },
             set: function (value) {
-                if (this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
+                if (this._dataStore._mode !== 0
                     && ALLOWED_EFFECTS.indexOf(value) > -1) {
                     this._dropEffect = value;
                 }
@@ -701,23 +669,23 @@
     function determineDropEffect(effectAllowed, sourceNode) {
         if (!effectAllowed) {
             if (sourceNode.nodeType === 3 && sourceNode.tagName === "A") {
-                return DROP_EFFECTS[DROP_EFFECT.LINK];
+                return DROP_EFFECTS[3];
             }
-            return DROP_EFFECTS[DROP_EFFECT.COPY];
+            return DROP_EFFECTS[1];
         }
-        if (effectAllowed === ALLOWED_EFFECTS[EFFECT_ALLOWED.NONE]) {
-            return DROP_EFFECTS[DROP_EFFECT.NONE];
+        if (effectAllowed === ALLOWED_EFFECTS[0]) {
+            return DROP_EFFECTS[0];
         }
-        if (effectAllowed.indexOf(ALLOWED_EFFECTS[EFFECT_ALLOWED.COPY]) === 0 || effectAllowed === ALLOWED_EFFECTS[EFFECT_ALLOWED.ALL]) {
-            return DROP_EFFECTS[DROP_EFFECT.COPY];
+        if (effectAllowed.indexOf(ALLOWED_EFFECTS[1]) === 0 || effectAllowed === ALLOWED_EFFECTS[7]) {
+            return DROP_EFFECTS[1];
         }
-        if (effectAllowed.indexOf(ALLOWED_EFFECTS[EFFECT_ALLOWED.LINK]) === 0) {
-            return DROP_EFFECTS[DROP_EFFECT.LINK];
+        if (effectAllowed.indexOf(ALLOWED_EFFECTS[4]) === 0) {
+            return DROP_EFFECTS[3];
         }
-        if (effectAllowed === ALLOWED_EFFECTS[EFFECT_ALLOWED.MOVE]) {
-            return DROP_EFFECTS[DROP_EFFECT.MOVE];
+        if (effectAllowed === ALLOWED_EFFECTS[6]) {
+            return DROP_EFFECTS[2];
         }
-        return DROP_EFFECTS[DROP_EFFECT.COPY];
+        return DROP_EFFECTS[1];
     }
     function dispatchDragEvent(dragEvent, targetElement, touchEvent, dataStore, dataTransfer, cancelable, relatedTarget) {
         if (cancelable === void 0) { cancelable = true; }
@@ -734,7 +702,7 @@
         }
         var leaveEvt = createDragEventFromTouch(targetElement, touchEvent, dragEvent, cancelable, document.defaultView, dataTransfer, relatedTarget);
         var cancelled = !targetElement.dispatchEvent(leaveEvt);
-        dataStore._mode = DragDataStoreMode._DISCONNECTED;
+        dataStore._mode = 0;
         if (DEBUG) {
             targetElement.classList.remove(debug_class_event_target);
             if (relatedTarget) {
@@ -747,22 +715,22 @@
         if (!effectAllowed || effectAllowed === ALLOWED_EFFECTS[7]) {
             return dropEffect;
         }
-        if (dropEffect === DROP_EFFECTS[DROP_EFFECT.COPY]) {
-            if (effectAllowed.indexOf(DROP_EFFECTS[DROP_EFFECT.COPY]) === 0) {
-                return DROP_EFFECTS[DROP_EFFECT.COPY];
+        if (dropEffect === DROP_EFFECTS[1]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[1]) === 0) {
+                return DROP_EFFECTS[1];
             }
         }
-        else if (dropEffect === DROP_EFFECTS[DROP_EFFECT.LINK]) {
-            if (effectAllowed.indexOf(DROP_EFFECTS[DROP_EFFECT.LINK]) === 0 || effectAllowed.indexOf("Link") > -1) {
-                return DROP_EFFECTS[DROP_EFFECT.LINK];
+        else if (dropEffect === DROP_EFFECTS[3]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[3]) === 0 || effectAllowed.indexOf("Link") > -1) {
+                return DROP_EFFECTS[3];
             }
         }
-        else if (dropEffect === DROP_EFFECTS[DROP_EFFECT.MOVE]) {
-            if (effectAllowed.indexOf(DROP_EFFECTS[DROP_EFFECT.MOVE]) === 0 || effectAllowed.indexOf("Move") > -1) {
-                return DROP_EFFECTS[DROP_EFFECT.MOVE];
+        else if (dropEffect === DROP_EFFECTS[2]) {
+            if (effectAllowed.indexOf(DROP_EFFECTS[2]) === 0 || effectAllowed.indexOf("Move") > -1) {
+                return DROP_EFFECTS[2];
             }
         }
-        return DROP_EFFECTS[DROP_EFFECT.NONE];
+        return DROP_EFFECTS[0];
     }
 
     exports.polyfill = polyfill;
