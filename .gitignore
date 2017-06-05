@@ -1,6 +1,6 @@
 .idea/
 .tscache/
-tscommand*.txt
+npm-debug.log
 
 node_modules/
 

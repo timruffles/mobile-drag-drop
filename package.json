@@ -6,6 +6,15 @@
   "types": "release/drag-drop-polyfill.d.ts",
   "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
   "scripts": {
+    "start": "grunt",
+    "build": "grunt compile",
+    "release:build": "grunt build-release",
+    "release:serve": "grunt serve-release",
+    "release:prepare:prerelease": "grunt prepare-release:prerelease",
+    "release:prepare:patch": "grunt prepare-release:patch",
+    "release:prepare:minor": "grunt prepare-release:minor",
+    "release:prepare:major": "grunt prepare-release:major",
+    "release:publish": "grunt publish-release",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
