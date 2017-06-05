@@ -260,4 +260,4 @@ To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-
 
 ## License
 
-[BSD-2-Clause](LICENSE)
+[MIT License](LICENSE)
