@@ -195,7 +195,7 @@ Feel free to use this as a starting point.
 | Chrome on Android                |  Polyfill                |  No known issues.                              |
 | Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
 | Firefox on touch device          |  Native                  |  No known issues.                              |
-| Firefox on Android               |  Polyfill                |  No known issues. [More info](#firefox-android-issues) |
+| Firefox on Android               |  Polyfill                |  No known issues.                              |
 | Amazon Silk                      |  **Unknown**             |  **Unknown**                                   |
 | Ubuntu Phone                     |  Polyfill                |  No known issues.                              |
 | IEMobile                         |  Native                  |  **Unknown**                                   |
@@ -211,10 +211,6 @@ when Chrome is detected with touch events enabled.
 Touch events can be activated by a user in `about:config` to `0` (off), `1` (on), `2`(auto).
 As of today (FF39.0) touch behavior is off.
 When touch events are active drag-and-drop interaction will still work, so no need to polyfill.
-
-**Firefox on Android: <a name="firefox-android-issues"></a>**
-`TODO check if this is still the case`
-No critical issues but UX suffers because of the constantly [scrolling location bar](https://bugzilla.mozilla.org/show_bug.cgi?id=1044370).
 
 
 ## Cross-browser differences in HTML5 drag'n'drop API
