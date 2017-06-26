@@ -31,11 +31,11 @@ Check out the demo to see it in action and monitor the console to see the events
 
 **bower**
 
-`bower install drag-drop-polyfill#2.0.0-beta.3 --save`
+`bower install drag-drop-polyfill#2.0.0-rc.0 --save`
 
 **npm**
 
-`npm install drag-drop-polyfill --save`
+`npm install drag-drop-polyfill@2.0.0-rc.0 --save`
 
 **jspm**
 
@@ -72,11 +72,11 @@ System.import("drag-drop-polyfill/drag-drop-polyfill.css!");
 
 **ES2015/TypeScript/webpack**
 
-```JavaScript
-import {polyfill} from "drag-drop-polyfill/release/drag-drop-polyfill";
+```JavaScript`
+import {polyfill} from "drag-drop-polyfill/drag-drop-polyfill";
 
 // optional import of scroll behaviour
-import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/release/drag-drop-polyfill-scroll-behaviour";
+import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/drag-drop-polyfill-scroll-behaviour";
 
 // options are optional ;)
 polyfill({
@@ -88,7 +88,7 @@ polyfill({
 **webpack/scss**
 
 ```SCSS
-@import "~drag-drop-polyfill/release/drag-drop-polyfill.css";
+@import "~drag-drop-polyfill/drag-drop-polyfill.css";
 ```
 
 

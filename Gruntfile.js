@@ -155,6 +155,10 @@ module.exports = function (grunt) {
                         dest: "release/",
                         filter: "isFile",
                         flatten: true
+                    },
+                    {
+                        src: "package.json",
+                        dest: "release/"
                     }
                 ]
             }
@@ -193,7 +197,7 @@ module.exports = function (grunt) {
                 pushTo: "origin",
                 gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
                 globalReplace: false,
-                prereleaseName: "beta",
+                prereleaseName: "rc",
                 metadata: "",
                 regExp: false
             }
@@ -257,7 +261,7 @@ module.exports = function (grunt) {
     grunt.registerTask("serve-release", "serve release files for checking that release files have no issues", ["connect:release", "watch:resources"]);
 
     // publish a prepared release
-    grunt.registerTask("publish-release", ["bump-commit", "npm-publish"]);
+    grunt.registerTask("publish-release", ["bump-commit"]);
 
     // default task for developers to start coding
     grunt.registerTask("default", ["connect:dev", "watch"]);
