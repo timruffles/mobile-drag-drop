@@ -1,4 +1,22 @@
 
+<a name"2.0.0-rc.0"></a>
+## 2.0.0-rc.0 (2017-06-26)
+
+### BREAKING CHANGE
+
+On npm the polyfill now publishes flat.
+This changes how the files are included
+when the polyfill is installed through npm.
+
+BEFORE
+
+`import {polyfill} from "drag-drop-polyfill/release/drag-drop-polyfill";` 
+
+AFTER
+
+`import {polyfill} from "drag-drop-polyfill/drag-drop-polyfill";`
+
+
 <a name"2.0.0-beta.3"></a>
 ## 2.0.0-beta.3 (2016-11-25)
 

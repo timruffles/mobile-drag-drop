@@ -1,7 +1,7 @@
 {
   "name": "drag-drop-polyfill",
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-rc.0",
   "main": ["release/drag-drop-polyfill.js", "release/drag-drop-polyfill.css"],
   "ignore": [
     "*",
@@ -24,7 +24,7 @@
     "mobile",
     "polyfill"
   ],
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "moduleType": [
     "globals"
   ]
