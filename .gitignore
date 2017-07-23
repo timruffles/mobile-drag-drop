@@ -9,4 +9,4 @@ src/*.map
 src/*.d.ts
 
 !/release/**/*
-!/spec-compliance/**/*
+!/demo/**/*

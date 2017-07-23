@@ -59,7 +59,7 @@ module.exports = function (grunt) {
             dev: {
                 options: {
                     port: 8000,
-                    open: "http://localhost:8000/spec-compliance/",
+                    open: "http://localhost:8000/demo/",
                     livereload: 35731,
                     middleware: function (connect, options, middlewares) {
 
@@ -90,7 +90,7 @@ module.exports = function (grunt) {
             release: {
                 options: {
                     port: 8001,
-                    open: "http://localhost:8001/spec-compliance/"
+                    open: "http://localhost:8001/demo/"
                 }
             }
         },
@@ -174,7 +174,7 @@ module.exports = function (grunt) {
                 }
             },
             resources: {
-                files: ["src/**/*.css", "spec-compliance/**/*"],
+                files: ["src/**/*.css", "demo/**/*"],
                 options: {
                     debounceDelay: 500,
                     livereload: 35731
