@@ -1,4 +1,38 @@
 
+<a name"2.0.0"></a>
+## 2.0.0 (2017-07-23)
+
+Releasing the rewrite as stable 2.0.0 including a few breaking changes because of renaming. 
+
+### BREAKING CHANGE
+
+The github repository and released package is renamed from `drag-drop-polyfill` to `mobile-drag-drop`.
+
+This changes how the package is installed and further how it is referenced.
+
+BEFORE
+
+`import {polyfill} from "drag-drop-polyfill/drag-drop-polyfill";`
+`import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/drag-drop-polyfill-scroll-behaviour";` 
+
+AFTER
+
+`import {polyfill} from "mobile-drag-drop";`
+`import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/scroll-behaviour";`
+
+
+Also the css files got shorter names which do not repeat the package name in their filename.
+
+BEFORE
+
+`drag-drop-polyfill.css`
+`drag-drop-polyfill-icons.css` 
+
+AFTER
+
+`default.css`
+`icons.css`
+
 <a name"2.0.0-rc.0"></a>
 ## 2.0.0-rc.0 (2017-06-26)
 
