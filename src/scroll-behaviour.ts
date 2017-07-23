@@ -1,6 +1,6 @@
 //<editor-fold desc="static scroll utils">
 
-import {DragImageTranslateOverrideFn, Point} from "./drag-drop-polyfill";
+import {DragImageTranslateOverrideFn, Point} from "./index";
 
 interface ScrollIntentions {
     horizontal: ScrollIntention;

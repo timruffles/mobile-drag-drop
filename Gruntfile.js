@@ -3,8 +3,7 @@
 
 var sourcemaps = require("rollup-plugin-sourcemaps");
 
-var fileName = "drag-drop-polyfill";
-var umdName = "DragDropPolyfill";
+var umdName = "MobileDragDrop";
 
 module.exports = function (grunt) {
     grunt.initConfig({
@@ -39,18 +38,18 @@ module.exports = function (grunt) {
             },
             main: {
                 options: {
-                    banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | BSD 2 License */",
-                    sourceMapIn: "src/drag-drop-polyfill.js.map"
+                    banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | MIT License */",
+                    sourceMapIn: "src/index.js.map"
                 },
-                src: "src/drag-drop-polyfill.js",
-                dest: "src/drag-drop-polyfill.min.js"
+                src: "src/index.js",
+                dest: "src/index.min.js"
             },
             scroll: {
                 options: {
-                    sourceMapIn: "src/drag-drop-polyfill-scroll-behaviour.js.map"
+                    sourceMapIn: "src/scroll-behaviour.js.map"
                 },
-                src: "src/drag-drop-polyfill-scroll-behaviour.js",
-                dest: "src/drag-drop-polyfill-scroll-behaviour.min.js"
+                src: "src/scroll-behaviour.js",
+                dest: "src/scroll-behaviour.min.js"
             }
         },
         // http server config for development and demo page
@@ -126,8 +125,8 @@ module.exports = function (grunt) {
             },
             build: {
                 files: {
-                    "src/drag-drop-polyfill.js": "src/drag-drop-polyfill.js",
-                    "src/drag-drop-polyfill-scroll-behaviour.js": "src/drag-drop-polyfill-scroll-behaviour.js"
+                    "src/index.js": "src/index.js",
+                    "src/scroll-behaviour.js": "src/scroll-behaviour.js"
                 }
             }
         },
@@ -135,8 +134,8 @@ module.exports = function (grunt) {
             umdDeclaration: {
                 append: "export as namespace " + umdName + ";",
                 files: {
-                    "src/drag-drop-polyfill.d.ts": "src/drag-drop-polyfill.d.ts",
-                    "src/drag-drop-polyfill-scroll-behaviour.d.ts": "src/drag-drop-polyfill-scroll-behaviour.d.ts"
+                    "src/index.d.ts": "src/index.d.ts",
+                    "src/scroll-behaviour.d.ts": "src/scroll-behaviour.d.ts"
                 }
             }
         },

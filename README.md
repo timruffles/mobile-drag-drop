@@ -1,11 +1,11 @@
 ![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
 ![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
-[![npmversion](https://img.shields.io/npm/v/drag-drop-polyfill.svg)](https://www.npmjs.com/package/drag-drop-polyfill)
-![bowerversion](https://img.shields.io/bower/v/drag-drop-polyfill.svg)
-![license](https://img.shields.io/npm/l/drag-drop-polyfill.svg)
+[![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
+![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
+![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
 ![issues](https://img.shields.io/github/issues/timruffles/ios-html5-drag-drop-shim.svg)
-![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/drag-drop-polyfill.min.js)
-![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/drag-drop-polyfill.min.js?compression=gzip)
+![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/index.min.js)
+![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/index.min.js?compression=gzip)
 
 
 # Polyfill for HTML 5 drag'n'drop
@@ -15,7 +15,7 @@ The HTML 5 drag'n'drop API allows you to implement drag'n'drop on [most desktop 
 Unfortunately, you'll notice most mobile browsers don't support it, so no iPad (or Nexus) action for you!
 
 Luckily, browsers give us enough tools to make it happen ourselves. If you drop
-this package in your page your existing HTML 5 drag'n'drop code should just work.
+this package in your page your existing HTML 5 drag'n'drop code should _just work_ ([*almost](#polyfill-requires-dragenter-listener)).
 
 
 ## Demos
@@ -31,15 +31,15 @@ Check out the demo to see it in action and monitor the console to see the events
 
 **bower**
 
-`bower install drag-drop-polyfill#2.0.0-rc.0 --save`
+`bower install mobile-drag-drop --save`
 
 **npm**
 
-`npm install drag-drop-polyfill@2.0.0-rc.0 --save`
+`npm install mobile-drag-drop --save`
 
 **jspm**
 
-`jspm install npm:drag-drop-polyfill`
+`jspm install npm:mobile-drag-drop`
 
 
 ### Include
@@ -47,17 +47,17 @@ Check out the demo to see it in action and monitor the console to see the events
 **global**
 
 ```HTML
-<link rel="stylesheet" href="libs/drag-drop-polyfill/release/drag-drop-polyfill.css">
-<script src="libs/drag-drop-polyfill/release/drag-drop-polyfill.min.js"></script>
+<link rel="stylesheet" href="libs/mobile-drag-drop/release/default.css">
+<script src="libs/mobile-drag-drop/release/index.min.js"></script>
 
 <!--optional import of scroll behaviour-->
-<script src="libs/drag-drop-polyfill/release/drag-drop-polyfill-scroll-behaviour.min.js"></script>
+<script src="libs/mobile-drag-drop/release/scroll-behaviour.min.js"></script>
 
 <script>
     // options are optional ;)
-    DragDropPolyfill.polyfill({
+    MobileDragDrop.polyfill({
         // use this to make use of the scroll behaviour
-        dragImageTranslateOverride: DragDropPolyfill.scrollBehaviourDragImageTranslateOverride
+        dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
     });
 </script>
 ```
@@ -65,18 +65,18 @@ Check out the demo to see it in action and monitor the console to see the events
 **SystemJS/JSPM**
 
 ```JavaScript
-System.import("drag-drop-polyfill");
+System.import("mobile-drag-drop");
 // import css if using system-js css loader plugin 
-System.import("drag-drop-polyfill/drag-drop-polyfill.css!");
+System.import("mobile-drag-drop/default.css!");
 ```
 
 **ES2015/TypeScript/webpack**
 
-```JavaScript`
-import {polyfill} from "drag-drop-polyfill/drag-drop-polyfill";
+```JavaScript
+import {polyfill} from "mobile-drag-drop";
 
 // optional import of scroll behaviour
-import {scrollBehaviourDragImageTranslateOverride} from "drag-drop-polyfill/drag-drop-polyfill-scroll-behaviour";
+import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 
 // options are optional ;)
 polyfill({
@@ -85,12 +85,20 @@ polyfill({
 });
 ```
 
+**Make sure to implement a `dragenter`-listener!** ([read here why](#polyfill-requires-dragenter-listener))
+
+```
+// dragenter listener
+(event)=> {
+    event.preventDefault();
+}
+```
+
 **webpack/scss**
 
 ```SCSS
-@import "~drag-drop-polyfill/drag-drop-polyfill.css";
+@import "~mobile-drag-drop/default.css";
 ```
-
 
 ## API & Options <a name="options"></a>
 
@@ -164,11 +172,11 @@ Override the classes that are applied by the polyfill. Mind the `!important`.
 CSS classes are applied to the `dragImage`-element according to the
 current drop effect: `none`, `copy`, `move`, `link`.
 
-There is `drag-drop-polyfill-icons.css` which defines default styles and icons.
+There is `icons.css` which defines default styles and icons.
 Feel free to use this as a starting point.
 
 ```HTML
-<link rel="stylesheet" href="[...]/drag-drop-polyfill/drag-drop-polyfill-icons.css">
+<link rel="stylesheet" href="[...]/mobile-drag-drop/icons.css">
 ```
 
 [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported.
@@ -226,13 +234,19 @@ This table is an effort to list all things required to make drag'n'drop work in 
 
 _empty cells mean there is nothing special to take into account_
 
+#### Polyfill requires dragenter listener
+
+On desktop browsers if no `dragenter`-handler is registered the drag-operation is silently allowed. Browsers don't implement `dropzone`-attribute 
+according to [caniuse](http://caniuse.com/#search=drag) which is why they allow it by default, which violates the spec. 
+
+If a handler is set up it has to call `event.preventDefault()` to allow dropping.
+
+This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
+which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make it work.
+
+
 **Further notices:**
 
-*   If no `dragenter`-handler is registered the drag-operation is silently allowed. Browsers don't implement `dropzone`-attribute
-    according to [caniuse](http://caniuse.com/#search=drag) so they allow it by default, which violates the spec. 
-    If a handler is set up it has to call `event.preventDefault()` to allow dropping.
-    This is pretty bad for the polyfill since JS doesn't allow to check how many listeners were invoked when the event is dispatched,
-    which forces the polyfill to rely on a listener being present calling `event.preventDefault()` to make it work.
 *   FF:<a name="ff-quirk"></a> If `effectAllowed` or `dropEffect` is set in `dragstart` then `dragenter/dragover` also need to set it.
 *   When using a MS Surface tablet a drag-operation is initiated by touch and hold on a draggable.
 *   IE11 and Chrome scroll automatically when dragging close to a viewport edge.

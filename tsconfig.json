@@ -10,7 +10,7 @@
     "suppressImplicitAnyIndexErrors": true
   },
   "files": [
-    "./src/drag-drop-polyfill.ts",
-    "./src/drag-drop-polyfill-scroll-behaviour.ts"
+    "./src/index.ts",
+    "./src/scroll-behaviour.ts"
   ]
 }

@@ -13,4 +13,4 @@ export interface Point {
     x: number;
     y: number;
 }
-export as namespace DragDropPolyfill;
+export as namespace MobileDragDrop;

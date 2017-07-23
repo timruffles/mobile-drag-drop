@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (factory((global.DragDropPolyfill = global.DragDropPolyfill || {})));
+    (factory((global.MobileDragDrop = global.MobileDragDrop || {})));
 }(this, (function (exports) { 'use strict';
 
     var DEBUG = false;
@@ -739,4 +739,4 @@
 
 })));
 
-//# sourceMappingURL=drag-drop-polyfill.js.map
+//# sourceMappingURL=index.js.map
