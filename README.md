@@ -20,9 +20,7 @@ this package in your page your existing HTML 5 drag'n'drop code should _just wor
 
 ## Demos
 
-`TODO demo page containing all the different things that need to be working as a test base and to show capabilities/spec compliance/limitations`
-
-[Demo](http://reppners.github.io/ios-html5-drag-drop-shim/spec-compliance/)
+[Demo](http://timruffles.github.io/ios-html5-drag-drop-shim/demo/)
 
 Check out the demo to see it in action and monitor the console to see the events firing.
 
