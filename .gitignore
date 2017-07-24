@@ -1,0 +1,12 @@
+.idea/
+.tscache/
+npm-debug.log
+
+node_modules/
+
+src/*.js
+src/*.map
+src/*.d.ts
+
+!/release/**/*
+!/demo/**/*

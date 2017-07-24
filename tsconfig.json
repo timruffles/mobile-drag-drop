@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "es2015",
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "suppressImplicitAnyIndexErrors": true
+  },
+  "files": [
+    "./src/index.ts",
+    "./src/scroll-behaviour.ts"
+  ]
+}
