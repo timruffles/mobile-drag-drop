@@ -115,7 +115,7 @@ export type DragImageTranslateOverrideFn = (
     // the element under the calculated touch coordinates
     hoveredElement: HTMLElement, 
     // callback for updating the drag image offset
-    translateDragImageFn: (offsetX: number, offsetY: number) => void) => void;
+    translateDragImageFn: (offsetX: number, offsetY: number) => void;
 ) => void;
 
 export interface Config {
