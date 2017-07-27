@@ -1,5 +1,4 @@
 
-<a name"2.0.0"></a>
 ## 2.0.0 (2017-07-23)
 
 Releasing the rewrite as stable 2.0.0 including a few breaking changes because of renaming. 
@@ -33,7 +32,7 @@ AFTER
 `default.css`
 `icons.css`
 
-<a name"2.0.0-rc.0"></a>
+
 ## 2.0.0-rc.0 (2017-06-26)
 
 ### BREAKING CHANGE
@@ -51,7 +50,6 @@ AFTER
 `import {polyfill} from "drag-drop-polyfill/drag-drop-polyfill";`
 
 
-<a name"2.0.0-beta.3"></a>
 ## 2.0.0-beta.3 (2016-11-25)
 
 * **fix(DragImageOffset)**: fixed wrong drag image offset
@@ -63,12 +61,11 @@ AFTER
   Required since future versions of Chrome and current stable Chromium will default to passive event listeners at document level to ensure smooth scrolling experience.
   
   
-<a name"2.0.0-beta.2"></a>
 ## 2.0.0-beta.2 (2016-09-13)
 
 * package.json no longer uses `directories.lib` since it had no effect, `main` now points to `release/drag-drop-polyfill.min.js`.
 
-<a name"2.0.0-beta.1"></a>
+
 ## 2.0.0-beta.1 (2016-08-20)
 
 ### Bugfixes
@@ -89,7 +86,7 @@ AFTER
 This is also motivated by an upcoming change where the sources will be refactored to ES6 modules and introducing UMD support where the global DEBUG variable will be removed.
 Having a magic global DEBUG variable in the ES6 module context feels like a code-smell.
 
-<a name"2.0.0-beta.0"></a>
+
 ## 2.0.0-beta.0 (2016-06-25)
 
 First beta-release of a major rewrite aiming to be as close as possible to
