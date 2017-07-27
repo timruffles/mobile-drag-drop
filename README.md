@@ -1,11 +1,11 @@
-![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
-![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/rewrite.svg)
+![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/master.svg)
+![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
 ![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
 ![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
 ![issues](https://img.shields.io/github/issues/timruffles/ios-html5-drag-drop-shim.svg)
-![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/index.min.js)
-![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/rewrite/release/index.min.js?compression=gzip)
+![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/master/release/index.min.js)
+![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/master/release/index.min.js?compression=gzip)
 
 
 # Polyfill for HTML 5 drag'n'drop
