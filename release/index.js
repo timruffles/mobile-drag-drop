@@ -52,12 +52,13 @@
             if (detectedFeatures.userAgentSupportingNativeDnD
                 && detectedFeatures.draggable
                 && detectedFeatures.dragEvents) {
-                return;
+                return false;
             }
         }
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
         supportsPassive = supportsPassiveEventListener();
         addDocumentListener("touchstart", onTouchstart, false);
+        return true;
     }
     var activeDragOperation;
     function onTouchstart(e) {

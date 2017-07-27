@@ -1,4 +1,14 @@
 
+## 2.1.0 (2017-07-27)
+
+This release adds a minor change to the API surface.
+
+```TS
+export function polyfill(override?: Config):boolean;
+```
+
+`polyfill()` will inform if the polyfill takes effect by returning `true`.
+
 ## 2.0.0 (2017-07-23)
 
 Releasing the rewrite as stable 2.0.0 including a few breaking changes because of renaming. 
