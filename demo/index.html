@@ -18,6 +18,8 @@
         <h1>mobile-drag-drop - Polyfill for HTML5 drag'n'drop on touch devices</h1>
     </header>
     <article>
+        <p id="appliedMessage"></p>
+
         <p>Drag the list items over the dustbin, and drop them to have the bin eat the item</p>
 
         <div id="bin">
@@ -72,7 +74,8 @@
         <hr/>
         <h4>box-sizing: border-box</h4>
         <ul class="border-boxed">
-            <li><a href="#" id="eleven"><span style="display: inline-block; background: lightblue">eleven</span></a></li>
+            <li><a href="#" id="eleven"><span style="display: inline-block; background: lightblue">eleven</span></a>
+            </li>
             <li><a href="#" id="twelve">twelve</a></li>
             <li><a href="#" id="thirteen">thirteen</a></li>
             <li><a href="#" id="fourteen">fourteen</a></li>
@@ -175,7 +178,9 @@
         <hr/>
         <h4>Notes</h4>
         <ol>
-            <li>The blue bordered item ('one') is a child inside a draggable element. If you drag the child, we should still drag the whole element.</li>
+            <li>The blue bordered item ('one') is a child inside a draggable element. If you drag the child, we should
+                still drag the whole element.
+            </li>
         </ol>
         <hr/>
         <div>
@@ -206,7 +211,8 @@
                         <figcaption>
                             <div>Institute Of Contemporary Arts #2</div>
                         </figcaption>
-                        <img class="oic-image" draggable="true" src="http://placehold.it/350x350" onclick="alert('clicked image');">
+                        <img class="oic-image" draggable="true" src="http://placehold.it/350x350"
+                             onclick="alert('clicked image');">
                     </figure>
                 </div>
             </div>
@@ -374,7 +380,7 @@
     </article>
     <script>
 
-//        var DEBUG = false;
+        //        var DEBUG = false;
 
         var allowDragWithTwoFingersOnly = function (event) {
 
@@ -398,7 +404,7 @@
             }
 
             var deltaX = Math.abs(startX - touch.clientX),
-                    deltaY = Math.abs(startY - touch.clientY);
+                deltaY = Math.abs(startY - touch.clientY);
 
             console.log("startX: " + startX);
             console.log("startY: " + startY);
@@ -437,7 +443,7 @@
             return true;
         };
 
-        MobileDragDrop.polyfill({
+        var polyfillApplied = MobileDragDrop.polyfill({
 //            dragImageCenterOnTouch: true,
 //            dragImageOffset: {
 //                x: 0,
@@ -447,6 +453,14 @@
 //            defaultActionOverride: alertAction,
             dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
         });
+
+        var appliedMessageEl = document.getElementById("appliedMessage");
+        var appliedMessage = "Polyfill inactive: Current browser was detected to handle drag'n'drop quite well on its own ;)";
+        if (polyfillApplied) {
+
+            appliedMessage = "Polyfill activated: Detected current browser not capable of HTML5 drag'n'drop (or somebody set forceApply is to true)";
+        }
+        appliedMessageEl.innerHTML = appliedMessage;
 
         /**
          * ---------------------------------------------------------------------------------------------------------
@@ -877,11 +891,14 @@
         //        }
 
         // tmp fix for iOS10 touchmove bug (https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77)
-        window.addEventListener( 'touchmove', function() {})
+        window.addEventListener('touchmove', function () {
+        })
 
     </script>
     <footer>
-        <a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built" href="http://twitter.com/rem">original demo by
+        <a id="author" href="http://twitter.com/timruffles">@timruffles made this shim</a>/<a id="built"
+                                                                                              href="http://twitter.com/rem">original
+        demo by
         @rem</a>/<a href="#view-source">source</a>
     </footer>
 </section>

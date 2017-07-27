@@ -101,7 +101,7 @@ const config:Config = {
     iterationInterval: 150,
 };
 
-export function polyfill(override?:Config) {
+export function polyfill(override?:Config):boolean {
 
     if (override) {
         // overwrite default config with user config
@@ -121,7 +121,7 @@ export function polyfill(override?:Config) {
             && detectedFeatures.draggable
             && detectedFeatures.dragEvents) {
             // no polyfilling required
-            return;
+            return false;
         }
     }
 
@@ -131,6 +131,8 @@ export function polyfill(override?:Config) {
 
     // add listeners suitable for detecting a potential drag operation
     addDocumentListener("touchstart", onTouchstart, false);
+
+    return true;
 }
 
 //</editor-fold>
