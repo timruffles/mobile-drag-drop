@@ -142,8 +142,8 @@ export interface Config {
     defaultActionOverride?: (event: TouchEvent) => void;
 }
 
-// invoke for initializing the polyfill
-export function polyfill(override?: Config): void;
+// invoke for initializing the polyfill => returns true if polyfill is applied
+export function polyfill(override?: Config):boolean;
 ```
 
 

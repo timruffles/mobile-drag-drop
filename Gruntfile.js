@@ -253,7 +253,7 @@ module.exports = function (grunt) {
             grunt.log.error("You must specify the version bump! See https://github.com/vojtajina/grunt-bump/tree/v0.7.0");
             return;
         }
-        grunt.task.run("build-release", "bump-only:" + bump);
+        grunt.task.run("build-release", "bump-only:" + bump, "copy");
     });
 
     // serve release files
