@@ -93,7 +93,9 @@ export interface Config {
     dragImageTranslateOverride?:DragImageTranslateOverrideFn;
     // hook for custom logic that can override the default action based on the original touch event when the drag never started
     // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
-    defaultActionOverride?:(event:TouchEvent) => void;
+    defaultActionOverride?: (event: TouchEvent) => void;
+    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items). Defaults to no delay.
+    holdToDrag?: number;
 }
 
 // default config
@@ -130,7 +132,11 @@ export function polyfill(override?:Config):boolean {
     supportsPassive = supportsPassiveEventListener();
 
     // add listeners suitable for detecting a potential drag operation
-    addDocumentListener("touchstart", onTouchstart, false);
+    if (config.holdToDrag) {
+        addDocumentListener("touchstart", onDelayTouchstart, false);
+    } else {
+        addDocumentListener("touchstart", onTouchstart, false);
+    }
 
     return true;
 }
@@ -1527,6 +1533,44 @@ function determineDragOperation(effectAllowed:string, dropEffect:string):string 
     }
 
     return DROP_EFFECTS[DROP_EFFECT.NONE];
+}
+
+function onDelayTouchstart(evt: TouchEvent) {
+    const el = evt.target;
+
+    const heldItem = () => {
+        end.off();
+        cancel.off();
+        scroll.off();
+        onTouchstart(evt);
+    };
+
+    const onReleasedItem = () => {
+        end.off();
+        cancel.off();
+        scroll.off();
+        clearTimeout(timer);
+    };
+
+    const timer = setTimeout(heldItem, config.holdToDrag);
+
+    const end = onEvt(el, 'touchend', onReleasedItem, this);
+    const cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
+    const scroll = onEvt(window, 'scroll', onReleasedItem, this);
+}
+
+function onEvt(el: EventTarget, event: string, handler: () => any, context: any) {
+    if (context) {
+        handler = handler.bind(context);
+    }
+
+    el.addEventListener(event, handler);
+
+    return {
+        off() {
+            return el.removeEventListener(event, handler);
+        }
+    };
 }
 
 //</editor-fold>
