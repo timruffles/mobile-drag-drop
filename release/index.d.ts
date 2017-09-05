@@ -7,6 +7,7 @@ export interface Config {
     dragStartConditionOverride?: (event: TouchEvent) => boolean;
     dragImageTranslateOverride?: DragImageTranslateOverrideFn;
     defaultActionOverride?: (event: TouchEvent) => void;
+    holdToDrag?: number;
 }
 export declare function polyfill(override?: Config): boolean;
 export interface Point {

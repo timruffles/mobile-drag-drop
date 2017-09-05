@@ -57,7 +57,12 @@
         }
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
         supportsPassive = supportsPassiveEventListener();
-        addDocumentListener("touchstart", onTouchstart, false);
+        if (config.holdToDrag) {
+            addDocumentListener("touchstart", onDelayTouchstart, false);
+        }
+        else {
+            addDocumentListener("touchstart", onTouchstart, false);
+        }
         return true;
     }
     var activeDragOperation;
@@ -732,6 +737,36 @@
             }
         }
         return DROP_EFFECTS[0];
+    }
+    function onDelayTouchstart(evt) {
+        var el = evt.target;
+        var heldItem = function () {
+            end.off();
+            cancel.off();
+            scroll.off();
+            onTouchstart(evt);
+        };
+        var onReleasedItem = function () {
+            end.off();
+            cancel.off();
+            scroll.off();
+            clearTimeout(timer);
+        };
+        var timer = setTimeout(heldItem, config.holdToDrag);
+        var end = onEvt(el, 'touchend', onReleasedItem, this);
+        var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
+        var scroll = onEvt(window, 'scroll', onReleasedItem, this);
+    }
+    function onEvt(el, event, handler, context) {
+        if (context) {
+            handler = handler.bind(context);
+        }
+        el.addEventListener(event, handler);
+        return {
+            off: function () {
+                return el.removeEventListener(event, handler);
+            }
+        };
     }
 
     exports.polyfill = polyfill;

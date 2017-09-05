@@ -1,4 +1,10 @@
 
+## 2.2.0 (2017-09-05)
+
+`holdToDrag` option introduced in 1.x is now available in 2.x
+
+Thanks to @altschuler and @matte00 :+1:
+
 ## 2.1.0 (2017-07-27)
 
 This release adds a minor change to the API surface.
