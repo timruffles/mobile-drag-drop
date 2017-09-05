@@ -140,6 +140,9 @@ export interface Config {
     // hook for custom logic that can override the default action based on the original touch event when the drag never started
     // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
     defaultActionOverride?: (event: TouchEvent) => void;
+    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items).
+    // Defaults to no delay.
+    holdToDrag?: number;
 }
 
 // invoke for initializing the polyfill => returns true if polyfill is applied
