@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (factory((global.MobileDragDrop = global.MobileDragDrop || {})));
+    (factory((global.MobileDragDrop = {})));
 }(this, (function (exports) { 'use strict';
 
     var DEBUG = false;
@@ -58,6 +58,7 @@
         console.log("dnd-poly: Applying mobile drag and drop polyfill.");
         supportsPassive = supportsPassiveEventListener();
         if (config.holdToDrag) {
+            console.log("dnd-poly: holdToDrag set to " + config.holdToDrag);
             addDocumentListener("touchstart", onDelayTouchstart, false);
         }
         else {
@@ -67,13 +68,14 @@
     }
     var activeDragOperation;
     function onTouchstart(e) {
-        console.log("dnd-poly: global touchstart");
+        console.log("dnd-poly: touchstart");
         if (activeDragOperation) {
             console.log("dnd-poly: drag operation already active");
             return;
         }
         var dragTarget = tryFindDraggableTarget(e);
         if (!dragTarget) {
+            console.log("dnd-poly: no draggable at touchstart coordinates");
             return;
         }
         try {
@@ -202,7 +204,7 @@
             }
             translateDragImage(this._dragImage, this._dragImagePageCoordinates, this._dragImageTransforms, this._dragImageOffset, this._config.dragImageCenterOnTouch);
             document.body.appendChild(this._dragImage);
-            this._iterationIntervalId = setInterval(function () {
+            this._iterationIntervalId = window.setInterval(function () {
                 if (_this._iterationLock) {
                     console.log("dnd-poly: iteration skipped because previous iteration hast not yet finished.");
                     return;
@@ -457,10 +459,36 @@
             this._setDragImageHandler = _setDragImageHandler;
             this._dropEffect = DROP_EFFECTS[0];
         }
+        Object.defineProperty(DataTransfer.prototype, "dropEffect", {
+            get: function () {
+                return this._dropEffect;
+            },
+            set: function (value) {
+                if (this._dataStore._mode !== 0
+                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
+                    this._dropEffect = value;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(DataTransfer.prototype, "types", {
             get: function () {
                 if (this._dataStore._mode !== 0) {
                     return Object.freeze(this._dataStore._types);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DataTransfer.prototype, "effectAllowed", {
+            get: function () {
+                return this._dataStore._effectAllowed;
+            },
+            set: function (value) {
+                if (this._dataStore._mode === 2
+                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
+                    this._dataStore._effectAllowed = value;
                 }
             },
             enumerable: true,
@@ -502,32 +530,6 @@
                 this._setDragImageHandler(image, x, y);
             }
         };
-        Object.defineProperty(DataTransfer.prototype, "effectAllowed", {
-            get: function () {
-                return this._dataStore._effectAllowed;
-            },
-            set: function (value) {
-                if (this._dataStore._mode === 2
-                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
-                    this._dataStore._effectAllowed = value;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(DataTransfer.prototype, "dropEffect", {
-            get: function () {
-                return this._dropEffect;
-            },
-            set: function (value) {
-                if (this._dataStore._mode !== 0
-                    && ALLOWED_EFFECTS.indexOf(value) > -1) {
-                    this._dropEffect = value;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
         return DataTransfer;
     }());
     function addDocumentListener(ev, handler, passive) {
@@ -739,32 +741,34 @@
         return DROP_EFFECTS[0];
     }
     function onDelayTouchstart(evt) {
+        console.log("dnd-poly: setup delayed dragstart..");
         var el = evt.target;
         var heldItem = function () {
+            console.log("dnd-poly: starting delayed drag..");
             end.off();
             cancel.off();
             scroll.off();
             onTouchstart(evt);
         };
-        var onReleasedItem = function () {
+        var onReleasedItem = function (event) {
+            console.log("dnd-poly: aborting delayed drag because of " + event.type);
             end.off();
             cancel.off();
             scroll.off();
             clearTimeout(timer);
         };
         var timer = setTimeout(heldItem, config.holdToDrag);
-        var end = onEvt(el, 'touchend', onReleasedItem, this);
-        var cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
-        var scroll = onEvt(window, 'scroll', onReleasedItem, this);
+        var end = onEvt(el, 'touchend', onReleasedItem);
+        var cancel = onEvt(el, 'touchcancel', onReleasedItem);
+        var scroll = onEvt(window.document, 'scroll', onReleasedItem, true);
     }
-    function onEvt(el, event, handler, context) {
-        if (context) {
-            handler = handler.bind(context);
-        }
-        el.addEventListener(event, handler);
+    function onEvt(el, event, handler, capture) {
+        if (capture === void 0) { capture = false; }
+        var options = supportsPassive ? { passive: true, capture: capture } : capture;
+        el.addEventListener(event, handler, options);
         return {
             off: function () {
-                return el.removeEventListener(event, handler);
+                el.removeEventListener(event, handler, options);
             }
         };
     }

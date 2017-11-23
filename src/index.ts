@@ -93,9 +93,9 @@ export interface Config {
     dragImageTranslateOverride?:DragImageTranslateOverrideFn;
     // hook for custom logic that can override the default action based on the original touch event when the drag never started
     // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
-    defaultActionOverride?: (event: TouchEvent) => void;
+    defaultActionOverride?:(event:TouchEvent) => void;
     // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items). Defaults to no delay.
-    holdToDrag?: number;
+    holdToDrag?:number;
 }
 
 // default config
@@ -133,8 +133,13 @@ export function polyfill(override?:Config):boolean {
 
     // add listeners suitable for detecting a potential drag operation
     if (config.holdToDrag) {
+
+        console.log("dnd-poly: holdToDrag set to " + config.holdToDrag);
+
         addDocumentListener("touchstart", onDelayTouchstart, false);
-    } else {
+    }
+    else {
+
         addDocumentListener("touchstart", onTouchstart, false);
     }
 
@@ -153,7 +158,7 @@ let activeDragOperation:DragOperationController;
  */
 function onTouchstart(e:TouchEvent) {
 
-    console.log("dnd-poly: global touchstart");
+    console.log("dnd-poly: touchstart");
 
     // From the moment that the user agent is to initiate the drag-and-drop operation,
     // until the end of the drag-and-drop operation, device input events (e.g. mouse and keyboard events) must be suppressed.
@@ -169,6 +174,7 @@ function onTouchstart(e:TouchEvent) {
     // If there is no such element, then nothing is being dragged; abort these
     // steps, the drag-and-drop operation is never started.
     if (!dragTarget) {
+        console.log("dnd-poly: no draggable at touchstart coordinates");
         return;
     }
 
@@ -256,11 +262,11 @@ function dragOperationEnded(_config:Config, event:TouchEvent, state:DragOperatio
 const enum DragOperationState {
     // initial state of a controller, if no movement is detected the operation ends with this state
     POTENTIAL,
-        // after movement is detected the drag operation starts and keeps this state until it ends
+    // after movement is detected the drag operation starts and keeps this state until it ends
     STARTED,
-        // when the drag operation ended normally
+    // when the drag operation ended normally
     ENDED,
-        // when the drag operation ended with a cancelled input event
+    // when the drag operation ended with a cancelled input event
     CANCELLED
 }
 
@@ -488,7 +494,7 @@ class DragOperationController {
         document.body.appendChild(this._dragImage);
 
         // 10. Initiate the drag-and-drop operation in a manner consistent with platform conventions, and as described below.
-        this._iterationIntervalId = setInterval(() => {
+        this._iterationIntervalId = window.setInterval(() => {
 
             // If the user agent is still performing the previous iteration of the sequence (if any) when the next iteration becomes due,
             // abort these steps for this iteration (effectively "skipping missed frames" of the drag-and-drop operation).
@@ -837,7 +843,7 @@ class DragOperationController {
         // If the previous step caused the current target element to change,
         // and if the previous target element was not null or a part of a non-DOM document,
         // then fire a DND event named dragleave at the previous target element.
-        if (previousTargetElement !== this._currentDropTarget && (isDOMElement(previousTargetElement) )) {
+        if (previousTargetElement !== this._currentDropTarget && (isDOMElement(previousTargetElement))) {
 
             if (DEBUG) {
                 previousTargetElement.classList.remove(debug_class_drop_target);
@@ -1095,11 +1101,11 @@ interface DragDataStore {
  */
 class DataTransfer {
 
-    private _dropEffect:string = DROP_EFFECTS[DROP_EFFECT.NONE];
-
     constructor(private _dataStore:DragDataStore,
                 private _setDragImageHandler:(image:Element, x:number, y:number) => void) {
     }
+
+    private _dropEffect:string = DROP_EFFECTS[DROP_EFFECT.NONE];
 
     //public get files():FileList {
     //    return undefined;
@@ -1109,9 +1115,31 @@ class DataTransfer {
     //    return undefined;
     //}
 
+    public get dropEffect() {
+        return this._dropEffect;
+    }
+
+    public set dropEffect(value) {
+        if (this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
+            && ALLOWED_EFFECTS.indexOf(value) > -1) {
+            this._dropEffect = value;
+        }
+    }
+
     public get types():ReadonlyArray<string> {
         if (this._dataStore._mode !== DragDataStoreMode._DISCONNECTED) {
             return Object.freeze(this._dataStore._types);
+        }
+    }
+
+    public get effectAllowed() {
+        return this._dataStore._effectAllowed;
+    }
+
+    public set effectAllowed(value) {
+        if (this._dataStore._mode === DragDataStoreMode.READWRITE
+            && ALLOWED_EFFECTS.indexOf(value) > -1) {
+            this._dataStore._effectAllowed = value;
         }
     }
 
@@ -1157,28 +1185,6 @@ class DataTransfer {
     public setDragImage(image:Element, x:number, y:number):void {
         if (this._dataStore._mode === DragDataStoreMode.READWRITE) {
             this._setDragImageHandler(image, x, y);
-        }
-    }
-
-    public get effectAllowed() {
-        return this._dataStore._effectAllowed;
-    }
-
-    public set effectAllowed(value) {
-        if (this._dataStore._mode === DragDataStoreMode.READWRITE
-            && ALLOWED_EFFECTS.indexOf(value) > -1) {
-            this._dataStore._effectAllowed = value;
-        }
-    }
-
-    public get dropEffect() {
-        return this._dropEffect;
-    }
-
-    public set dropEffect(value) {
-        if (this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
-            && ALLOWED_EFFECTS.indexOf(value) > -1) {
-            this._dropEffect = value;
         }
     }
 }
@@ -1535,17 +1541,26 @@ function determineDragOperation(effectAllowed:string, dropEffect:string):string 
     return DROP_EFFECTS[DROP_EFFECT.NONE];
 }
 
-function onDelayTouchstart(evt: TouchEvent) {
+function onDelayTouchstart(evt:TouchEvent) {
+
+    console.log("dnd-poly: setup delayed dragstart..");
+
     const el = evt.target;
 
     const heldItem = () => {
+
+        console.log("dnd-poly: starting delayed drag..");
+
         end.off();
         cancel.off();
         scroll.off();
         onTouchstart(evt);
     };
 
-    const onReleasedItem = () => {
+    const onReleasedItem = (event:Event) => {
+
+        console.log("dnd-poly: aborting delayed drag because of " + event.type);
+
         end.off();
         cancel.off();
         scroll.off();
@@ -1554,21 +1569,20 @@ function onDelayTouchstart(evt: TouchEvent) {
 
     const timer = setTimeout(heldItem, config.holdToDrag);
 
-    const end = onEvt(el, 'touchend', onReleasedItem, this);
-    const cancel = onEvt(el, 'touchcancel', onReleasedItem, this);
-    const scroll = onEvt(window, 'scroll', onReleasedItem, this);
+    const end = onEvt(el, 'touchend', onReleasedItem);
+    const cancel = onEvt(el, 'touchcancel', onReleasedItem);
+    const scroll = onEvt(window.document, 'scroll', onReleasedItem, true);
 }
 
-function onEvt(el: EventTarget, event: string, handler: () => any, context: any) {
-    if (context) {
-        handler = handler.bind(context);
-    }
+function onEvt(el:EventTarget, event:string, handler:EventListener, capture:boolean = false) {
 
-    el.addEventListener(event, handler);
+    const options = supportsPassive ? {passive: true, capture: capture} : capture;
+
+    el.addEventListener(event, handler, options);
 
     return {
         off() {
-            return el.removeEventListener(event, handler);
+            el.removeEventListener(event, handler, options as any);
         }
     };
 }

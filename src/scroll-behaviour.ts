@@ -1,21 +1,21 @@
 //<editor-fold desc="static scroll utils">
 
-import {DragImageTranslateOverrideFn, Point} from "./index";
+import { DragImageTranslateOverrideFn, Point } from "./index";
 
 interface ScrollIntentions {
-    horizontal: ScrollIntention;
-    vertical: ScrollIntention;
+    horizontal:ScrollIntention;
+    vertical:ScrollIntention;
 }
 
 interface IScrollBounds {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    scrollX: number;
-    scrollY: number;
-    scrollHeight: number;
-    scrollWidth: number;
+    x:number;
+    y:number;
+    width:number;
+    height:number;
+    scrollX:number;
+    scrollY:number;
+    scrollHeight:number;
+    scrollWidth:number;
 }
 
 const enum ScrollIntention {
@@ -29,13 +29,13 @@ const enum ScrollAxis {
     VERTICAL
 }
 
-function isTopLevelEl(el: HTMLElement): boolean {
+function isTopLevelEl(el:HTMLElement):boolean {
 
     return (el === document.body || el === document.documentElement);
 }
 
-function getElementViewportOffset(el: HTMLElement, axis: ScrollAxis) {
-    let offset: number;
+function getElementViewportOffset(el:HTMLElement, axis:ScrollAxis) {
+    let offset:number;
 
     if (isTopLevelEl(el)) {
         offset = (axis === ScrollAxis.HORIZONTAL) ? el.clientLeft : el.clientTop;
@@ -48,8 +48,8 @@ function getElementViewportOffset(el: HTMLElement, axis: ScrollAxis) {
     return offset;
 }
 
-function getElementViewportSize(el: HTMLElement, axis: ScrollAxis) {
-    let size: number;
+function getElementViewportSize(el:HTMLElement, axis:ScrollAxis) {
+    let size:number;
 
     if (isTopLevelEl(el)) {
         size = (axis === ScrollAxis.HORIZONTAL) ? window.innerWidth : window.innerHeight;
@@ -61,7 +61,7 @@ function getElementViewportSize(el: HTMLElement, axis: ScrollAxis) {
     return size;
 }
 
-function getSetElementScroll(el: HTMLElement, axis: ScrollAxis, scroll?: number) {
+function getSetElementScroll(el:HTMLElement, axis:ScrollAxis, scroll?:number) {
     const prop = (axis === ScrollAxis.HORIZONTAL) ? "scrollLeft" : "scrollTop";
 
     // abstracting away compatibility issues on scroll properties of document/body
@@ -86,7 +86,7 @@ function getSetElementScroll(el: HTMLElement, axis: ScrollAxis, scroll?: number)
 }
 
 //TODO check if scroll end is reached according to scroll intention? this is needed to implement scroll chaining
-function isScrollable(el: HTMLElement): boolean {
+function isScrollable(el:HTMLElement):boolean {
     const cs = getComputedStyle(el);
 
     if (el.scrollHeight > el.clientHeight && (cs.overflowY === "scroll" || cs.overflowY === "auto")) {
@@ -100,7 +100,7 @@ function isScrollable(el: HTMLElement): boolean {
     return false;
 }
 
-function findScrollableParent(el: HTMLElement): HTMLElement {
+function findScrollableParent(el:HTMLElement):HTMLElement {
     do {
         if (!el) {
             return undefined;
@@ -115,7 +115,7 @@ function findScrollableParent(el: HTMLElement): HTMLElement {
     return null;
 }
 
-function determineScrollIntention(currentCoordinate: number, size: number, threshold: number): ScrollIntention {
+function determineScrollIntention(currentCoordinate:number, size:number, threshold:number):ScrollIntention {
 
     // LEFT / TOP
     if (currentCoordinate < threshold) {
@@ -129,7 +129,7 @@ function determineScrollIntention(currentCoordinate: number, size: number, thres
     return ScrollIntention.NONE;
 }
 
-function determineDynamicVelocity(scrollIntention: ScrollIntention, currentCoordinate: number, size: number, threshold: number): number {
+function determineDynamicVelocity(scrollIntention:ScrollIntention, currentCoordinate:number, size:number, threshold:number):number {
 
     if (scrollIntention === ScrollIntention.LEFT_OR_TOP) {
 
@@ -143,15 +143,15 @@ function determineDynamicVelocity(scrollIntention: ScrollIntention, currentCoord
     return 0;
 }
 
-function isScrollEndReached(axis: ScrollAxis, scrollIntention: ScrollIntention, scrollBounds: IScrollBounds) {
+function isScrollEndReached(axis:ScrollAxis, scrollIntention:ScrollIntention, scrollBounds:IScrollBounds) {
 
     const currentScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollX) : (scrollBounds.scrollY);
 
     // wants to scroll to the right/bottom
     if (scrollIntention === ScrollIntention.RIGHT_OR_BOTTOM) {
 
-        const maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? ( scrollBounds.scrollWidth - scrollBounds.width ) : ( scrollBounds.scrollHeight -
-            scrollBounds.height );
+        const maxScrollOffset = (axis === ScrollAxis.HORIZONTAL) ? (scrollBounds.scrollWidth - scrollBounds.width) : (scrollBounds.scrollHeight -
+            scrollBounds.height);
 
         // is already at the right/bottom edge
         return currentScrollOffset >= maxScrollOffset;
@@ -168,39 +168,39 @@ function isScrollEndReached(axis: ScrollAxis, scrollIntention: ScrollIntention, 
 
 //</editor-fold>
 
-let _options: ScrollOptions = {
+let _options:ScrollOptions = {
     threshold: 75,
     // simplified cubic-ease-in function
-    velocityFn: function (velocity: number, threshold: number) {
+    velocityFn: function (velocity:number, threshold:number) {
         const multiplier = velocity / threshold;
         const easeInCubic = multiplier * multiplier * multiplier;
         return easeInCubic * threshold;
     }
 };
 
-let _scrollIntentions: ScrollIntentions = {
+let _scrollIntentions:ScrollIntentions = {
     horizontal: ScrollIntention.NONE,
     vertical: ScrollIntention.NONE
 };
 
-let _dynamicVelocity: Point = {
+let _dynamicVelocity:Point = {
     x: 0,
     y: 0
 };
 
-let _scrollAnimationFrameId: any;
-let _currentCoordinates: Point;
-let _hoveredElement: HTMLElement;
-let _scrollableParent: HTMLElement;
-let _translateDragImageFn: (offsetX: number, offsetY: number) => void;
+let _scrollAnimationFrameId:any;
+let _currentCoordinates:Point;
+let _hoveredElement:HTMLElement;
+let _scrollableParent:HTMLElement;
+let _translateDragImageFn:(offsetX:number, offsetY:number) => void;
 
 /**
  * core handler function
  */
-function handleDragImageTranslateOverride(event: TouchEvent,
-                                          currentCoordinates: Point,
-                                          hoveredElement: HTMLElement,
-                                          translateDragImageFn: (scrollDiffX: number, scrollDiffY: number) => void): void {
+function handleDragImageTranslateOverride(event:TouchEvent,
+                                          currentCoordinates:Point,
+                                          hoveredElement:HTMLElement,
+                                          translateDragImageFn:(scrollDiffX:number, scrollDiffY:number) => void):void {
 
     _currentCoordinates = currentCoordinates;
     _translateDragImageFn = translateDragImageFn;
@@ -285,11 +285,11 @@ function scrollAnimation() {
 
 //<editor-fold desc="scroll checks">
 
-function updateScrollIntentions(currentCoordinates: Point,
-                                scrollableParent: HTMLElement,
-                                threshold: number,
-                                scrollIntentions: ScrollIntentions,
-                                dynamicVelocity: Point): boolean {
+function updateScrollIntentions(currentCoordinates:Point,
+                                scrollableParent:HTMLElement,
+                                threshold:number,
+                                scrollIntentions:ScrollIntentions,
+                                dynamicVelocity:Point):boolean {
 
     if (!currentCoordinates || !scrollableParent) {
 
@@ -297,7 +297,7 @@ function updateScrollIntentions(currentCoordinates: Point,
         return false;
     }
 
-    const scrollableParentBounds: IScrollBounds = {
+    const scrollableParentBounds:IScrollBounds = {
         x: getElementViewportOffset(scrollableParent, ScrollAxis.HORIZONTAL),
         y: getElementViewportOffset(scrollableParent, ScrollAxis.VERTICAL),
         width: getElementViewportSize(scrollableParent, ScrollAxis.HORIZONTAL),
@@ -346,14 +346,14 @@ function updateScrollIntentions(currentCoordinates: Point,
 export interface ScrollOptions {
     // threshold in px. when distance between scrollable element edge and touch position is smaller start programmatic scroll.
     // defaults to 75px
-    threshold?: number;
+    threshold?:number;
     // function to customize the scroll velocity
     // velocity param: distance to scrollable element edge
     // threshold: the threshold used to determine when scrolling should start
     // defaults to cubic-ease-in.
-    velocityFn: (velocity: number, threshold: number) => number;
+    velocityFn:(velocity:number, threshold:number) => number;
 }
 
-export const scrollBehaviourDragImageTranslateOverride: DragImageTranslateOverrideFn = handleDragImageTranslateOverride;
+export const scrollBehaviourDragImageTranslateOverride:DragImageTranslateOverrideFn = handleDragImageTranslateOverride;
 
 //</editor-fold>
