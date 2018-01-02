@@ -8,5 +8,7 @@ src/*.js
 src/*.map
 src/*.d.ts
 
+test/tmp/
+
 !/release/**/*
 !/demo/**/*

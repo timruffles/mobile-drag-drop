@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/timruffles/ios-html5-drag-drop-shim.svg?branch=testing)](https://travis-ci.org/timruffles/ios-html5-drag-drop-shim)
 ![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/master.svg)
 ![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)

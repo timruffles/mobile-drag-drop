@@ -117,6 +117,8 @@ module.exports = function (grunt) {
                 sourceMap: true,
                 format: "umd",
                 moduleName: umdName,
+                //TODO option not passed through by grunt-rollup yet.. https://github.com/chrisprice/grunt-rollup/issues/31
+                extend: true,
                 plugins: function () {
                     return [
                         sourcemaps()
