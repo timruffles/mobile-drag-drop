@@ -7,7 +7,12 @@
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "lib": [
+      "dom",
+      "es2015"
+    ],
+    "types": []
   },
   "files": [
     "./src/index.ts",
