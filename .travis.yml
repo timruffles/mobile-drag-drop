@@ -11,7 +11,6 @@ addons:
   sauce_connect: true
 
 before_script:
-  - 'npm run release:build'
-  - 'npm run release:serve'
+  - 'npm run release:serve &'
 
-script: 'npm run test'
+script: 'npm run release:build && npm run test'
