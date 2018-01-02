@@ -94,12 +94,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        // run tsc from grunt but use tsconfig.json
-        ts: {
-            build: {
-                tsconfig: true
-            }
-        },
         tslint: {
             options: {
                 // can be a configuration object or a filepath to tslint.json
@@ -202,6 +196,11 @@ module.exports = function (grunt) {
                 metadata: "",
                 regExp: false
             }
+        },
+        exec: {
+            tsc: {
+                command: "node_modules/.bin/tsc -p ./tsconfig.json"
+            }
         }
     });
 
@@ -210,11 +209,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-watch");
-    grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks("grunt-tslint");
     grunt.loadNpmTasks("grunt-npm");
     grunt.loadNpmTasks("grunt-bump");
     grunt.loadNpmTasks("grunt-rollup");
+    grunt.loadNpmTasks("grunt-exec");
 
     grunt.registerMultiTask("append", function () {
 
@@ -245,7 +244,7 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.registerTask("compile", ["ts", "rollup", "append:umdDeclaration"]);
+    grunt.registerTask("compile", ["exec:tsc", "rollup", "append:umdDeclaration"]);
 
     grunt.registerTask("build-release", ["compile", "tslint", "uglify", "clean", "copy"]);
 
