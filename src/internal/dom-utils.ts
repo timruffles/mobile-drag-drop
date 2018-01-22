@@ -60,7 +60,7 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
         dstNode.removeAttribute( "draggable" );
 
         // canvas elements need special handling by copying canvas image data
-        if( dstNode.nodeName == "CANVAS" ) {
+        if( dstNode.nodeName === "CANVAS" ) {
 
             const canvasSrc = srcNode as HTMLCanvasElement;
             const canvasDst = dstNode as HTMLCanvasElement;
