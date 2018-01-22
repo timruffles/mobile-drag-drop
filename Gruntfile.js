@@ -1,55 +1,74 @@
 /* jshint node:true */
 "use strict";
 
-var sourcemaps = require("rollup-plugin-sourcemaps");
-
 var umdName = "MobileDragDrop";
 
 module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"),
-        // js minification
-        uglify: {
+        // various cli execution configs
+        exec: {
+            rollup: {
+                cmd: "rollup -c"
+            },
+            ts: {
+                cmd: "tsc -p tsconfig.json"
+            },
+            tslint: {
+                cmd: "tslint -p tsconfig.json"
+            }
+        },
+        // append UMD declaration to d.ts files
+        append: {
+            umdDeclaration: {
+                append: "export as namespace " + umdName + ";",
+                files: {
+                    "src/index.d.ts": "src/index.d.ts",
+                    "src/scroll-behaviour.d.ts": "src/scroll-behaviour.d.ts"
+                }
+            }
+        },
+        // bump version, commit, tag
+        bump: {
             options: {
-                // mangle var names
-                mangle: {
-                    reserved: [
-                        umdName
-                    ]
-                },
-                mangleProperties: {
-                    regex: /^_/ // this will mangle all properties starting with an underscore
-                },
-                reserveDOMProperties: true, // do not mangle browser props
-                compress: {
-                    drop_console: true, // remove console log statements
-                    drop_debugger: true, // remove debugger statements
-                    dead_code: true, // removes unreachable code
-                    unused: true, // remove unused code
-                    sequences: true,
-                    if_return: true,
-                    join_vars: true,
-                    keep_fargs: true,
-                    conditionals: true,
-                    evaluate: true
-                },
-                sourceMap: true,
-                report: "min"
-            },
-            main: {
-                options: {
-                    banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | MIT License */",
-                    sourceMapIn: "src/index.js.map"
-                },
-                src: "src/index.js",
-                dest: "src/index.min.js"
-            },
-            scroll: {
-                options: {
-                    sourceMapIn: "src/scroll-behaviour.js.map"
-                },
-                src: "src/scroll-behaviour.js",
-                dest: "src/scroll-behaviour.min.js"
+                files: ["package.json", "bower.json"],
+                updateConfigs: ["pkg"],
+                commit: true,
+                commitMessage: "Release v%VERSION%",
+                commitFiles: ["package.json", "bower.json", "CHANGELOG.md", "release"],
+                createTag: true,
+                tagName: "v%VERSION%",
+                tagMessage: "Version %VERSION%",
+                push: true,
+                pushTo: "origin",
+                gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
+                globalReplace: false,
+                prereleaseName: "alpha",
+                metadata: "",
+                regExp: false
+            }
+        },
+        clean: {
+            release: ["release"]
+        },
+        copy: {
+            // copy files from src to release folder
+            release: {
+                files: [
+                    // includes files within path
+                    {
+                        expand: true,
+                        cwd: "src",
+                        src: ["*.css", "**/*.d.ts", "*.js", "*.map"],
+                        dest: "release/",
+                        filter: "isFile",
+                        flatten: false
+                    },
+                    {
+                        src: "package.json",
+                        dest: "release/"
+                    }
+                ]
             }
         },
         // http server config for development and demo page
@@ -94,75 +113,51 @@ module.exports = function (grunt) {
                 }
             }
         },
-        // run tsc from grunt but use tsconfig.json
-        ts: {
-            build: {
-                tsconfig: true
-            }
-        },
-        tslint: {
+        // js minification
+        uglify: {
             options: {
-                // can be a configuration object or a filepath to tslint.json
-                configuration: "tslint.json"
-            },
-            files: {
-                src: [
-                    "src/*.ts",
-                    "!src/*.d.ts"
-                ]
-            }
-        },
-        rollup: {
-            options: {
-                sourceMap: true,
-                format: "umd",
-                moduleName: umdName,
-                plugins: function () {
-                    return [
-                        sourcemaps()
+                // mangle var names
+                mangle: {
+                    reserved: [
+                        umdName
                     ]
-                }
+                },
+                mangleProperties: {
+                    regex: /^_/ // this will mangle all properties starting with an underscore
+                },
+                reserveDOMProperties: true, // do not mangle browser props
+                compress: {
+                    drop_console: true, // remove console log statements
+                    drop_debugger: true, // remove debugger statements
+                    dead_code: true, // removes unreachable code
+                    unused: true, // remove unused code
+                    sequences: true,
+                    if_return: true,
+                    join_vars: true,
+                    keep_fargs: true,
+                    conditionals: true,
+                    evaluate: true
+                },
+                sourceMap: true,
+                report: "min"
             },
-            build: {
-                files: {
-                    "src/index.js": "src/index.js",
-                    "src/scroll-behaviour.js": "src/scroll-behaviour.js"
-                }
+            main: {
+                options: {
+                    banner: "/*! <%= pkg.name %> <%= pkg.version %> | Copyright (c) <%= grunt.template.today('yyyy') %> Tim Ruffles | MIT License */",
+                    sourceMapIn: "src/index.js.map"
+                },
+                src: "src/index.js",
+                dest: "src/index.min.js"
+            },
+            scroll: {
+                options: {
+                    sourceMapIn: "src/scroll-behaviour.js.map"
+                },
+                src: "src/scroll-behaviour.js",
+                dest: "src/scroll-behaviour.min.js"
             }
         },
-        append: {
-            umdDeclaration: {
-                append: "export as namespace " + umdName + ";",
-                files: {
-                    "src/index.d.ts": "src/index.d.ts",
-                    "src/scroll-behaviour.d.ts": "src/scroll-behaviour.d.ts"
-                }
-            }
-        },
-        clean: {
-            release: ["release"]
-        },
-        copy: {
-            // copy files from src to release folder
-            release: {
-                files: [
-                    // includes files within path
-                    {
-                        expand: true,
-                        cwd: "src",
-                        src: ["*.css", "*.d.ts", "*.js", "*.map"],
-                        dest: "release/",
-                        filter: "isFile",
-                        flatten: true
-                    },
-                    {
-                        src: "package.json",
-                        dest: "release/"
-                    }
-                ]
-            }
-        },
-        // automatically recompile on changes
+        // automatically recompile on changes, demo page livereload
         watch: {
             ts: {
                 files: ["src/**/*.ts", "!src/**/*.d.ts"],
@@ -181,26 +176,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        // bump version, commit, tag
-        bump: {
-            options: {
-                files: ["package.json", "bower.json"],
-                updateConfigs: ["pkg"],
-                commit: true,
-                commitMessage: "Release v%VERSION%",
-                commitFiles: ["package.json", "bower.json", "CHANGELOG.md", "release"],
-                createTag: true,
-                tagName: "v%VERSION%",
-                tagMessage: "Version %VERSION%",
-                push: true,
-                pushTo: "origin",
-                gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
-                globalReplace: false,
-                prereleaseName: "alpha",
-                metadata: "",
-                regExp: false
-            }
-        }
     });
 
     grunt.loadNpmTasks("grunt-contrib-uglify");
@@ -208,11 +183,9 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-watch");
-    grunt.loadNpmTasks("grunt-ts");
-    grunt.loadNpmTasks("grunt-tslint");
     grunt.loadNpmTasks("grunt-npm");
     grunt.loadNpmTasks("grunt-bump");
-    grunt.loadNpmTasks("grunt-rollup");
+    grunt.loadNpmTasks("grunt-exec");
 
     grunt.registerMultiTask("append", function () {
 
@@ -243,9 +216,9 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.registerTask("compile", ["ts", "rollup", "append:umdDeclaration"]);
+    grunt.registerTask("compile", ["exec:ts", "exec:rollup", "append:umdDeclaration"]);
 
-    grunt.registerTask("build-release", ["compile", "tslint", "uglify", "clean", "copy"]);
+    grunt.registerTask("build-release", ["compile", "exec:tslint", "uglify", "clean", "copy"]);
 
     // compile, lint, minify, clean copy to release folder
     grunt.registerTask("prepare-release", "Prepare a release by building release files and bumping version", function (bump) {
