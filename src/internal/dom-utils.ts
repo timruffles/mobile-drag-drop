@@ -58,11 +58,24 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
         dstNode.removeAttribute( "id" );
         dstNode.removeAttribute( "class" );
         dstNode.removeAttribute( "draggable" );
+
+        // canvas elements need special handling by copying canvas image data
+        if( dstNode.nodeName == "CANVAS" ) {
+
+            const canvasSrc = srcNode as HTMLCanvasElement;
+            const canvasDst = dstNode as HTMLCanvasElement;
+
+            const canvasSrcImgData = canvasSrc.getContext( "2d" ).getImageData( 0, 0, canvasSrc.width, canvasSrc.height );
+
+            canvasDst.getContext( "2d" ).putImageData( canvasSrcImgData, 0, 0 );
+        }
     }
 
     // Do the same for the children
     if( srcNode.hasChildNodes() ) {
+
         for( let i = 0; i < srcNode.childNodes.length; i++ ) {
+
             prepareNodeCopyAsDragImage( <HTMLElement>srcNode.childNodes[ i ], <HTMLElement>dstNode.childNodes[ i ] );
         }
     }
@@ -124,8 +137,6 @@ export function extractTransformStyles( sourceNode:HTMLElement ):string[] {
         if( !transform || transform === "none" ) {
             return "";
         }
-
-        // TODO what about translateX(x), translateY(x), translateZ(z), translate3d(x,y,z), matrix(*,*,*,*,x,y) ?
 
         // removes translate(x,y)
         return transform.replace( /translate\(\D*\d+[^,]*,\D*\d+[^,]*\)\s*/g, "" );
@@ -194,7 +205,7 @@ export function applyDragImageSnapback( sourceEl:HTMLElement, dragImage:HTMLElem
     pnt.x += (document.body.scrollLeft || document.documentElement.scrollLeft);
     pnt.y += (document.body.scrollTop || document.documentElement.scrollTop);
 
-    //TODO this sometimes fails.. find out when exactly and how to detect
+    //TODO this sometimes fails to calculate the correct origin position.. find out when exactly and how to detect
     pnt.x -= parseInt( cs.marginLeft, 10 );
     pnt.y -= parseInt( cs.marginTop, 10 );
 
