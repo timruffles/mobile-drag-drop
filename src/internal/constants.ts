@@ -19,6 +19,7 @@ export const enum EFFECT_ALLOWED {
     MOVE = 6,
     ALL = 7
 }
+
 // contains all possible values of the effectAllowed property
 export const ALLOWED_EFFECTS = [ "none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all" ];
 
@@ -29,5 +30,6 @@ export const enum DROP_EFFECT {
     MOVE = 2,
     LINK = 3,
 }
+
 // contains all possible values of the dropEffect property
 export const DROP_EFFECTS = [ "none", "copy", "move", "link" ];

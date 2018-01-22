@@ -1,21 +1,10 @@
 import { Config } from "../index";
 import {
-    CLASS_DRAG_IMAGE,
-    CLASS_DRAG_OPERATION_ICON,
-    CLASS_PREFIX,
-    DEBUG,
-    DROP_EFFECT,
-    DROP_EFFECTS
+    CLASS_DRAG_IMAGE, CLASS_DRAG_OPERATION_ICON, CLASS_PREFIX, DEBUG, DROP_EFFECT, DROP_EFFECTS
 } from "./constants";
 import {
-    addDocumentListener,
-    applyDragImageSnapback,
-    extractTransformStyles,
-    isDOMElement,
-    isTouchIdentifierContainedInTouchEvent,
-    Point,
-    removeDocumentListener,
-    translateElementToPoint,
+    addDocumentListener, applyDragImageSnapback, extractTransformStyles, isDOMElement,
+    isTouchIdentifierContainedInTouchEvent, Point, removeDocumentListener, translateElementToPoint,
     updateCentroidCoordinatesOfTouchesIn
 } from "./dom-utils";
 import { DataTransfer, DragDataStore, DragDataStoreMode } from "./drag-data-store";

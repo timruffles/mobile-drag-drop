@@ -22,7 +22,6 @@ export interface DragDataStore {
 
 /**
  * Polyfills https://html.spec.whatwg.org/multipage/interaction.html#datatransfer
- * TODO fail with errors when somebody uses it wrong so they know they are doing it wrong?
  */
 export class DataTransfer {
 

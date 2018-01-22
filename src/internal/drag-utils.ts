@@ -3,6 +3,7 @@ import { DataTransfer, DragDataStore, DragDataStoreMode } from "./drag-data-stor
 
 /**
  * Search for a possible draggable item upon an event that can initialize a drag operation.
+ * Can be overridden in polyfill config.
  */
 export function tryFindDraggableTarget( event:TouchEvent ):HTMLElement | undefined {
 
@@ -75,7 +76,6 @@ export function determineDropEffect( effectAllowed:string, sourceNode:Element ) 
     // copy
     return DROP_EFFECTS[ DROP_EFFECT.COPY ];
 }
-
 
 function createDragEventFromTouch( targetElement:Element,
                                    e:TouchEvent,
