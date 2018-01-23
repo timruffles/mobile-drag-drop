@@ -1,4 +1,16 @@
 
+## 2.3.0-rc.0 (2018-01-22)
+
+Maintenance release candidate containing bugfixes and API improvements.
+
+* refactoring to modular files because my scrollwheel broke ;)
+* special handling for canvas elements when creating drag image (fixes #120, thx to @johntdowney)
+* got rid of some build middleware (fixes #118)
+* remove DEBUG code to decrease size to 10.4kB minified
+* adds config functions to customize tryFindDraggableTarget(), dragImageSetup() and elementFromPoint()
+
+The enhanced config API is intended to enable custom workarounds when the polyfill falls short.
+
 ## 2.2.0 (2017-09-05)
 
 `holdToDrag` option introduced in 1.x is now available in 2.x
