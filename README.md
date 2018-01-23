@@ -27,10 +27,6 @@ Check out the demo to see it in action and monitor the console to see the events
 
 ## Install
 
-**bower**
-
-`bower install mobile-drag-drop --save`
-
 **npm**
 
 `npm install mobile-drag-drop --save`
@@ -39,6 +35,9 @@ Check out the demo to see it in action and monitor the console to see the events
 
 `jspm install npm:mobile-drag-drop`
 
+**bower**
+
+`bower install mobile-drag-drop --save`
 
 ### Include
 
@@ -119,30 +118,45 @@ export type DragImageTranslateOverrideFn = (
 ) => void;
 
 export interface Config {
+
     // flag to force the polyfill being applied and not rely on internal feature detection
-    forceApply?: boolean;
+    forceApply?:boolean;
+
     // useful for when you want the default drag image but still want to apply
     // some static offset from touch coordinates to drag image coordinates
     // defaults to (0,0)
-    dragImageOffset?: Point;
+    dragImageOffset?:Point;
+
     // if the dragImage shall be centered on the touch coordinates
     // defaults to false
-    dragImageCenterOnTouch?: boolean;
+    dragImageCenterOnTouch?:boolean;
+
     // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
     // defaults to 150ms
-    iterationInterval?: number;
+    iterationInterval?:number;
+
     // hook for custom logic that decides if a drag operation should start
-    // executed once with the initial touchmove and if true is returned the drag-operation initializes.
-    // defaults to (event.touches.length === 1) 
-    dragStartConditionOverride?: (event: TouchEvent) => boolean;
+    dragStartConditionOverride?:( event:TouchEvent ) => boolean;
+
     // hook for custom logic that can manipulate the drag image translate offset
-    dragImageTranslateOverride?: DragImageTranslateOverrideFn;
+    dragImageTranslateOverride?:DragImageTranslateOverrideFn;
+
     // hook for custom logic that can override the default action based on the original touch event when the drag never started
     // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
-    defaultActionOverride?: (event: TouchEvent) => void;
-    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items).
-    // Defaults to no delay.
-    holdToDrag?: number;
+    defaultActionOverride?:( event:TouchEvent ) => void;
+
+    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items). Defaults to no delay.
+    holdToDrag?:number;
+
+    // function invoked for each touchstart event to determine if and which touched element is detected as "draggable"
+    tryFindDraggableTarget?:( event:TouchEvent ) => HTMLElement | undefined;
+
+    // function for creating a copy of the dragged element
+    dragImageSetup?:( element:HTMLElement ) => HTMLElement;
+
+    // function for determining element that is currently hovered while dragging
+    // defaults to `document.elementFromPoint()`
+    elementFromPoint?:( x:number, y:number ) => Element;
 }
 
 // invoke for initializing the polyfill => returns true if polyfill is applied

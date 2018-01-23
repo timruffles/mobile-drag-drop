@@ -35,7 +35,7 @@ module.exports = function (grunt) {
                 updateConfigs: ["pkg"],
                 commit: true,
                 commitMessage: "Release v%VERSION%",
-                commitFiles: ["package.json", "bower.json", "CHANGELOG.md", "release"],
+                commitFiles: ["package.json", "package-lock.json", "bower.json", "CHANGELOG.md", "release"],
                 createTag: true,
                 tagName: "v%VERSION%",
                 tagMessage: "Version %VERSION%",
@@ -43,7 +43,7 @@ module.exports = function (grunt) {
                 pushTo: "origin",
                 gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d",
                 globalReplace: false,
-                prereleaseName: "alpha",
+                prereleaseName: "rc",
                 metadata: "",
                 regExp: false
             }
@@ -120,10 +120,10 @@ module.exports = function (grunt) {
                 mangle: {
                     reserved: [
                         umdName
-                    ]
-                },
-                mangleProperties: {
-                    regex: /^_/ // this will mangle all properties starting with an underscore
+                    ],
+                    properties: {
+                        regex: /^_/ // this will mangle all properties starting with an underscore
+                    }
                 },
                 reserveDOMProperties: true, // do not mangle browser props
                 compress: {
@@ -136,10 +136,12 @@ module.exports = function (grunt) {
                     join_vars: true,
                     keep_fargs: true,
                     conditionals: true,
-                    evaluate: true
+                    evaluate: true,
+                    passes: 1,
+                    warnings: true
                 },
                 sourceMap: true,
-                report: "min"
+                report: "gzip"
             },
             main: {
                 options: {
