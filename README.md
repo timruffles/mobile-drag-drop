@@ -197,9 +197,23 @@ Feel free to use this as a starting point.
 [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported.
 
 
+### Custom drag image setup function
+
+One can also set a custom `dragImageSetup()` function in the polyfill config. This allows to completely
+customize the routine used to create a copy of the dragged element.
+
+Checkout the [default implementation](https://github.com/timruffles/ios-html5-drag-drop-shim/blob/4a664a60fdb40079b987af88441d687783408ae3/src/internal/dom-utils.ts#L39-L92) as a starting point.
+
+
 ## Known issues and limitations
 
-`iFrames` are currently not supported. Contributions welcome. Please see https://github.com/timruffles/ios-html5-drag-drop-shim/issues/5 for the current state.
+* `iFrames` are currently not supported. Please see [#5](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/5) for the current state.
+
+* `ShadowDOM/ShadyDOM` are currently not working seamlessly. Please see [#115](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/115) for the current state.
+
+* `:before/:after` css pseudo styles can't be copied to the drag image. By default classes are removed on the drag image recursively to avoid side-effects. You can pass a custom dragImageSetup function in the config.
+
+Contributions welcome!
 
 
 ## Browser compatibility
