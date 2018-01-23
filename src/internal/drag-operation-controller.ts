@@ -1,6 +1,6 @@
 import { Config } from "../index";
 import {
-    CLASS_DRAG_IMAGE, CLASS_DRAG_OPERATION_ICON, CLASS_PREFIX, DEBUG, DROP_EFFECT, DROP_EFFECTS
+    CLASS_DRAG_IMAGE, CLASS_DRAG_OPERATION_ICON, CLASS_PREFIX, DROP_EFFECT, DROP_EFFECTS
 } from "./constants";
 import {
     addDocumentListener, applyDragImageSnapback, extractTransformStyles, isDOMElement,
@@ -136,10 +136,10 @@ export class DragOperationController {
         this._currentDragOperation = DROP_EFFECTS[ DROP_EFFECT.NONE ];
 
         this._dragDataStore = {
-            _data: {},
-            _effectAllowed: undefined,
-            _mode: DragDataStoreMode.PROTECTED,
-            _types: [],
+            data: {},
+            effectAllowed: undefined,
+            mode: DragDataStoreMode.PROTECTED,
+            types: [],
         };
 
         this._currentHotspotCoordinates = {
@@ -167,7 +167,7 @@ export class DragOperationController {
         } );
 
         // 9. Fire a DND event named dragstart at the source node.
-        this._dragDataStore._mode = DragDataStoreMode.READWRITE;
+        this._dragDataStore.mode = DragDataStoreMode.READWRITE;
         this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
         if( dispatchDragEvent( "dragstart", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer ) ) {
             console.log( "dnd-poly: dragstart cancelled" );
@@ -417,16 +417,16 @@ export class DragOperationController {
      */
     private _dragAndDropProcessModelIteration():void {
 
-        if( DEBUG ) {
-            var debug_class = CLASS_PREFIX + "debug",
-                debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection",
-                debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
-        }
+        // if( DEBUG ) {
+        //     var debug_class = CLASS_PREFIX + "debug",
+        //         debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection",
+        //         debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
+        // }
 
         const previousDragOperation = this._currentDragOperation;
 
         // Fire a DND event named drag event at the source node.
-        this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+        this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
         this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
         const dragCancelled = dispatchDragEvent( "drag", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer );
         if( dragCancelled ) {
@@ -470,22 +470,22 @@ export class DragOperationController {
         // and then update the current target element as follows:
         if( newUserSelection !== this._immediateUserSelection && newUserSelection !== this._currentDropTarget ) {
 
-            if( DEBUG ) {
-
-                if( this._immediateUserSelection ) {
-                    this._immediateUserSelection.classList.remove( debug_class_user_selection );
-                }
-
-                if( newUserSelection ) {
-                    newUserSelection.classList.add( debug_class );
-                    newUserSelection.classList.add( debug_class_user_selection );
-                }
-            }
+            // if( DEBUG ) {
+            //
+            //     if( this._immediateUserSelection ) {
+            //         this._immediateUserSelection.classList.remove( debug_class_user_selection );
+            //     }
+            //
+            //     if( newUserSelection ) {
+            //         newUserSelection.classList.add( debug_class );
+            //         newUserSelection.classList.add( debug_class_user_selection );
+            //     }
+            // }
 
             this._immediateUserSelection = newUserSelection;
 
             if( this._currentDropTarget !== null ) {
-                this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+                this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
                 this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
                 dispatchDragEvent( "dragexit", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false );
             }
@@ -509,8 +509,8 @@ export class DragOperationController {
                 // Fire a DND event named dragenter at the immediate user selection.
                 //the polyfill cannot determine if a handler even exists as browsers do to silently
                 // allow drop when no listener existed, so this event MUST be handled by the client
-                this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-                this._dataTransfer.dropEffect = determineDropEffect( this._dragDataStore._effectAllowed, this._sourceNode );
+                this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
+                this._dataTransfer.dropEffect = determineDropEffect( this._dragDataStore.effectAllowed, this._sourceNode );
                 if( dispatchDragEvent( "dragenter", this._immediateUserSelection, this._lastTouchEvent, this._dragDataStore, this._dataTransfer ) ) {
                     console.log( "dnd-poly: dragenter default prevented" );
                     // If the event is canceled, then set the current target element to the immediate user selection.
@@ -578,13 +578,13 @@ export class DragOperationController {
         // then fire a DND event named dragleave at the previous target element.
         if( previousTargetElement !== this._currentDropTarget && (isDOMElement( previousTargetElement )) ) {
 
-            if( DEBUG ) {
-                previousTargetElement.classList.remove( debug_class_drop_target );
-            }
+            // if( DEBUG ) {
+            //     previousTargetElement.classList.remove( debug_class_drop_target );
+            // }
 
             console.log( "dnd-poly: current drop target changed." );
 
-            this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+            this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
             this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
             dispatchDragEvent( "dragleave", previousTargetElement, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false, this._currentDropTarget );
         }
@@ -592,14 +592,14 @@ export class DragOperationController {
         // If the current target element is a DOM element, then fire a DND event named dragover at this current target element.
         if( isDOMElement( this._currentDropTarget ) ) {
 
-            if( DEBUG ) {
-                this._currentDropTarget.classList.add( debug_class );
-                this._currentDropTarget.classList.add( debug_class_drop_target );
-            }
+            // if( DEBUG ) {
+            //     this._currentDropTarget.classList.add( debug_class );
+            //     this._currentDropTarget.classList.add( debug_class_drop_target );
+            // }
 
             // If the dragover event is not canceled, run the appropriate step from the following list:
-            this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
-            this._dataTransfer.dropEffect = determineDropEffect( this._dragDataStore._effectAllowed, this._sourceNode );
+            this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
+            this._dataTransfer.dropEffect = determineDropEffect( this._dragDataStore.effectAllowed, this._sourceNode );
             if( dispatchDragEvent( "dragover", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer ) === false ) {
 
                 console.log( "dnd-poly: dragover not prevented on possible drop-target." );
@@ -651,9 +651,7 @@ export class DragOperationController {
 
         const currentDragOperationClass = CLASS_PREFIX + this._currentDragOperation;
 
-        if( this._dragImage.classList.contains( currentDragOperationClass ) === false ) {
-            this._dragImage.classList.add( currentDragOperationClass );
-        }
+        this._dragImage.classList.add( currentDragOperationClass );
     }
 
     /**
@@ -663,19 +661,19 @@ export class DragOperationController {
 
         console.log( "dnd-poly: drag operation end detected with " + this._currentDragOperation );
 
-        if( DEBUG ) {
-
-            var debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection",
-                debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
-
-            if( this._currentDropTarget ) {
-                this._currentDropTarget.classList.remove( debug_class_drop_target );
-
-            }
-            if( this._immediateUserSelection ) {
-                this._immediateUserSelection.classList.remove( debug_class_user_selection );
-            }
-        }
+        // if( DEBUG ) {
+        //
+        //     var debug_class_user_selection = CLASS_PREFIX + "immediate-user-selection",
+        //         debug_class_drop_target = CLASS_PREFIX + "current-drop-target";
+        //
+        //     if( this._currentDropTarget ) {
+        //         this._currentDropTarget.classList.remove( debug_class_drop_target );
+        //
+        //     }
+        //     if( this._immediateUserSelection ) {
+        //         this._immediateUserSelection.classList.remove( debug_class_user_selection );
+        //     }
+        // }
 
         //var dropped:boolean = undefined;
 
@@ -696,7 +694,7 @@ export class DragOperationController {
 
             // If the current target element is a DOM element, fire a DND event named dragleave at it;
             if( isDOMElement( this._currentDropTarget ) ) {
-                this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+                this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
                 this._dataTransfer.dropEffect = DROP_EFFECTS[ DROP_EFFECT.NONE ];
                 dispatchDragEvent( "dragleave", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false );
             }
@@ -718,7 +716,7 @@ export class DragOperationController {
                 // If the event is canceled, set the current drag operation to the value of the dropEffect attribute of the
                 // DragEvent object's dataTransfer object as it stood after the event dispatch finished.
 
-                this._dragDataStore._mode = DragDataStoreMode.READONLY;
+                this._dragDataStore.mode = DragDataStoreMode.READONLY;
                 this._dataTransfer.dropEffect = this._currentDragOperation;
                 if( dispatchDragEvent( "drop", this._currentDropTarget, this._lastTouchEvent, this._dragDataStore, this._dataTransfer ) ===
                     true ) {
@@ -792,7 +790,7 @@ export class DragOperationController {
         console.log( "dnd-poly: dragimage snap back transition ended" );
 
         // Fire a DND event named dragend at the source node.
-        this._dragDataStore._mode = DragDataStoreMode.PROTECTED;
+        this._dragDataStore.mode = DragDataStoreMode.PROTECTED;
         this._dataTransfer.dropEffect = this._currentDragOperation;
         dispatchDragEvent( "dragend", this._sourceNode, this._lastTouchEvent, this._dragDataStore, this._dataTransfer, false );
 

@@ -1,7 +1,6 @@
 export interface DetectedFeatures {
     draggable:boolean;
     dragEvents:boolean;
-    touchEvents:boolean;
     userAgentSupportingNativeDnD:boolean;
 }
 
@@ -10,7 +9,6 @@ export function detectFeatures():DetectedFeatures {
     let features:DetectedFeatures = {
         dragEvents: ("ondragstart" in document.documentElement),
         draggable: ("draggable" in document.documentElement),
-        touchEvents: ("ontouchstart" in document.documentElement),
         userAgentSupportingNativeDnD: undefined
     };
 
@@ -21,7 +19,7 @@ export function detectFeatures():DetectedFeatures {
         (/iPad|iPhone|iPod|Android/.test( navigator.userAgent ))
         || // OR
         //if is blink(chrome/opera) with touch events enabled -> no native dnd
-        (isBlinkEngine && features.touchEvents)
+        (isBlinkEngine && ("ontouchstart" in document.documentElement))
     );
 
     return features;

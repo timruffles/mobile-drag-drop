@@ -14,10 +14,10 @@ export const enum DragDataStoreMode {
  * Polyfills https://html.spec.whatwg.org/multipage/interaction.html#the-drag-data-store
  */
 export interface DragDataStore {
-    _mode:DragDataStoreMode;
-    _data:{ [type:string]:any };
-    _types:Array<string>;
-    _effectAllowed:string;
+    mode:DragDataStoreMode;
+    data:{ [type:string]:any };
+    types:Array<string>;
+    effectAllowed:string;
 }
 
 /**
@@ -40,26 +40,26 @@ export class DataTransfer {
     //}
 
     public set dropEffect( value ) {
-        if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED
+        if( this._dataStore.mode !== DragDataStoreMode._DISCONNECTED
             && ALLOWED_EFFECTS.indexOf( value ) > -1 ) {
             this._dropEffect = value;
         }
     }
 
     public get types():ReadonlyArray<string> {
-        if( this._dataStore._mode !== DragDataStoreMode._DISCONNECTED ) {
-            return Object.freeze( this._dataStore._types );
+        if( this._dataStore.mode !== DragDataStoreMode._DISCONNECTED ) {
+            return Object.freeze( this._dataStore.types );
         }
     }
 
     public get effectAllowed() {
-        return this._dataStore._effectAllowed;
+        return this._dataStore.effectAllowed;
     }
 
     public set effectAllowed( value ) {
-        if( this._dataStore._mode === DragDataStoreMode.READWRITE
+        if( this._dataStore.mode === DragDataStoreMode.READWRITE
             && ALLOWED_EFFECTS.indexOf( value ) > -1 ) {
-            this._dataStore._effectAllowed = value;
+            this._dataStore.effectAllowed = value;
         }
     }
 
@@ -68,46 +68,46 @@ export class DataTransfer {
     }
 
     public setData( type:string, data:string ):void {
-        if( this._dataStore._mode === DragDataStoreMode.READWRITE ) {
+        if( this._dataStore.mode === DragDataStoreMode.READWRITE ) {
 
             if( type.indexOf( " " ) > -1 ) {
                 throw new Error( "illegal arg: type contains space" );
             }
 
-            this._dataStore._data[ type ] = data;
+            this._dataStore.data[ type ] = data;
 
-            if( this._dataStore._types.indexOf( type ) === -1 ) {
-                this._dataStore._types.push( type );
+            if( this._dataStore.types.indexOf( type ) === -1 ) {
+                this._dataStore.types.push( type );
             }
         }
     }
 
     public getData( type:string ):string {
-        if( this._dataStore._mode === DragDataStoreMode.READONLY
-            || this._dataStore._mode === DragDataStoreMode.READWRITE ) {
-            return this._dataStore._data[ type ] || "";
+        if( this._dataStore.mode === DragDataStoreMode.READONLY
+            || this._dataStore.mode === DragDataStoreMode.READWRITE ) {
+            return this._dataStore.data[ type ] || "";
         }
     }
 
     public clearData( format?:string ):void {
-        if( this._dataStore._mode === DragDataStoreMode.READWRITE ) {
+        if( this._dataStore.mode === DragDataStoreMode.READWRITE ) {
             // delete data for format
-            if( format && this._dataStore._data[ format ] ) {
-                delete this._dataStore._data[ format ];
-                var index = this._dataStore._types.indexOf( format );
+            if( format && this._dataStore.data[ format ] ) {
+                delete this._dataStore.data[ format ];
+                var index = this._dataStore.types.indexOf( format );
                 if( index > -1 ) {
-                    this._dataStore._types.splice( index, 1 );
+                    this._dataStore.types.splice( index, 1 );
                 }
                 return;
             }
             // delete all data
-            this._dataStore._data = {};
-            this._dataStore._types = [];
+            this._dataStore.data = {};
+            this._dataStore.types = [];
         }
     }
 
     public setDragImage( image:Element, x:number, y:number ):void {
-        if( this._dataStore._mode === DragDataStoreMode.READWRITE ) {
+        if( this._dataStore.mode === DragDataStoreMode.READWRITE ) {
             this._setDragImageHandler( image, x, y );
         }
     }

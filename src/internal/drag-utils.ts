@@ -1,4 +1,4 @@
-import { ALLOWED_EFFECTS, CLASS_PREFIX, DEBUG, DROP_EFFECT, DROP_EFFECTS, EFFECT_ALLOWED } from "./constants";
+import { ALLOWED_EFFECTS, DROP_EFFECT, DROP_EFFECTS, EFFECT_ALLOWED } from "./constants";
 import { DataTransfer, DragDataStore, DragDataStoreMode } from "./drag-data-store";
 
 /**
@@ -124,29 +124,31 @@ export function dispatchDragEvent( dragEvent:string,
 
     console.log( "dnd-poly: dispatching " + dragEvent );
 
-    if( DEBUG ) {
-        var debug_class = CLASS_PREFIX + "debug",
-            debug_class_event_target = CLASS_PREFIX + "event-target",
-            debug_class_event_related_target = CLASS_PREFIX + "event-related-target";
-        targetElement.classList.add( debug_class );
-        targetElement.classList.add( debug_class_event_target );
-        if( relatedTarget ) {
-            relatedTarget.classList.add( debug_class );
-            relatedTarget.classList.add( debug_class_event_related_target );
-        }
-    }
+    // if( DEBUG ) {
+    //     const debug_class = CLASS_PREFIX + "debug",
+    //         debug_class_event_target = CLASS_PREFIX + "event-target",
+    //         debug_class_event_related_target = CLASS_PREFIX + "event-related-target";
+    //     targetElement.classList.add( debug_class );
+    //     targetElement.classList.add( debug_class_event_target );
+    //     if( relatedTarget ) {
+    //         relatedTarget.classList.add( debug_class );
+    //         relatedTarget.classList.add( debug_class_event_related_target );
+    //     }
+    // }
 
     const leaveEvt = createDragEventFromTouch( targetElement, touchEvent, dragEvent, cancelable, document.defaultView, dataTransfer, relatedTarget );
     const cancelled = !targetElement.dispatchEvent( leaveEvt );
 
-    dataStore._mode = DragDataStoreMode._DISCONNECTED;
+    dataStore.mode = DragDataStoreMode._DISCONNECTED;
 
-    if( DEBUG ) {
-        targetElement.classList.remove( debug_class_event_target );
-        if( relatedTarget ) {
-            relatedTarget.classList.remove( debug_class_event_related_target );
-        }
-    }
+    // if( DEBUG ) {
+    //     const debug_class_event_target = CLASS_PREFIX + "event-target",
+    //         debug_class_event_related_target = CLASS_PREFIX + "event-related-target";
+    //     targetElement.classList.remove( debug_class_event_target );
+    //     if( relatedTarget ) {
+    //         relatedTarget.classList.remove( debug_class_event_related_target );
+    //     }
+    // }
 
     return cancelled;
 }

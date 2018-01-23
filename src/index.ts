@@ -1,4 +1,3 @@
-import { DEBUG } from "./internal/constants";
 import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/dom-utils";
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
 import { tryFindDraggableTarget } from "./internal/drag-utils";
@@ -179,11 +178,11 @@ export function polyfill( override?:Config ):boolean {
         // feature/browser detection
         const detectedFeatures = detectFeatures();
 
-        if( DEBUG ) {
-            Object.keys( detectedFeatures ).forEach( function( key ) {
-                console.log( "dnd-poly: detected feature '" + key + " = " + detectedFeatures[ key ] + "'" );
-            } );
-        }
+        // if( DEBUG ) {
+        //     Object.keys( detectedFeatures ).forEach( function( key ) {
+        //         console.log( "dnd-poly: detected feature '" + key + " = " + detectedFeatures[ key ] + "'" );
+        //     } );
+        // }
 
         // check if native drag and drop support is there
         if( detectedFeatures.userAgentSupportingNativeDnD

@@ -1,6 +1,6 @@
 // debug mode, which will highlight drop target, immediate user selection and events fired as you interact
 // only available in non-minified js / development environment
-export const DEBUG = false;
+// export const DEBUG = false;
 
 // css classes
 export const CLASS_PREFIX = "dnd-poly-";
