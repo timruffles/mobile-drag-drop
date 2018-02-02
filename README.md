@@ -179,7 +179,10 @@ export function polyfill(override?: Config):boolean;
 
 ## DragImage Customization
 
-Override the classes that are applied by the polyfill. Mind the `!important`.
+If you want to set a custom drag image use [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage).
+
+Override the classes that are applied by the polyfill for customizing the drag image appearance
+and snapback behaviour. Mind the `!important`.
 
 ```CSS
 .dnd-poly-drag-image {
@@ -206,8 +209,6 @@ Feel free to use this as a starting point.
 ```HTML
 <link rel="stylesheet" href="[...]/mobile-drag-drop/icons.css">
 ```
-
-[setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported.
 
 
 ### Custom drag image setup function
