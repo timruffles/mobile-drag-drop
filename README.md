@@ -148,15 +148,28 @@ export interface Config {
     // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items). Defaults to no delay.
     holdToDrag?:number;
 
+    /**
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * THE FOLLOWING OPTIONS ARE ONLY AVAILABLE IN v2.3.0-rc.0
+     *
+     */
+
     // function invoked for each touchstart event to determine if and which touched element is detected as "draggable"
     tryFindDraggableTarget?:( event:TouchEvent ) => HTMLElement | undefined;
 
-    // function for creating a copy of the dragged element
+    // function implementing how a copy of the dragged element is created
+    // NOTE! this function is for customizing HOW an element is transformed to a drag image element
+    // if you're looking for setting a custom drag image please use [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage)
     dragImageSetup?:( element:HTMLElement ) => HTMLElement;
 
     // function for determining element that is currently hovered while dragging
     // defaults to `document.elementFromPoint()`
     elementFromPoint?:( x:number, y:number ) => Element;
+
+    /**
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     */
 }
 
 // invoke for initializing the polyfill => returns true if polyfill is applied
