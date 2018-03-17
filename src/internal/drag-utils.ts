@@ -26,7 +26,11 @@ export function tryFindDraggableTarget( event:TouchEvent ):HTMLElement | undefin
         if( el.draggable === false ) {
             continue;
         }
-        if( el.getAttribute && el.getAttribute( "draggable" ) === "true" ) {
+        if( el.draggable === true ) {
+            return el;
+        }
+        if( el.getAttribute
+            && el.getAttribute( "draggable" ) === "true" ) {
             return el;
         }
     } while( (el = <HTMLElement>el.parentNode) && el !== document.body );
