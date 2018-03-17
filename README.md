@@ -91,6 +91,14 @@ polyfill({
 }
 ```
 
+**If you're targeting iOS Safari 10.x and higher**
+
+```JS
+window.addEventListener( 'touchmove', function() {});
+```
+
+See [#77](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77) for details.
+
 **webpack/scss**
 
 ```SCSS
