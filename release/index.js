@@ -49,14 +49,13 @@ function addDocumentListener(ev, handler, passive) {
 function removeDocumentListener(ev, handler) {
     document.removeEventListener(ev, handler);
 }
-function onEvt(el, event, handler, context) {
-    if (context) {
-        handler = handler.bind(context);
-    }
-    el.addEventListener(event, handler);
+function onEvt(el, event, handler, capture) {
+    if (capture === void 0) { capture = false; }
+    var options = supportsPassive ? { passive: true, capture: capture } : capture;
+    el.addEventListener(event, handler, options);
     return {
         off: function () {
-            return el.removeEventListener(event, handler);
+            el.removeEventListener(event, handler, options);
         }
     };
 }
@@ -662,6 +661,7 @@ function onTouchstart(e) {
     }
     var dragTarget = config.tryFindDraggableTarget(e);
     if (!dragTarget) {
+        console.log("dnd-poly: no draggable at touchstart coordinates");
         return;
     }
     try {
@@ -673,23 +673,26 @@ function onTouchstart(e) {
     }
 }
 function onDelayTouchstart(evt) {
+    console.log("dnd-poly: setup delayed dragstart..");
     var el = evt.target;
     var heldItem = function () {
+        console.log("dnd-poly: starting delayed drag..");
         end.off();
         cancel.off();
         scroll.off();
         onTouchstart(evt);
     };
-    var onReleasedItem = function () {
+    var onReleasedItem = function (event) {
+        console.log("dnd-poly: aborting delayed drag because of " + event.type);
         end.off();
         cancel.off();
         scroll.off();
         clearTimeout(timer);
     };
     var timer = window.setTimeout(heldItem, config.holdToDrag);
-    var end = onEvt(el, "touchend", onReleasedItem, this);
-    var cancel = onEvt(el, "touchcancel", onReleasedItem, this);
-    var scroll = onEvt(window, "scroll", onReleasedItem, this);
+    var end = onEvt(el, "touchend", onReleasedItem);
+    var cancel = onEvt(el, "touchcancel", onReleasedItem);
+    var scroll = onEvt(window, "scroll", onReleasedItem, true);
 }
 function dragOperationEnded(_config, event, state) {
     if (state === 0) {
@@ -724,6 +727,7 @@ function polyfill(override) {
     }
     console.log("dnd-poly: Applying mobile drag and drop polyfill.");
     if (config.holdToDrag) {
+        console.log("dnd-poly: holdToDrag set to " + config.holdToDrag);
         addDocumentListener("touchstart", onDelayTouchstart, false);
     }
     else {

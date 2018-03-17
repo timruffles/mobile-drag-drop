@@ -1,3 +1,9 @@
+## 2.3.0-rc.1 (2018-03-17)
+
+Maintenance release candidate for improving `holdToDrag` functionality
+
+* improves logging of `holdToDrag` functionality
+* adds `scroll` listener for aborting scheduled drag operation in capture phase
 
 ## 2.3.0-rc.0 (2018-01-22)
 

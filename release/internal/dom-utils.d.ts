@@ -5,7 +5,7 @@ export interface Point {
 export declare function isDOMElement(object: Element): string;
 export declare function addDocumentListener(ev: string, handler: EventListener, passive?: boolean): void;
 export declare function removeDocumentListener(ev: string, handler: EventListener): void;
-export declare function onEvt(el: EventTarget, event: string, handler: () => any, context: any): {
+export declare function onEvt(el: EventTarget, event: string, handler: EventListener, capture?: boolean): {
     off(): void;
 };
 export declare function createDragImage(sourceNode: HTMLElement): HTMLElement;
