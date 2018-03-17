@@ -21,17 +21,15 @@ export function removeDocumentListener( ev:string, handler:EventListener ) {
     document.removeEventListener( ev, handler );
 }
 
-export function onEvt( el:EventTarget, event:string, handler:() => any, context:any ) {
+export function onEvt(el:EventTarget, event:string, handler:EventListener, capture:boolean = false) {
 
-    if( context ) {
-        handler = handler.bind( context );
-    }
+    const options = supportsPassive ? {passive: true, capture: capture} : capture;
 
-    el.addEventListener( event, handler );
+    el.addEventListener(event, handler, options);
 
     return {
         off() {
-            return el.removeEventListener( event, handler );
+            el.removeEventListener(event, handler, options as any);
         }
     };
 }

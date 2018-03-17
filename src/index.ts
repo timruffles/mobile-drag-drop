@@ -35,6 +35,7 @@ function onTouchstart( e:TouchEvent ) {
     // If there is no such element, then nothing is being dragged; abort these
     // steps, the drag-and-drop operation is never started.
     if( !dragTarget ) {
+        console.log("dnd-poly: no draggable at touchstart coordinates");
         return;
     }
 
@@ -50,16 +51,24 @@ function onTouchstart( e:TouchEvent ) {
 
 function onDelayTouchstart( evt:TouchEvent ) {
 
+    console.log("dnd-poly: setup delayed dragstart..");
+
     const el = evt.target;
 
     const heldItem = () => {
+
+        console.log("dnd-poly: starting delayed drag..");
+
         end.off();
         cancel.off();
         scroll.off();
         onTouchstart( evt );
     };
 
-    const onReleasedItem = () => {
+    const onReleasedItem = (event:Event) => {
+
+        console.log("dnd-poly: aborting delayed drag because of " + event.type);
+
         end.off();
         cancel.off();
         scroll.off();
@@ -68,9 +77,11 @@ function onDelayTouchstart( evt:TouchEvent ) {
 
     const timer = window.setTimeout( heldItem, config.holdToDrag );
 
-    const end = onEvt( el, "touchend", onReleasedItem, this );
-    const cancel = onEvt( el, "touchcancel", onReleasedItem, this );
-    const scroll = onEvt( window, "scroll", onReleasedItem, this );
+    const end = onEvt( el, "touchend", onReleasedItem );
+    const cancel = onEvt( el, "touchcancel", onReleasedItem );
+    // scroll events don't bubble, only way to listen to scroll events
+    // that are about to happen in nested scrollables is by listening in capture phase
+    const scroll = onEvt( window, "scroll", onReleasedItem, true );
 }
 
 /**
@@ -197,6 +208,7 @@ export function polyfill( override?:Config ):boolean {
 
     // add listeners suitable for detecting a potential drag operation
     if( config.holdToDrag ) {
+        console.log("dnd-poly: holdToDrag set to " + config.holdToDrag);
         addDocumentListener( "touchstart", onDelayTouchstart, false );
     } else {
         addDocumentListener( "touchstart", onTouchstart, false );
