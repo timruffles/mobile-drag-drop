@@ -10,3 +10,5 @@ src/**/*.d.ts
 
 !/release/**/*
 !/demo/**/*
+
+.DS_Store
