@@ -912,7 +912,7 @@
 
         // tmp fix for iOS10 touchmove bug (https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77)
         window.addEventListener('touchmove', function () {
-        })
+        }, {passive: false})
 
     </script>
     <footer>
@@ -931,5 +931,3 @@
 
 </body>
 </html>
-
-
