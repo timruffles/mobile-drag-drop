@@ -7,10 +7,15 @@
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "strict": false,
+    "lib": [
+      "dom",
+      "es2015"
+    ],
+    "types": []
   },
-  "files": [
-    "./src/index.ts",
-    "./src/scroll-behaviour.ts"
+  "include": [
+    "src/**/*"
   ]
 }
