@@ -910,7 +910,7 @@
         //            });
         //        }
 
-        // tmp fix for iOS10 touchmove bug (https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77)
+        // workaround for iOS10/iOS11 touchmove behaviour (https://github.com/timruffles/mobile-drag-drop/issues/77)
         try {
             window.addEventListener('touchmove', function () {
             }, {passive: false})
@@ -926,7 +926,7 @@
     </footer>
 </section>
 
-<a href="https://github.com/timruffles/ios-html5-drag-drop-shim">
+<a href="https://github.com/timruffles/mobile-drag-drop">
     <img style="position: absolute; top: 0; left: 0; border: 0;"
          src="http://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
          alt="Fork me on GitHub"/>
