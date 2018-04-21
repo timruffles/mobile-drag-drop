@@ -53,6 +53,7 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
         dstNode.style.pointerEvents = "none";
 
         // Remove any potential conflict attributes
+        dstNode.style.transform = "";
         dstNode.removeAttribute( "id" );
         dstNode.removeAttribute( "class" );
         dstNode.removeAttribute( "draggable" );
