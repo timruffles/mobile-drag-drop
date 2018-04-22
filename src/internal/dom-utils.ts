@@ -87,6 +87,7 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement, f
 export function createDragImage( sourceNode:HTMLElement ):HTMLElement {
 
     const dragImage = <HTMLElement>sourceNode.cloneNode( true );
+
     // this removes any id's and stuff that could interfere with drag and drop
     prepareNodeCopyAsDragImage( sourceNode, dragImage, true );
 
