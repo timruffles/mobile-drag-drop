@@ -34,7 +34,7 @@ export function onEvt(el:EventTarget, event:string, handler:EventListener, captu
     };
 }
 
-function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement, firstNode:boolean) {
+function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement, firstNode:boolean ) {
 
     // Is this node an element?
     if( srcNode.nodeType === 1 ) {
