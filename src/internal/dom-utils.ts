@@ -53,7 +53,6 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
         dstNode.style.pointerEvents = "none";
 
         // Remove any potential conflict attributes
-        dstNode.style.transform = "";
         dstNode.removeAttribute( "id" );
         dstNode.removeAttribute( "class" );
         dstNode.removeAttribute( "draggable" );
@@ -83,7 +82,7 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
 export function createDragImage( sourceNode:HTMLElement ):HTMLElement {
 
     const dragImage = <HTMLElement>sourceNode.cloneNode( true );
-
+    dragImage.style.transform = "";
     // this removes any id's and stuff that could interfere with drag and drop
     prepareNodeCopyAsDragImage( sourceNode, dragImage );
 
