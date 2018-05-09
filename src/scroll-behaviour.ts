@@ -50,6 +50,9 @@ function getElementViewportOffset( el:HTMLElement, axis:ScrollAxis ) {
 }
 
 function getElementViewportSize( el:HTMLElement, axis:ScrollAxis ) {
+    if(isTopLevelEl( el )) {
+        return (axis === ScrollAxis.HORIZONTAL) ? Math.min(el.clientWidth, window.innerWidth) : Math.min(el.clientHeight, window.innerHeight);
+    }
     return (axis === ScrollAxis.HORIZONTAL) ? el.clientWidth : el.clientHeight;
 }
 
@@ -300,9 +303,10 @@ function updateScrollIntentions( currentCoordinates:Point,
         // when coordinates become undefined drag operation stopped. stop scrolling also.
         return false;
     }
+
     const updateScrollWidth:boolean = _scrollableParentBounds === undefined || _scrollableParentBounds.scrollWidth === undefined || scrollableParent === undefined;
     const updateScrollHeight:boolean = _scrollableParentBounds === undefined || _scrollableParentBounds.scrollHeight === undefined || scrollableParent === undefined;
-        _scrollableParentBounds = {
+    _scrollableParentBounds = {
         x: getElementViewportOffset( scrollableParent, ScrollAxis.HORIZONTAL ),
         y: getElementViewportOffset( scrollableParent, ScrollAxis.VERTICAL ),
         width: getElementViewportSize( scrollableParent, ScrollAxis.HORIZONTAL ),
