@@ -1,6 +1,7 @@
 //<editor-fold desc="static scroll utils">
 
-import { DragImageTranslateOverrideFn, Point } from "./index";
+import { DragImageTranslateOverrideFn } from "./index";
+import { Point } from "./internal/dom-utils";
 
 interface ScrollIntentions {
     horizontal:ScrollIntention;

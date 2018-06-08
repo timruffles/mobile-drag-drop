@@ -1,12 +1,11 @@
-[![Build Status](https://travis-ci.org/timruffles/ios-html5-drag-drop-shim.svg?branch=testing)](https://travis-ci.org/timruffles/ios-html5-drag-drop-shim)
-![dependencies](https://img.shields.io/david/timruffles/ios-html5-drag-drop-shim/master.svg)
-![devdependencies](https://img.shields.io/david/dev/timruffles/ios-html5-drag-drop-shim/master.svg)
+![dependencies](https://img.shields.io/david/timruffles/mobile-drag-drop/master.svg)
+![devdependencies](https://img.shields.io/david/dev/timruffles/mobile-drag-drop/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
 ![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
 ![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
-![issues](https://img.shields.io/github/issues/timruffles/ios-html5-drag-drop-shim.svg)
-![size](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/master/release/index.min.js)
-![gzippedsize](https://badge-size.herokuapp.com/timruffles/ios-html5-drag-drop-shim/master/release/index.min.js?compression=gzip)
+![issues](https://img.shields.io/github/issues/timruffles/mobile-drag-drop.svg)
+![size](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js)
+![gzippedsize](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js?compression=gzip)
 
 
 # Polyfill for HTML 5 drag'n'drop
@@ -21,16 +20,12 @@ this package in your page your existing HTML 5 drag'n'drop code should _just wor
 
 ## Demos
 
-[Demo](http://timruffles.github.io/ios-html5-drag-drop-shim/demo/)
+[Demo](http://timruffles.github.io/mobile-drag-drop/demo/)
 
 Check out the demo to see it in action and monitor the console to see the events firing.
 
 
 ## Install
-
-**bower**
-
-`bower install mobile-drag-drop --save`
 
 **npm**
 
@@ -40,6 +35,9 @@ Check out the demo to see it in action and monitor the console to see the events
 
 `jspm install npm:mobile-drag-drop`
 
+**bower**
+
+`bower install mobile-drag-drop --save`
 
 ### Include
 
@@ -93,6 +91,14 @@ polyfill({
 }
 ```
 
+**If you're targeting iOS Safari 10.x and higher**
+
+```JS
+window.addEventListener( 'touchmove', function() {});
+```
+
+See [#77](https://github.com/timruffles/mobile-drag-drop/issues/77) for details.
+
 **webpack/scss**
 
 ```SCSS
@@ -120,30 +126,58 @@ export type DragImageTranslateOverrideFn = (
 ) => void;
 
 export interface Config {
+
     // flag to force the polyfill being applied and not rely on internal feature detection
-    forceApply?: boolean;
+    forceApply?:boolean;
+
     // useful for when you want the default drag image but still want to apply
     // some static offset from touch coordinates to drag image coordinates
     // defaults to (0,0)
-    dragImageOffset?: Point;
+    dragImageOffset?:Point;
+
     // if the dragImage shall be centered on the touch coordinates
     // defaults to false
-    dragImageCenterOnTouch?: boolean;
+    dragImageCenterOnTouch?:boolean;
+
     // the drag and drop operation involves some processing. here you can specify in what interval this processing takes place.
     // defaults to 150ms
-    iterationInterval?: number;
+    iterationInterval?:number;
+
     // hook for custom logic that decides if a drag operation should start
-    // executed once with the initial touchmove and if true is returned the drag-operation initializes.
-    // defaults to (event.touches.length === 1) 
-    dragStartConditionOverride?: (event: TouchEvent) => boolean;
+    dragStartConditionOverride?:( event:TouchEvent ) => boolean;
+
     // hook for custom logic that can manipulate the drag image translate offset
-    dragImageTranslateOverride?: DragImageTranslateOverrideFn;
+    dragImageTranslateOverride?:DragImageTranslateOverrideFn;
+
     // hook for custom logic that can override the default action based on the original touch event when the drag never started
     // be sure to call event.preventDefault() if handling the default action in the override to prevent the browser default.
-    defaultActionOverride?: (event: TouchEvent) => void;
-    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items).
-    // Defaults to no delay.
-    holdToDrag?: number;
+    defaultActionOverride?:( event:TouchEvent ) => void;
+
+    // Drag action delay on touch devices ("hold to drag" functionality, useful for scrolling draggable items). Defaults to no delay.
+    holdToDrag?:number;
+
+    /**
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * THE FOLLOWING OPTIONS ARE ONLY AVAILABLE IN v2.3.0-rc.0
+     *
+     */
+
+    // function invoked for each touchstart event to determine if and which touched element is detected as "draggable"
+    tryFindDraggableTarget?:( event:TouchEvent ) => HTMLElement | undefined;
+
+    // function implementing how a copy of the dragged element is created
+    // NOTE! this function is for customizing HOW an element is transformed to a drag image element
+    // if you're looking for setting a custom drag image please use [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage)
+    dragImageSetup?:( element:HTMLElement ) => HTMLElement;
+
+    // function for determining element that is currently hovered while dragging
+    // defaults to `document.elementFromPoint()`
+    elementFromPoint?:( x:number, y:number ) => Element;
+
+    /**
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     */
 }
 
 // invoke for initializing the polyfill => returns true if polyfill is applied
@@ -153,7 +187,10 @@ export function polyfill(override?: Config):boolean;
 
 ## DragImage Customization
 
-Override the classes that are applied by the polyfill. Mind the `!important`.
+If you want to set a custom drag image use [setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage).
+
+Override the classes that are applied by the polyfill for customizing the drag image appearance
+and snapback behaviour. Mind the `!important`.
 
 ```CSS
 .dnd-poly-drag-image {
@@ -181,12 +218,24 @@ Feel free to use this as a starting point.
 <link rel="stylesheet" href="[...]/mobile-drag-drop/icons.css">
 ```
 
-[setDragImage()](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage) is supported.
+
+### Custom drag image setup function
+
+One can also set a custom `dragImageSetup()` function in the polyfill config. This allows to completely
+customize the routine used to create a copy of the dragged element.
+
+Checkout the [default implementation](https://github.com/timruffles/mobile-drag-drop/blob/4a664a60fdb40079b987af88441d687783408ae3/src/internal/dom-utils.ts#L39-L92) as a starting point.
 
 
 ## Known issues and limitations
 
-`iFrames` are currently not supported. Contributions welcome. Please see https://github.com/timruffles/ios-html5-drag-drop-shim/issues/5 for the current state.
+* `iFrames` are currently not supported. Please see [#5](https://github.com/timruffles/mobile-drag-drop/issues/5) for the current state.
+
+* `ShadowDOM/ShadyDOM` are currently not working seamlessly. Please see [#115](https://github.com/timruffles/mobile-drag-drop/issues/115) for the current state.
+
+* `:before/:after` css pseudo styles can't be copied to the drag image. By default classes are removed on the drag image recursively to avoid side-effects. You can pass a custom dragImageSetup function in the config.
+
+Contributions welcome!
 
 
 ## Browser compatibility
@@ -200,7 +249,7 @@ Feel free to use this as a starting point.
 | Internet Explorer 11             |  Native                  |  No known issues.                              |
 | Edge                             |  **Unknown**             |  **Unknown**                                   |
 | Mobile Safari (<iOS 10)          |  Polyfill                |  No known issues.                              |
-| Mobile Safari (iOS 10)           |  Polyfill                |  [#77](https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77) |
+| Mobile Safari (iOS 10)           |  Polyfill                |  [#77](https://github.com/timruffles/mobile-drag-drop/issues/77) |
 | Chrome on iOS                    |  Polyfill                |  No known issues.                              |
 | Chrome on Android                |  Polyfill                |  No known issues.                              |
 | Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
@@ -269,7 +318,7 @@ For more details on development setup see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Thanks
 
-To the [amazing contributors](https://github.com/timruffles/ios-html5-drag-drop-shim/graphs/contributors) who've provided massive extensions and fixes to the original.
+To the [amazing contributors](https://github.com/timruffles/mobile-drag-drop/graphs/contributors) who've provided massive extensions and fixes to the original.
 
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's drop-in nature.
 

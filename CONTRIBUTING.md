@@ -25,10 +25,10 @@ commands are available as npm scripts to abstract away the current task runner o
 
 ## Debugging
 
-For debugging purposes run with `npm start` and set `const DEBUG = true;` in the main source file.
+For debugging purposes run with `npm start` and set `const DEBUG = true;` in the `constants.ts` file.
 This will result in verbose console output that helps to track down issues.
 
-To get visual feedback on the state of the drag-and-drop operation additionaly include `drag-drop-polyfill-debug.css`.
+To get visual feedback on the state of the drag-and-drop operation additionally include `drag-drop-polyfill-debug.css`.
 
 
 ## Releasing

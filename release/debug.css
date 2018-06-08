@@ -22,7 +22,7 @@
 }
 
 .dnd-poly-current-drop-target {
-    background-color: lime  !important;
+    background-color: lime !important;
 }
 
 .dnd-poly-event-target {
@@ -30,7 +30,7 @@
     -moz-transition-duration: 0ms, 0ms;
     -o-transition-duration: 0ms, 0ms;
     transition-duration: 0ms, 0ms;
-    outline: 1px solid red  !important;
+    outline: 1px solid red !important;
     outline-offset: 0;
 }
 

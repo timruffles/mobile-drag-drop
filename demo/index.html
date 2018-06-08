@@ -232,7 +232,7 @@
                     <div>one</div>
                 </div>
             </li>
-            <li class="draggable no-drag" id="aksjd2">
+            <li class="draggable no-drag" id="aksjd3">
                 <div class="drag-handle">O</div>
                 <div>two</div>
             </li>
@@ -378,6 +378,25 @@
             </li>
         </ul>
     </article>
+
+    <div>
+
+        <img src="http://placehold.it/350x350"/>
+
+        <img src="http://placehold.it/350x350"
+             draggable="false"/>
+
+    </div>
+
+    <div>
+
+        <a href="http://placehold.it/350x350">Implicitly draggable anchor</a>
+
+        <a href="http://placehold.it/350x350"
+           draggable="false">Explicitly undraggable anchor</a>
+
+    </div>
+
     <script>
 
         //        var DEBUG = false;
@@ -451,7 +470,8 @@
 //            },
 //            dragStartConditionOverride: allowHorizontalDragOnly,
 //            defaultActionOverride: alertAction,
-            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+            // holdToDrag: 300
         });
 
         var appliedMessageEl = document.getElementById("appliedMessage");
@@ -890,9 +910,12 @@
         //            });
         //        }
 
-        // tmp fix for iOS10 touchmove bug (https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77)
-        window.addEventListener('touchmove', function () {
-        })
+        // workaround for iOS10/iOS11 touchmove behaviour (https://github.com/timruffles/mobile-drag-drop/issues/77)
+        try {
+            window.addEventListener('touchmove', function () {
+            }, {passive: false})
+        } catch(e) {}
+
 
     </script>
     <footer>
@@ -903,7 +926,7 @@
     </footer>
 </section>
 
-<a href="https://github.com/timruffles/ios-html5-drag-drop-shim">
+<a href="https://github.com/timruffles/mobile-drag-drop">
     <img style="position: absolute; top: 0; left: 0; border: 0;"
          src="http://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
          alt="Fork me on GitHub"/>
@@ -911,5 +934,3 @@
 
 </body>
 </html>
-
-
