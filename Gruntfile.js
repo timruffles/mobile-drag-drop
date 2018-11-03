@@ -108,8 +108,7 @@ module.exports = function (grunt) {
             // starts a server that will serve the demo page with release sources
             release: {
                 options: {
-                    port: 8001,
-                    open: "http://localhost:8001/demo/"
+                    port: 8001
                 }
             }
         },

@@ -15,8 +15,11 @@
     "release:prepare:minor": "grunt prepare-release:minor",
     "release:prepare:major": "grunt prepare-release:major",
     "release:publish": "grunt publish-release && npm publish release",
-    "pretest": "tsc --project ./test/tsconfig.spec.json",
-    "test": "wdio"
+    "test:compile": "rm -rf ./test/tmp && tsc --project ./test/tsconfig.spec.json",
+    "pretest:appium": "npm run test:compile",
+    "pretest:sauce": "npm run test:compile",
+    "test:appium": "wdio wdio.appium.conf.js",
+    "test:sauce": "wdio wdio.sauce.conf.js"
   },
   "repository": {
     "type": "git",
@@ -50,7 +53,8 @@
   "devDependencies": {
     "@types/chai": "^4.0.10",
     "@types/mocha": "^2.2.45",
-    "@types/webdriverio": "^4.8.7",
+    "@types/webdriverio": "^4.10.5",
+    "appium": "^1.9.1",
     "chai": "^4.1.2",
     "grunt": "^1.0.1",
     "grunt-bump": "^0.8.0",
@@ -65,9 +69,9 @@
     "rollup-plugin-sourcemaps": "^0.4.2",
     "tslint": "^5.9.1",
     "typescript": "^2.6.2",
+    "wdio-appium-service": "^0.2.3",
     "wdio-mocha-framework": "^0.5.12",
-    "wdio-sauce-service": "^0.4.6",
-    "wdio-selenium-standalone-service": "0.0.9",
-    "webdriverio": "^4.9.11"
+    "wdio-sauce-service": "^0.4.11",
+    "webdriverio": "^4.13.2"
   }
 }

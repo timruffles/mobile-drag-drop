@@ -31,6 +31,17 @@ This will result in verbose console output that helps to track down issues.
 To get visual feedback on the state of the drag-and-drop operation additionally include `drag-drop-polyfill-debug.css`.
 
 
+## Tests
+
+For tests [WebdriverIO](http://webdriver.io) and [Appium](http://appium.io) are used.
+
+Before testing please follow the setup instructions for Appium at http://appium.io/docs/en/about-appium/getting-started/
+
+To run tests on a variety of platforms this project is using [Sauce Labs](https://saucelabs.com).
+
+https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
+
+
 ## Releasing
 _for maintainers only_
 

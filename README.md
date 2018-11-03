@@ -322,6 +322,14 @@ To the [amazing contributors](https://github.com/timruffles/mobile-drag-drop/gra
 
 <a href="http://twitter.com/rem">@rem</a> - who created the original demo used to demo this shim's drop-in nature.
 
+[Sauce Labs](https://saucelabs.com) granted access to their services for testing this open source project for free! 
+Thanks for supporting this project!
+
+<a href="https://saucelabs.com">
+  <img align="center" alt="SauceLabs" src="saucelabs.svg" width="120px" />
+</a>
+
+
 
 ## License
 

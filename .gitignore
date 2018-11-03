@@ -1,16 +1,16 @@
+.DS_Store
 .idea/
 .tscache/
-npm-debug.log
 
+npm-debug.log
 node_modules/
 
 src/**/*.js
 src/**/*.map
 src/**/*.d.ts
 
+appium.log
 test/tmp/
 
 !/release/**/*
 !/demo/**/*
-
-.DS_Store

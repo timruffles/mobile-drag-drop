@@ -13,4 +13,4 @@ addons:
 before_script:
   - 'npm run release:serve &'
 
-script: 'npm run release:build && npm run test'
+script: 'npm run release:build && npm run test:sauce'

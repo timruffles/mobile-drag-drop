@@ -38,19 +38,20 @@ const wdioConfig = {
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: [{
-        // maxInstances can get overwritten per capability. So if you have an in-house Selenium
-        // grid with only 5 firefox instance available you can make sure that not more than
-        // 5 instance gets started at a time.
-        maxInstances: 5,
-        //
-        browserName: 'chrome',
-        chromeOptions: {
-            mobileEmulation: {
-                deviceName: 'iPhone 6'
-            }
-        }
-    }],
+    // NOTE: this is the base conf which does not declare capabilities. Capabilities are declared in the specific wdio conf files
+    // capabilities: [{
+    //     // maxInstances can get overwritten per capability. So if you have an in-house Selenium
+    //     // grid with only 5 firefox instance available you can make sure that not more than
+    //     // 5 instance gets started at a time.
+    //     maxInstances: 5,
+    //     //
+    //     browserName: 'chrome',
+    //     chromeOptions: {
+    //         mobileEmulation: {
+    //             deviceName: 'iPhone 6'
+    //         }
+    //     }
+    // }],
     //
     // ===================
     // Test Configurations
@@ -189,22 +190,5 @@ const wdioConfig = {
     // onComplete: function(exitCode) {
     // }
 };
-
-if (process.env.CI) {
-
-    wdioConfig.logLevel = 'silent';
-
-    wdioConfig.services = ['sauce'];
-    wdioConfig.user = process.env.SAUCE_USERNAME;
-    wdioConfig.key = process.env.SAUCE_ACCESS_KEY;
-
-    //TODO configure additional capabilities for sauce testing
-
-    wdioConfig.capabilities.forEach(function (capability) {
-
-        capability['tunnel-identifier'] = process.env.TRAVIS_JOB_NUMBER;
-        capability['build'] = process.env.TRAVIS_BUILD_NUMBER;
-    });
-}
 
 exports.config = wdioConfig;
