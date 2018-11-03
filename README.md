@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/timruffles/mobile-drag-drop.svg?branch=testing)](https://travis-ci.org/timruffles/mobile-drag-drop)
 ![dependencies](https://img.shields.io/david/timruffles/mobile-drag-drop/master.svg)
 ![devdependencies](https://img.shields.io/david/dev/timruffles/mobile-drag-drop/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
