@@ -1,4 +1,4 @@
-const baseWdioConfig = require('./wdio.base.conf');
+const baseWdioConfig = require('./wdio.base.conf').config;
 
 const wdioConfig = {
     //TODO configure capabilities for sauce testing
