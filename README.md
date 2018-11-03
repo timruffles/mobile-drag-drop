@@ -326,7 +326,7 @@ To the [amazing contributors](https://github.com/timruffles/mobile-drag-drop/gra
 Thanks for supporting this project!
 
 <a href="https://saucelabs.com">
-  <img align="center" alt="SauceLabs" src="saucelabs.svg" width="120px" />
+  <img align="center" alt="SauceLabs" src="saucelabs.svg" width="240px" />
 </a>
 
 
