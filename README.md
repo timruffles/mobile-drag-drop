@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/timruffles/mobile-drag-drop.svg?branch=testing)](https://travis-ci.org/timruffles/mobile-drag-drop)
+[![Build Status](https://app.saucelabs.com/buildstatus/reppners)](https://app.saucelabs.com/builds/5119ae300d104867a3d3fc69268e22ce)
 ![dependencies](https://img.shields.io/david/timruffles/mobile-drag-drop/master.svg)
 ![devdependencies](https://img.shields.io/david/dev/timruffles/mobile-drag-drop/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
@@ -7,6 +8,8 @@
 ![issues](https://img.shields.io/github/issues/timruffles/mobile-drag-drop.svg)
 ![size](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js)
 ![gzippedsize](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js?compression=gzip)
+
+![Browser Matrix](https://app.saucelabs.com/browser-matrix/reppners.svg)
 
 
 # Polyfill for HTML 5 drag'n'drop
