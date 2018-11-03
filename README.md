@@ -9,7 +9,7 @@
 ![size](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js)
 ![gzippedsize](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js?compression=gzip)
 
-[![Browser Matrix](https://app.saucelabs.com/browser-matrix/reppners.svg)](https://app.saucelabs.com/buildstatus/reppners)
+[![Browser Matrix](https://app.saucelabs.com/browser-matrix/reppners.svg)](https://app.saucelabs.com/builds/5119ae300d104867a3d3fc69268e22ce)
 
 
 # Polyfill for HTML 5 drag'n'drop
