@@ -1,14 +1,10 @@
 const baseWdioConfig = require('./wdio.base.conf');
 
 const wdioConfig = {
-
-    logLevel: 'silent',
-
-    services: ['sauce'],
-    user: process.env.SAUCE_USERNAME,
-    key: process.env.SAUCE_ACCESS_KEY,
-
     //TODO configure capabilities for sauce testing
+    // If you have trouble getting all important capabilities together, check out the
+    // Sauce Labs platform configurator - a great tool to configure your capabilities:
+    // https://docs.saucelabs.com/reference/platforms-configurator
     capabilities:[
         {
             browserName: 'Safari',
@@ -17,7 +13,11 @@ const wdioConfig = {
             platformVersion: '12.0',
             platformName: 'iOS',
         }
-    ]
+    ],
+    services: ['sauce'],
+    sauceConnect: true,
+    user: process.env.SAUCE_USERNAME,
+    key: process.env.SAUCE_ACCESS_KEY
 };
 
 if (process.env.CI) {
