@@ -12,7 +12,7 @@ export class DemoPage {
 
     public open( deactivatePolyfill:boolean = false ):void {
 
-        let url = "/demo";
+        let url = "/demo/index.html";
 
         if( deactivatePolyfill ) {
             url += "?deactivate";
