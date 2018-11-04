@@ -41,7 +41,7 @@ export class DemoPage {
 
         browser.touchMultiPerform( [
             { action: "press", options: { ...startPosition } },
-            { action: "wait", options: { ms: 150 } },
+            { action: "wait", options: { ms: 200 } },
             { action: "moveTo", options: { ...endPosition, ms: 2000 } },
             { action: "wait", options: { ms: 1000 } },
             { action: "release" },
