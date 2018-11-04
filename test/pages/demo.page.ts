@@ -45,6 +45,10 @@ export class DemoPage {
             y: dropzoneLocation.y + (dropzoneSize.height / 2) + SAFARI_MAGIC_NATIVE_UI_OFFSET
         };
 
+        const webContext:string = browser.context().value;
+
+        browser.context( "NATIVE_APP" );
+
         browser.touchMultiPerform( [
             { action: "press", options: { ...startPosition } },
             { action: "wait", options: { ms: 200 } },
@@ -53,6 +57,8 @@ export class DemoPage {
             { action: "release" },
             { action: "wait", options: { ms: 1000 } },
         ] );
+
+        browser.context( webContext );
 
         browser.waitForExist( draggableSelector, 500, true );
     }
