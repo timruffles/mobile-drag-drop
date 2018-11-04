@@ -65,28 +65,21 @@ const wdioConfig = {
         },
         // Android Chrome
         {
-            browserName: 'Chrome',
+            browserName: 'Browser',
             deviceName: 'Android GoogleAPI Emulator',
             deviceOrientation: 'portrait',
             platformVersion: '4.4',
             platformName: 'Android',
         },
         {
-            browserName: 'Chrome',
-            deviceName: 'Android GoogleAPI Emulator',
-            deviceOrientation: 'portrait',
-            platformVersion: '4.4',
-            platformName: 'Android',
-        },
-        {
-            browserName: 'Chrome',
+            browserName: 'Browser',
             deviceName: 'Android GoogleAPI Emulator',
             deviceOrientation: 'portrait',
             platformVersion: '5.0',
             platformName: 'Android',
         },
         {
-            browserName: 'Chrome',
+            browserName: 'Browser',
             deviceName: 'Android GoogleAPI Emulator',
             deviceOrientation: 'portrait',
             platformVersion: '5.1',

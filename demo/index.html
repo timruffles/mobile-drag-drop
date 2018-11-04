@@ -462,7 +462,15 @@
             return true;
         };
 
-        var polyfillApplied = MobileDragDrop.polyfill({
+        var search = window.location.search || "";
+
+        var deactivatePolyfill = search.indexOf("deactivate") > -1;
+
+        var polyfillApplied;
+
+        if(!deactivatePolyfill) {
+
+            polyfillApplied = MobileDragDrop.polyfill({
 //            dragImageCenterOnTouch: true,
 //            dragImageOffset: {
 //                x: 0,
@@ -470,13 +478,18 @@
 //            },
 //            dragStartConditionOverride: allowHorizontalDragOnly,
 //            defaultActionOverride: alertAction,
-            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-            // holdToDrag: 300
-        });
+                dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+                // holdToDrag: 300
+            });
+        }
 
         var appliedMessageEl = document.getElementById("appliedMessage");
         var appliedMessage = "Polyfill inactive: Current browser was detected to handle drag'n'drop quite well on its own ;)";
-        if (polyfillApplied) {
+        if(deactivatePolyfill) {
+
+            appliedMessage = "Polyfill deactivated: Polyfill not invoked to use demo page for checking if drag and drop works without it";
+        }
+        else if (polyfillApplied) {
 
             appliedMessage = "Polyfill activated: Detected current browser not capable of HTML5 drag'n'drop (or somebody set forceApply is to true)";
         }

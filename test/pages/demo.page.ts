@@ -10,9 +10,15 @@ export class DemoPage {
         return browser.element( "#innerBin" );
     }
 
-    public open():void {
+    public open( deactivatePolyfill:boolean = false ):void {
 
-        browser.url( "/demo" );
+        let url = "/demo";
+
+        if( deactivatePolyfill ) {
+            url += "?deactivate";
+        }
+
+        browser.url( url );
     }
 
     public dragItemToDropzone() {
