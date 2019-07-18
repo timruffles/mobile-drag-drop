@@ -2,7 +2,7 @@ import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/d
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
 import { tryFindDraggableTarget } from "./internal/drag-utils";
 import { detectFeatures } from "./internal/feature-detection";
-import { EVENT_DRAG_INIT } from "./internal/constants";
+import { EVENT_DRAG_DRAGSTART_PENDING, EVENT_DRAG_DRAGSTART_CANCEL } from "./internal/constants";
 
 // default config
 const config:Config = {
@@ -77,7 +77,7 @@ function onDelayTouchstart( evt:TouchEvent ) {
     };
 
     if (el) {
-        el.dispatchEvent(new CustomEvent(EVENT_DRAG_INIT, { bubbles: true, cancelable: true }))
+        el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_PENDING, { bubbles: true, cancelable: true }));
     }
 
     const timer = window.setTimeout( heldItem, config.holdToDrag );
@@ -98,6 +98,11 @@ function dragOperationEnded( _config:Config, event:TouchEvent, state:DragOperati
     if( state === DragOperationState.POTENTIAL ) {
 
         console.log( "dnd-poly: Drag never started. Last event was " + event.type );
+
+        const el = event.target;
+        if (el) {
+            el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_CANCEL, { bubbles: true, cancelable: true }));
+        }
 
         // when lifecycle hook is present
         if( _config.defaultActionOverride ) {

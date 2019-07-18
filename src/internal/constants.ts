@@ -9,8 +9,9 @@ export const CLASS_DRAG_IMAGE_SNAPBACK = CLASS_PREFIX + "snapback";
 export const CLASS_DRAG_OPERATION_ICON = CLASS_PREFIX + "icon";
 
 // custom event
-export const EVENT_PREFIX = "dnd-poly-event-";
-export const EVENT_DRAG_INIT = EVENT_PREFIX + "init";
+export const EVENT_PREFIX = "dnd-poly-";
+export const EVENT_DRAG_DRAGSTART_PENDING = EVENT_PREFIX + "dragstart-pending";
+export const EVENT_DRAG_DRAGSTART_CANCEL = EVENT_PREFIX + "dragstart-cancel";
 
 // defines the array indexes to access string in ALLOWED_EFFECTS
 export const enum EFFECT_ALLOWED {
