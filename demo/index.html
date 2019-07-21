@@ -462,6 +462,9 @@
             return true;
         };
 
+        var urlParams = new URLSearchParams(window.location.search);
+        var holdToDrag = urlParams.get('holdToDrag');
+
         var polyfillApplied = MobileDragDrop.polyfill({
 //            dragImageCenterOnTouch: true,
 //            dragImageOffset: {
@@ -471,7 +474,7 @@
 //            dragStartConditionOverride: allowHorizontalDragOnly,
 //            defaultActionOverride: alertAction,
             dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-            // holdToDrag: 300
+            holdToDrag: holdToDrag
         });
 
         var appliedMessageEl = document.getElementById("appliedMessage");
@@ -479,6 +482,10 @@
         if (polyfillApplied) {
 
             appliedMessage = "Polyfill activated: Detected current browser not capable of HTML5 drag'n'drop (or somebody set forceApply is to true)";
+
+            if(holdToDrag) {
+                appliedMessage += ". holdToDrag is active with a delay of " + holdToDrag + "ms";
+            }
         }
         appliedMessageEl.innerHTML = appliedMessage;
 
