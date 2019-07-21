@@ -529,6 +529,21 @@
 
                 console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
             });
+
+            // Custom event fires only if holdToDrag is true
+            addEvent(el, 'dnd-poly-dragstart-pending', function (e) {
+                console.log('dnd-poly-dragstart-pending');
+
+                e.preventDefault();
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(el, 'dnd-poly-dragstart-cancel', function (e) {
+                console.log('dnd-poly-dragstart-cancel');
+
+                e.preventDefault();
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
         }
 
         var draggables = document.querySelectorAll('.draggable');

@@ -2,6 +2,7 @@ import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/d
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
 import { tryFindDraggableTarget } from "./internal/drag-utils";
 import { detectFeatures } from "./internal/feature-detection";
+import { EVENT_DRAG_DRAGSTART_PENDING, EVENT_DRAG_DRAGSTART_CANCEL } from "./internal/constants";
 
 // default config
 const config:Config = {
@@ -72,8 +73,17 @@ function onDelayTouchstart( evt:TouchEvent ) {
         end.off();
         cancel.off();
         scroll.off();
+
+        if (el) {
+            el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_CANCEL, { bubbles: true, cancelable: true }));
+        }
+
         clearTimeout( timer );
     };
+
+    if (el) {
+        el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_PENDING, { bubbles: true, cancelable: true }));
+    }
 
     const timer = window.setTimeout( heldItem, config.holdToDrag );
 
