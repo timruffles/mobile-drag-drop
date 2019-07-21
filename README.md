@@ -189,7 +189,7 @@ export function polyfill(override?: Config):boolean;
 
 When setting the option `holdToDrag` the draggable element will emit custom events:
 * `dnd-poly-dragstart-pending` as soon as the `touchstart` event is detected and a drag operation is about to be started after the delay specified with `holdToDrag`
-* `dnd-poly-dragstart-cancel` when the drag operation will not be started due to `touchend`, `touchcancel` or `scroll` within the `holdToDrag` delay.
+* `dnd-poly-dragstart-cancel` when the drag operation will not be started due to `touchmove`, `touchend`, `touchcancel` or `scroll` within the `holdToDrag` delay.
 
 Those events can be used to visualize the `holdToDrag` so the user is informed that a drag operation is about to start.
 

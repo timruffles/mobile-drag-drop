@@ -62,6 +62,7 @@ function onDelayTouchstart( evt:TouchEvent ) {
 
         end.off();
         cancel.off();
+        move.off();
         scroll.off();
         onTouchstart( evt );
     };
@@ -72,6 +73,7 @@ function onDelayTouchstart( evt:TouchEvent ) {
 
         end.off();
         cancel.off();
+        move.off();
         scroll.off();
 
         if (el) {
@@ -89,6 +91,7 @@ function onDelayTouchstart( evt:TouchEvent ) {
 
     const end = onEvt( el, "touchend", onReleasedItem );
     const cancel = onEvt( el, "touchcancel", onReleasedItem );
+    const move = onEvt( el, "touchmove", onReleasedItem );
     // scroll events don't bubble, only way to listen to scroll events
     // that are about to happen in nested scrollables is by listening in capture phase
     const scroll = onEvt( window, "scroll", onReleasedItem, true );
