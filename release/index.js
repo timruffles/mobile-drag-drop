@@ -8,6 +8,9 @@ var CLASS_PREFIX = "dnd-poly-";
 var CLASS_DRAG_IMAGE = CLASS_PREFIX + "drag-image";
 var CLASS_DRAG_IMAGE_SNAPBACK = CLASS_PREFIX + "snapback";
 var CLASS_DRAG_OPERATION_ICON = CLASS_PREFIX + "icon";
+var EVENT_PREFIX = "dnd-poly-";
+var EVENT_DRAG_DRAGSTART_PENDING = EVENT_PREFIX + "dragstart-pending";
+var EVENT_DRAG_DRAGSTART_CANCEL = EVENT_PREFIX + "dragstart-cancel";
 var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove", "move", "all"];
 var DROP_EFFECTS = ["none", "copy", "move", "link"];
 
@@ -259,7 +262,11 @@ function tryFindDraggableTarget(event) {
         if (el.draggable === false) {
             continue;
         }
-        if (el.getAttribute && el.getAttribute("draggable") === "true") {
+        if (el.draggable === true) {
+            return el;
+        }
+        if (el.getAttribute
+            && el.getAttribute("draggable") === "true") {
             return el;
         }
     } while ((el = el.parentNode) && el !== document.body);
@@ -679,6 +686,7 @@ function onDelayTouchstart(evt) {
         console.log("dnd-poly: starting delayed drag..");
         end.off();
         cancel.off();
+        move.off();
         scroll.off();
         onTouchstart(evt);
     };
@@ -686,12 +694,20 @@ function onDelayTouchstart(evt) {
         console.log("dnd-poly: aborting delayed drag because of " + event.type);
         end.off();
         cancel.off();
+        move.off();
         scroll.off();
+        if (el) {
+            el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_CANCEL, { bubbles: true, cancelable: true }));
+        }
         clearTimeout(timer);
     };
+    if (el) {
+        el.dispatchEvent(new CustomEvent(EVENT_DRAG_DRAGSTART_PENDING, { bubbles: true, cancelable: true }));
+    }
     var timer = window.setTimeout(heldItem, config.holdToDrag);
     var end = onEvt(el, "touchend", onReleasedItem);
     var cancel = onEvt(el, "touchcancel", onReleasedItem);
+    var move = onEvt(el, "touchmove", onReleasedItem);
     var scroll = onEvt(window, "scroll", onReleasedItem, true);
 }
 function dragOperationEnded(_config, event, state) {

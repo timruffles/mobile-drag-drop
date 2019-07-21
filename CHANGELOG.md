@@ -1,3 +1,12 @@
+## 2.3.0-rc.2 (2019-07-21)
+
+Adds custom events to enable visualize `holdToDrag` functionality, #150,
+see [README](https://github.com/timruffles/mobile-drag-drop#custom-events)
+
+Thanks to @anwarjaved :+1:
+
+Also will cancel pending dragstart if a `touchmove` event is detected during `holdToDrag`.
+
 ## 2.3.0-rc.1 (2018-03-17)
 
 Maintenance release candidate for improving `holdToDrag` functionality

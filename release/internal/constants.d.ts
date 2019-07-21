@@ -2,6 +2,9 @@ export declare const CLASS_PREFIX = "dnd-poly-";
 export declare const CLASS_DRAG_IMAGE: string;
 export declare const CLASS_DRAG_IMAGE_SNAPBACK: string;
 export declare const CLASS_DRAG_OPERATION_ICON: string;
+export declare const EVENT_PREFIX = "dnd-poly-";
+export declare const EVENT_DRAG_DRAGSTART_PENDING: string;
+export declare const EVENT_DRAG_DRAGSTART_CANCEL: string;
 export declare const enum EFFECT_ALLOWED {
     NONE = 0,
     COPY = 1,
