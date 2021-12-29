@@ -65,7 +65,7 @@ module.exports = function (grunt) {
                         flatten: false
                     },
                     {
-                        src: "package.json",
+                        src: ["package.json", "README.md", "LICENSE"],
                         dest: "release/"
                     }
                 ]
