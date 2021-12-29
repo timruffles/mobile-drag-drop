@@ -1,21 +1,72 @@
 {
   "rules": {
     "class-name": true,
-    "comment-format": [true],
+    "comment-format": [
+      true
+    ],
     "curly": true,
     "eofline": true,
     "forin": true,
-    "indent": [true, "spaces"],
+    "indent": [
+      true,
+      "spaces"
+    ],
     "label-position": true,
-    "max-line-length": [true, 180],
+    "max-line-length": [
+      true,
+      180
+    ],
     "member-access": true,
-    "member-ordering": [true,
-      "static-before-instance",
-      "variables-before-functions"
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          {
+            "name": "static field",
+            "kinds": [
+              "public-static-field",
+              "protected-static-field",
+              "private-static-field"
+            ]
+          },
+          {
+            "name": "instance field",
+            "kinds": [
+              "public-instance-field",
+              "protected-instance-field",
+              "private-instance-field"
+            ]
+          },
+          {
+            "name": "static method",
+            "kinds": [
+              "public-static-method",
+              "private-static-method",
+              "protected-static-method",
+              "public-static-accessor",
+              "protected-static-accessor",
+              "private-static-accessor"
+            ]
+          },
+          {
+            "name": "instance method",
+            "kinds": [
+              "public-constructor",
+              "protected-constructor",
+              "private-constructor",
+              "public-instance-method",
+              "protected-instance-method",
+              "private-instance-method",
+              "public-instance-accessor"
+            ]
+          }
+        ]
+      }
     ],
     "no-arg": true,
     "no-bitwise": true,
-    "no-console": [true,
+    "no-console": [
+      true,
       "debug",
       "info",
       "time",
@@ -33,29 +84,43 @@
     "no-switch-case-fall-through": false,
     "no-trailing-whitespace": true,
     "no-unused-expression": true,
-    "no-unused-variable": true,
     "no-var-keyword": false,
     "object-literal-sort-keys": false,
-    "one-line": [true,
+    "one-line": [
+      true,
       "check-open-brace",
       "check-whitespace"
     ],
-    "quotemark": [true, "double", "avoid-escape"],
+    "quotemark": [
+      true,
+      "double",
+      "avoid-escape"
+    ],
     "radix": true,
     "semicolon": true,
-    "trailing-comma": [true, {
-      "singleline": "never"
-    }],
-    "triple-equals": [true, "allow-null-check"],
-    "typedef-whitespace": [true, {
-      "call-signature": "nospace",
-      "index-signature": "nospace",
-      "parameter": "nospace",
-      "property-declaration": "nospace",
-      "variable-declaration": "nospace"
-    }],
+    "trailing-comma": [
+      true,
+      {
+        "singleline": "never"
+      }
+    ],
+    "triple-equals": [
+      true,
+      "allow-null-check"
+    ],
+    "typedef-whitespace": [
+      true,
+      {
+        "call-signature": "nospace",
+        "index-signature": "nospace",
+        "parameter": "nospace",
+        "property-declaration": "nospace",
+        "variable-declaration": "nospace"
+      }
+    ],
     "variable-name": false,
-    "whitespace": [true,
+    "whitespace": [
+      true,
       "check-decl",
       "check-operator",
       "check-separator",
