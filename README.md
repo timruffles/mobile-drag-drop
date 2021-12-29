@@ -1,5 +1,3 @@
-![dependencies](https://img.shields.io/david/timruffles/mobile-drag-drop/master.svg)
-![devdependencies](https://img.shields.io/david/dev/timruffles/mobile-drag-drop/master.svg)
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
 ![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
 ![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
