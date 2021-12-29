@@ -137,8 +137,7 @@ module.exports = function (grunt) {
                     keep_fargs: true,
                     conditionals: true,
                     evaluate: true,
-                    passes: 1,
-                    warnings: true
+                    passes: 3
                 },
                 sourceMap: true,
                 report: "gzip"
