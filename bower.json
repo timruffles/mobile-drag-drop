@@ -13,11 +13,11 @@
   ],
   "authors": [
     "Tim Ruffles <me@truffles.me.uk>",
-    "Stefan Steinhart <stefansteinhart@artec-engineering.com>"
+    "Stefan Steinhart <stefanreppner@googlemail.com>"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
+    "url": "git://github.com/timruffles/mobile-drag-drop.git"
   },
   "keywords": [
     "dragdrop",
