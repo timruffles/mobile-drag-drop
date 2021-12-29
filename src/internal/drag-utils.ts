@@ -20,20 +20,22 @@ export function tryFindDraggableTarget( event:TouchEvent ):HTMLElement | undefin
     // user tried to drag, that has the IDL attribute draggable set to true.
     //else {
 
-    let el = <HTMLElement>event.target;
-
-    do {
-        if( el.draggable === false ) {
-            continue;
-        }
-        if( el.draggable === true ) {
-            return el;
-        }
-        if( el.getAttribute
-            && el.getAttribute( "draggable" ) === "true" ) {
-            return el;
-        }
-    } while( (el = <HTMLElement>el.parentNode) && el !== document.body );
+	const cp = event.composedPath();
+    for (const o of cp) {
+		let el = <HTMLElement>event.target;
+		do {
+			if( el.draggable === false ) {
+				continue;
+			}
+			if( el.draggable === true ) {
+				return el;
+			}
+			if( el.getAttribute
+				&& el.getAttribute( "draggable" ) === "true" ) {
+				return el;
+			}
+		} while( (el = <HTMLElement>el.parentNode) && el !== document.body );
+	}
 }
 
 /**
@@ -184,4 +186,18 @@ export function determineDragOperation( effectAllowed:string, dropEffect:string 
     }
 
     return DROP_EFFECTS[ DROP_EFFECT.NONE ];
+}
+
+export function elementFromPoint( x:number, y:number):Element {
+    let el = document.elementFromPoint(x, y);
+    if (el) {
+        while (el.shadowRoot) {
+            let customEl = el.shadowRoot.elementFromPoint(x, y);
+            if (customEl === null || customEl === el) {
+                break;
+            }
+            el = customEl;
+        }
+        return el;
+    }
 }

@@ -1,6 +1,6 @@
 import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/dom-utils";
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
-import { tryFindDraggableTarget } from "./internal/drag-utils";
+import { tryFindDraggableTarget, elementFromPoint } from "./internal/drag-utils";
 import { detectFeatures } from "./internal/feature-detection";
 import { EVENT_DRAG_DRAGSTART_PENDING, EVENT_DRAG_DRAGSTART_CANCEL } from "./internal/constants";
 
@@ -9,7 +9,7 @@ const config:Config = {
     iterationInterval: 150,
     tryFindDraggableTarget: tryFindDraggableTarget,
     dragImageSetup: createDragImage,
-    elementFromPoint: function( x, y ) { return document.elementFromPoint( x, y ); }
+    elementFromPoint: elementFromPoint
 };
 
 // reference to the currently active drag operation
