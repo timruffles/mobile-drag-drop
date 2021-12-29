@@ -20,23 +20,23 @@ export function tryFindDraggableTarget( event:TouchEvent ):HTMLElement | undefin
     // user tried to drag, that has the IDL attribute draggable set to true.
     //else {
 
-	const cp = event.composedPath();
-    for (const o of cp) {
-		let el = <HTMLElement>event.target;
-		do {
-			if( el.draggable === false ) {
-				continue;
-			}
-			if( el.draggable === true ) {
-				return el;
-			}
-			if( el.getAttribute
-				&& el.getAttribute( "draggable" ) === "true" ) {
-				return el;
-			}
-		} while( (el = <HTMLElement>el.parentNode) && el !== document.body );
-	}
-}
+        const cp = event.composedPath();
+        for (const o of cp) {
+            let el = <HTMLElement>event.target;
+            do {
+                if( el.draggable === false ) {
+                    continue;
+                }
+                if( el.draggable === true ) {
+                    return el;
+                }
+                if( el.getAttribute
+                    && el.getAttribute( "draggable" ) === "true" ) {
+                    return el;
+                }
+            } while( (el = <HTMLElement>el.parentNode) && el !== document.body );
+        }
+    }
 
 /**
  * Implements "6." in the processing steps defined for a dnd event
