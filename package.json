@@ -4,7 +4,7 @@
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
   "main": "index.min.js",
   "types": "index.d.ts",
-  "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
+  "homepage": "https://www.timr.co/mobile-drag-drop/demo/",
   "scripts": {
     "start": "grunt",
     "build": "grunt compile",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
+    "url": "git://github.com/timruffles/mobile-drag-drop.git"
   },
   "keywords": [
     "dragdrop",
@@ -44,7 +44,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/timruffles/ios-html5-drag-drop-shim/issues"
+    "url": "https://github.com/timruffles/mobile-drag-drop/issues"
   },
   "devDependencies": {
     "grunt": "^1.0.1",
