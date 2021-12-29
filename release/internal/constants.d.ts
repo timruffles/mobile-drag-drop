@@ -13,13 +13,13 @@ export declare const enum EFFECT_ALLOWED {
     LINK = 4,
     LINK_MOVE = 5,
     MOVE = 6,
-    ALL = 7,
+    ALL = 7
 }
 export declare const ALLOWED_EFFECTS: string[];
 export declare const enum DROP_EFFECT {
     NONE = 0,
     COPY = 1,
     MOVE = 2,
-    LINK = 3,
+    LINK = 3
 }
 export declare const DROP_EFFECTS: string[];

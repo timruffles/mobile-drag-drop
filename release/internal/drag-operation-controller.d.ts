@@ -3,7 +3,7 @@ export declare const enum DragOperationState {
     POTENTIAL = 0,
     STARTED = 1,
     ENDED = 2,
-    CANCELLED = 3,
+    CANCELLED = 3
 }
 export declare class DragOperationController {
     private _initialEvent;
@@ -28,11 +28,11 @@ export declare class DragOperationController {
     private _iterationLock;
     private _iterationIntervalId;
     constructor(_initialEvent: TouchEvent, _config: Config, _sourceNode: HTMLElement, _dragOperationEndedCb: (config: Config, event: TouchEvent, state: DragOperationState) => void);
-    private _setup();
-    private _cleanup();
-    private _onTouchMove(event);
-    private _onTouchEndOrCancel(event);
-    private _dragAndDropProcessModelIteration();
-    private _dragOperationEnded(state);
-    private _finishDragOperation();
+    private _setup;
+    private _cleanup;
+    private _onTouchMove;
+    private _onTouchEndOrCancel;
+    private _dragAndDropProcessModelIteration;
+    private _dragOperationEnded;
+    private _finishDragOperation;
 }

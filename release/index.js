@@ -192,7 +192,7 @@ var DataTransfer = (function () {
                 this._dropEffect = value;
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(DataTransfer.prototype, "types", {
@@ -201,7 +201,7 @@ var DataTransfer = (function () {
                 return Object.freeze(this._dataStore.types);
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(DataTransfer.prototype, "effectAllowed", {
@@ -214,7 +214,7 @@ var DataTransfer = (function () {
                 this._dataStore.effectAllowed = value;
             }
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     DataTransfer.prototype.setData = function (type, data) {
