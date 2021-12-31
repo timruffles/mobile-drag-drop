@@ -188,6 +188,9 @@ export function determineDragOperation( effectAllowed:string, dropEffect:string 
     return DROP_EFFECTS[ DROP_EFFECT.NONE ];
 }
 
+/**
+ * Use this, if the "element from point" shoub be the one from the innermost shadowroot
+ */
 export function elementFromPoint( x:number, y:number):Element {
     let el = document.elementFromPoint(x, y);
     if (el) {

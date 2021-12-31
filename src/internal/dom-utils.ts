@@ -77,6 +77,23 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
             prepareNodeCopyAsDragImage( <HTMLElement>srcNode.childNodes[ i ], <HTMLElement>dstNode.childNodes[ i ] );
         }
     }
+
+    removePointerEventsFromShadoDomChildNodes(dstNode);
+}
+
+function removePointerEventsFromShadoDomChildNodes( node:Element ) {
+    if (node instanceof HTMLElement)
+        node.style.pointerEvents = "none";
+    if ( node.children.length ) {
+        for( let i = 0; i < node.children.length; i++ ) {
+            removePointerEventsFromShadoDomChildNodes(node.children[ i ]);
+        }
+    }
+    if ( node.shadowRoot && node.shadowRoot.children.length ) {
+        for( let i = 0; i < node.shadowRoot.children.length; i++ ) {
+            removePointerEventsFromShadoDomChildNodes(node.shadowRoot.children[ i ]);
+        }
+    }
 }
 
 export function createDragImage( sourceNode:HTMLElement ):HTMLElement {

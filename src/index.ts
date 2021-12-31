@@ -1,6 +1,6 @@
 import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/dom-utils";
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
-import { tryFindDraggableTarget, elementFromPoint } from "./internal/drag-utils";
+import { elementFromPoint, tryFindDraggableTarget } from "./internal/drag-utils";
 import { detectFeatures } from "./internal/feature-detection";
 import { EVENT_DRAG_DRAGSTART_PENDING, EVENT_DRAG_DRAGSTART_CANCEL } from "./internal/constants";
 
