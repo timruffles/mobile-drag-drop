@@ -22,7 +22,7 @@ export function tryFindDraggableTarget( event:TouchEvent ):HTMLElement | undefin
 
         const cp = event.composedPath();
         for (const o of cp) {
-            let el = <HTMLElement>event.target;
+            let el = <HTMLElement>o;
             do {
                 if( el.draggable === false ) {
                     continue;
