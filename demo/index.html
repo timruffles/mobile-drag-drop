@@ -11,6 +11,20 @@
     <link rel="stylesheet" href="../release/debug.css">
     <script src="../release/index.min.js"></script>
     <script src="../release/scroll-behaviour.min.js"></script>
+    <script>
+        class WC extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                const div = document.createElement('div');
+                div.innerHTML = 'Test WC';
+                div.style.background = 'red'
+                div.style.pointerEvents = 'auto';
+                this.shadowRoot.appendChild(div);
+            }
+        }
+        customElements.define('w-c', WC)
+    </script>
 </head>
 <body>
 <section id="wrapper">
@@ -29,6 +43,7 @@
             <div id="innerBin"></div>
         </div>
         <ul>
+            <li><a href="#" id="zero"><w-c></w-c></a></li>
             <li><a href="#" id="one"><span style="display: inline-block; background: lightblue">one</span></a></li>
             <li><a href="#" id="two">two</a></li>
             <li><a href="#" id="three">three</a></li>
