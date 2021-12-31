@@ -18,6 +18,9 @@
         <h1>mobile-drag-drop - Polyfill for HTML5 drag'n'drop on touch devices</h1>
     </header>
     <article>
+
+        <p>Your user agent is <b id="userAgent"></b></p>
+
         <p id="appliedMessage"></p>
 
         <p>Drag the list items over the dustbin, and drop them to have the bin eat the item</p>
@@ -444,8 +447,7 @@
                     console.log('horizontal drag detected, starting drag');
                     // we know for sure to start it, return true
                     return true;
-                }
-                else {
+                } else {
 
                     console.log('vertical scroll detected, aborting drag');
                     // we know for sure to abort it, return false
@@ -477,13 +479,16 @@
             holdToDrag: holdToDrag
         });
 
+        var userAgentEl = document.getElementById("userAgent");
+        userAgentEl.innerText = navigator.userAgent;
+
         var appliedMessageEl = document.getElementById("appliedMessage");
-        var appliedMessage = "Polyfill inactive: Current browser was detected to handle drag'n'drop quite well on its own ;)";
+        var appliedMessage = "<b>Polyfill inactive</b>: Current browser was detected to handle drag'n'drop quite well on its own ;)";
         if (polyfillApplied) {
 
-            appliedMessage = "Polyfill activated: Detected current browser not capable of HTML5 drag'n'drop (or somebody set forceApply is to true)";
+            appliedMessage = "<b>Polyfill activated</b>: Detected current browser not capable of HTML5 drag'n'drop (or somebody set forceApply is to true)";
 
-            if(holdToDrag) {
+            if (holdToDrag) {
                 appliedMessage += ". holdToDrag is active with a delay of " + holdToDrag + "ms";
             }
         }
@@ -723,6 +728,7 @@
             setTimeout(function () {
                 y.classList.add('fadeout');
             }, 250);
+            e.preventDefault();
         });
 
         /**
@@ -787,87 +793,94 @@
             setTimeout(function () {
                 y.classList.add('fadeout');
             }, 250);
+
+            e.preventDefault();
         });
 
 
-        //        /**
-        //         * ---------------------------------------------------------------------------------------------------------
-        //         */
-        //
-        //
-        //        var flexboxedDraggables = document.querySelectorAll('ul > li.flex-boxed');
-        //        for (var k = 0; k < flexboxedDraggables.length; k++) {
-        //            var flexboxedDraggable = flexboxedDraggables[k];
-        //
-        //            if (flexboxedDraggable.hasAttribute('draggable') === false) {
-        //                console.log('setting flexboxed item draggable programmatically');
-        //
-        //                flexboxedDraggable.setAttribute('draggable', 'true');
-        //            }
-        //
-        //            addEvent(flexboxedDraggable, 'dragstart', function (e) {
-        //                console.log('dragstart');
-        //
-        //                e.dataTransfer.effectAllowed = 'copyMove';
-        //                e.dataTransfer.setData('Text', "Test"); // required otherwise doesn't work
-        //            });
-        //
-        //            addEvent(flexboxedDraggable, 'drag', function (e) {
-        //                console.log('drag');
-        //            });
-        //
-        //            addEvent(flexboxedDraggable, 'dragend', function (e) {
-        //                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
-        //            });
-        //
-        //            addEvent(el, 'click', function (e) {
-        //                console.log('clicked on draggable');
-        //
-        //                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
-        //            });
-        //        }
-        //
-        //
-        //        var flexboxedDropzones = document.querySelectorAll('.flex-boxed.dropzone');
-        //
-        //        for (var j = 0; j < flexboxedDropzones.length; j++) {
-        //            var flexboxedDropzone = flexboxedDropzones[j];
-        //
-        //            addEvent(flexboxedDropzone, 'dragenter', function (e) {
-        //                console.log('flexbox dropzone dragenter');
-        //
-        //                e.preventDefault();
-        //                e.stopPropagation(); // stop it here to prevent it bubble up
-        //            });
-        //
-        //            addEvent(flexboxedDropzone, 'dragover', function (e) {
-        //                console.log('flexbox dropzone dragover');
-        //
-        //                e.preventDefault(); // allows us to drop
-        //                e.stopPropagation(); // stop it here to prevent it bubble up
-        //
-        //                e.dataTransfer.dropEffect = 'copy';
-        //            });
-        //
-        //            addEvent(flexboxedDropzone, 'dragexit', function (e) {
-        //                console.log('flexbox dropzone dragexit');
-        //
-        //                e.stopPropagation(); // stop it here to prevent it bubble up
-        //            });
-        //
-        //            addEvent(flexboxedDropzone, 'dragleave', function (e) {
-        //                console.log('flexbox dropzone dragleave');
-        //
-        //                e.stopPropagation(); // stop it here to prevent it bubble up
-        //            });
-        //
-        //            addEvent(flexboxedDropzone, 'drop', function (e) {
-        //                console.log('flexbox dropzone drop');
-        //
-        //                e.stopPropagation(); // stop it here to prevent it bubble up
-        //            });
-        //
-        //        }
+        /**
+         * ---------------------------------------------------------------------------------------------------------
+         */
+
+        function makeFlexBoxedDraggable(el) {
+            if (el.hasAttribute('draggable') === false) {
+                console.log('setting flexboxed item draggable programmatically');
+
+                el.setAttribute('draggable', 'true');
+            }
+
+            addEvent(el, 'dragstart', function (e) {
+                console.log('dragstart');
+
+                e.dataTransfer.effectAllowed = 'copyMove';
+                e.dataTransfer.setData('Text', "Test"); // required otherwise doesn't work
+            });
+
+            addEvent(el, 'drag', function (e) {
+                console.log('drag');
+            });
+
+            addEvent(el, 'dragend', function (e) {
+                console.log('dragend with effect: ' + e.dataTransfer.dropEffect);
+            });
+
+            addEvent(el, 'click', function (e) {
+                console.log('clicked on draggable');
+
+                console.log('click offsetX, offsetY: ' + e.offsetX + ", " + e.offsetY);
+            });
+        }
+
+        var flexboxedDraggables = document.querySelectorAll('ul > li.flex-boxed');
+        for (var k = 0; k < flexboxedDraggables.length; k++) {
+            var flexboxedDraggable = flexboxedDraggables[k];
+            makeFlexBoxedDraggable(flexboxedDraggable);
+        }
+
+        var draggableFlexContainer = document.querySelector('ul[draggable="true"].dropzone')
+        makeFlexBoxedDraggable(draggableFlexContainer);
+
+        var flexboxedDropzones = document.querySelectorAll('.flex-boxed.dropzone');
+
+        for (var j = 0; j < flexboxedDropzones.length; j++) {
+            var flexboxedDropzone = flexboxedDropzones[j];
+
+            addEvent(flexboxedDropzone, 'dragenter', function (e) {
+                console.log('flexbox dropzone dragenter');
+
+                e.preventDefault();
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'dragover', function (e) {
+                console.log('flexbox dropzone dragover');
+
+                e.preventDefault(); // allows us to drop
+                e.stopPropagation(); // stop it here to prevent it bubble up
+
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            addEvent(flexboxedDropzone, 'dragexit', function (e) {
+                console.log('flexbox dropzone dragexit');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'dragleave', function (e) {
+                console.log('flexbox dropzone dragleave');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+            });
+
+            addEvent(flexboxedDropzone, 'drop', function (e) {
+                console.log('flexbox dropzone drop');
+
+                e.stopPropagation(); // stop it here to prevent it bubble up
+                e.preventDefault();
+            });
+
+        }
         //
         //        /**
         //         * ---------------------------------------------------------------------------------------------------------
@@ -936,7 +949,8 @@
         try {
             window.addEventListener('touchmove', function () {
             }, {passive: false})
-        } catch(e) {}
+        } catch (e) {
+        }
 
 
     </script>

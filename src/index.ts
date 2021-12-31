@@ -135,6 +135,8 @@ function dragOperationEnded( _config:Config, event:TouchEvent, state:DragOperati
 
 export { Point } from "./internal/dom-utils";
 
+export { supportsPassiveEventListener } from "./internal/feature-detection";
+
 // function signature for the dragImageTranslateOverride hook
 export type DragImageTranslateOverrideFn = ( // corresponding touchmove event
     event:TouchEvent,

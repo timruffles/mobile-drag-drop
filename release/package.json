@@ -4,7 +4,7 @@
   "description": "Polyfill for making HTML5 drag and drop possible in all browsers.",
   "main": "index.min.js",
   "types": "index.d.ts",
-  "homepage": "http://timruffles.github.io/ios-html5-drag-drop-shim/demo/",
+  "homepage": "https://www.timr.co/mobile-drag-drop/demo/",
   "scripts": {
     "start": "grunt",
     "build": "grunt compile",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/timruffles/ios-html5-drag-drop-shim.git"
+    "url": "git://github.com/timruffles/mobile-drag-drop.git"
   },
   "keywords": [
     "dragdrop",
@@ -31,7 +31,7 @@
   ],
   "author": "Tim Ruffles <me@truffles.me.uk>",
   "contributors": [
-    "Stefan Steinhart <stefansteinhart@artec-engineering.com>",
+    "Stefan Steinhart <stefanreppner@googlemail.com>",
     "Kaur Kuut <strom@nevermore.ee>",
     "Tim Ruffles <me@truffles.me.uk>",
     "Joshua-Smith <noidea@example.com>",
@@ -44,21 +44,21 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/timruffles/ios-html5-drag-drop-shim/issues"
+    "url": "https://github.com/timruffles/mobile-drag-drop/issues"
   },
   "devDependencies": {
-    "grunt": "^1.0.1",
+    "grunt": "^1.4.1",
     "grunt-bump": "^0.8.0",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-connect": "^1.0.2",
+    "grunt-contrib-clean": "^2.0.0",
+    "grunt-contrib-connect": "^3.0.0",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-uglify": "^3.3.0",
-    "grunt-contrib-watch": "^1.0.0",
+    "grunt-contrib-uglify": "^5.0.1",
+    "grunt-contrib-watch": "^1.1.0",
     "grunt-exec": "^3.0.0",
     "grunt-npm": "0.0.2",
     "rollup": "^0.54.1",
-    "rollup-plugin-sourcemaps": "^0.4.2",
-    "tslint": "^5.9.1",
-    "typescript": "^2.6.2"
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "tslint": "^6.1.3",
+    "typescript": "^4.5.4"
   }
 }

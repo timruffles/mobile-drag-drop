@@ -65,7 +65,7 @@ module.exports = function (grunt) {
                         flatten: false
                     },
                     {
-                        src: "package.json",
+                        src: ["package.json", "README.md", "LICENSE"],
                         dest: "release/"
                     }
                 ]
@@ -108,8 +108,8 @@ module.exports = function (grunt) {
             // starts a server that will serve the demo page with release sources
             release: {
                 options: {
-                    port: 8001,
-                    open: "http://localhost:8001/demo/"
+                    port: 8000,
+                    open: "http://localhost:8000/demo/"
                 }
             }
         },
@@ -137,8 +137,7 @@ module.exports = function (grunt) {
                     keep_fargs: true,
                     conditionals: true,
                     evaluate: true,
-                    passes: 1,
-                    warnings: true
+                    passes: 3
                 },
                 sourceMap: true,
                 report: "gzip"

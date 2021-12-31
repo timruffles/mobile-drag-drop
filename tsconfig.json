@@ -6,6 +6,7 @@
     "inlineSources": true,
     "declaration": true,
     "noImplicitAny": true,
+    "noUnusedLocals": true,
     "removeComments": true,
     "suppressImplicitAnyIndexErrors": true,
     "strict": false,
