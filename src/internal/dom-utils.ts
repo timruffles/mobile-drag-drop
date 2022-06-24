@@ -82,8 +82,9 @@ function prepareNodeCopyAsDragImage( srcNode:HTMLElement, dstNode:HTMLElement ) 
 }
 
 function removePointerEventsFromShadoDomChildNodes( node:Element ) {
-    if (node instanceof HTMLElement)
+    if (node instanceof HTMLElement) {
         node.style.pointerEvents = "none";
+    }
     if ( node.children.length ) {
         for( let i = 0; i < node.children.length; i++ ) {
             removePointerEventsFromShadoDomChildNodes(node.children[ i ]);
