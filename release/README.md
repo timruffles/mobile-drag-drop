@@ -1,5 +1,4 @@
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
-![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
 ![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
 ![issues](https://img.shields.io/github/issues/timruffles/mobile-drag-drop.svg)
 ![size](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js)
@@ -8,11 +7,20 @@
 
 # Polyfill for HTML 5 drag'n'drop
 
-The HTML 5 drag'n'drop API allows you to implement drag'n'drop on [most desktop browsers](http://caniuse.com/#search=drag). 
+The HTML 5 drag'n'drop API allows you to implement drag'n'drop on [most desktop browsers and some mobile browsers](http://caniuse.com/#search=drag). 
 
-Unfortunately, you'll notice most mobile browsers don't support it, so no iPad (or Nexus) action for you!
+~~Unfortunately, you'll notice most mobile browsers don't support it, so no iPad (or Nexus) action for you!~~
 
-Luckily, browsers give us enough tools to make it happen ourselves. If you drop
+`Chrome>=96 on Android>=7` and `Safari on iOS/iPadOS>=15` are reported to support drag and drop natively!
+This means native support for drag and drop is growing but some browsers still need polyfilling.
+It is advised to keep an eye on [caniuse](http://caniuse.com/#search=drag) and test for your userbase.
+In the case of iOS native support and the polyfill seem to be able to coexist without issues.
+
+See https://github.com/timruffles/mobile-drag-drop/issues/167 for state of drag and drop in `iOS/iPad>=15`.
+
+`Chrome>=96 on Android>=7` behaviour is under investigation.
+
+Luckily, browsers give us enough tools to make it happen ourselves if needed. If you drop
 this package in your page your existing HTML 5 drag'n'drop code should _just work_ ([*almost](#polyfill-requires-dragenter-listener)).
 
 
@@ -33,9 +41,6 @@ Check out the demo to see it in action and monitor the console to see the events
 
 `jspm install npm:mobile-drag-drop`
 
-**bower**
-
-`bower install mobile-drag-drop --save`
 
 ### Include
 
@@ -92,10 +97,13 @@ polyfill({
 **If you're targeting iOS Safari 10.x and higher**
 
 ```JS
-window.addEventListener( 'touchmove', function() {});
+// iOS>=10 supports passive event listeners
+// but make sure to catch or check passive event listener support
+// regarding this code running on other platforms.
+window.addEventListener( 'touchmove', function() {}, {passive: false});
 ```
 
-See [#77](https://github.com/timruffles/mobile-drag-drop/issues/77) for details.
+See [#77](https://github.com/timruffles/mobile-drag-drop/issues/77) and [#124](https://github.com/timruffles/mobile-drag-drop/issues/124) for details.
 
 **webpack/scss**
 
@@ -204,7 +212,7 @@ and snapback behaviour. Mind the `!important`.
     opacity: .5 !important;
 }
 /* applied when the drag effect is none and the operation ends */
-.dnd-poly-drag-image.snapback {
+.dnd-poly-drag-image.dnd-poly-snapback {
     -webkit-transition: -webkit-transform 250ms ease-out !important;
     -moz-transition: -moz-transform 250ms ease-out !important;
     -o-transition: -o-transform 250ms ease-out !important;
@@ -238,8 +246,6 @@ Checkout the [default implementation](https://github.com/timruffles/mobile-drag-
 
 * `iFrames` are currently not supported. Please see [#5](https://github.com/timruffles/mobile-drag-drop/issues/5) for the current state.
 
-* `ShadowDOM/ShadyDOM` are currently not working seamlessly. Please see [#115](https://github.com/timruffles/mobile-drag-drop/issues/115) for the current state.
-
 * `:before/:after` css pseudo styles can't be copied to the drag image. By default classes are removed on the drag image recursively to avoid side-effects. You can pass a custom dragImageSetup function in the config.
 
 Contributions welcome!
@@ -247,24 +253,26 @@ Contributions welcome!
 
 ## Browser compatibility
 
-| Browser                          |  Support                 |  Known issues                                  |
-| -------------------------------- | ------------------------ | ---------------------------------------------- |
-| Chrome                           |  Native                  |  No known issues. [More info](#chrome-issues)  |
-| Firefox                          |  Native                  |  No known issues. [More info](#firefox-issues) |
-| Safari                           |  Native                  |  No known issues.                              |
-| Opera                            |  Native                  |  Same as Chrome.                               |
-| Internet Explorer 11             |  Native                  |  No known issues.                              |
-| Edge                             |  **Unknown**             |  **Unknown**                                   |
-| Mobile Safari (<iOS 10)          |  Polyfill                |  No known issues.                              |
-| Mobile Safari (iOS 10)           |  Polyfill                |  [#77](https://github.com/timruffles/mobile-drag-drop/issues/77) |
-| Chrome on iOS                    |  Polyfill                |  No known issues.                              |
-| Chrome on Android                |  Polyfill                |  No known issues.                              |
-| Chrome on touch device           |  Polyfill                |  No known issues. [More info](#chrome-issues)  |
-| Firefox on touch device          |  Native                  |  No known issues.                              |
-| Firefox on Android               |  Polyfill                |  No known issues.                              |
-| Amazon Silk                      |  **Unknown**             |  **Unknown**                                   |
-| Ubuntu Phone                     |  Polyfill                |  No known issues.                              |
-| IEMobile                         |  Native                  |  **Unknown**                                   |
+| Browser                  | Support           | Known issues                                                            |
+|--------------------------|-------------------|-------------------------------------------------------------------------|
+| Chrome                   | Native            | No known issues. [More info](#chrome-issues)                            |
+| Firefox                  | Native            | No known issues. [More info](#firefox-issues)                           |
+| Safari                   | Native            | No known issues.                                                        |
+| Opera                    | Native            | Same as Chrome.                                                         |
+| Brave                    | Native            | Same as Chrome.                                                         |
+| Internet Explorer 11     | Native            | No known issues.                                                        |
+| Edge                     | Native            | No known issues. [More info](#chrome-issues)                            |
+| Mobile Safari (<iOS 10)  | Polyfill          | No known issues.                                                        |
+| Mobile Safari (>=iOS 10) | Polyfill          | [#77](https://github.com/timruffles/mobile-drag-drop/issues/77)         |
+| Mobile Safari (>=iOS 15) | Native & Polyfill | [#167](https://github.com/timruffles/mobile-drag-drop/issues/167)       |
+| Chrome on iOS            | Polyfill          | See Mobile Safari since it's the same engine inside.                    |
+| Chrome on Android        | Polyfill          | No known issues. **Needs investigation regarding native capabilities!** |
+| Chrome on touch device   | Polyfill          | No known issues. [More info](#chrome-issues)                            |
+| Firefox on touch device  | Native            | No known issues.                                                        |
+| Firefox on Android       | Polyfill          | No known issues.                                                        |
+| Amazon Silk              | **Unknown**       | **Unknown**                                                             |
+| Ubuntu Phone             | Polyfill          | No known issues.                                                        |
+| IEMobile                 | Native            | **Unknown**                                                             |
 
 **Chrome: <a name="chrome-issues"></a>**
 Chrome supports touch devices/events. When run on a desktop touch device like MS Surface it turns on touch events
@@ -307,7 +315,7 @@ which forces the polyfill to rely on a listener being present calling `event.pre
 
 *   FF:<a name="ff-quirk"></a> If `effectAllowed` or `dropEffect` is set in `dragstart` then `dragenter/dragover` also need to set it.
 *   When using a MS Surface tablet a drag-operation is initiated by touch and hold on a draggable.
-*   IE11 and Chrome scroll automatically when dragging close to a viewport edge.
+*   IE11, Chrome (and all other browsers using the same engine), Firefox scroll automatically when dragging close to a viewport edge.
 
 **Baseline recommendations for cross-browser/-platform support:**
 

@@ -1,5 +1,6 @@
 import { Point } from "./internal/dom-utils";
 export { Point } from "./internal/dom-utils";
+export { supportsPassiveEventListener } from "./internal/feature-detection";
 export declare type DragImageTranslateOverrideFn = (event: TouchEvent, hoverCoordinates: Point, hoveredElement: HTMLElement, translateDragImageFn: (offsetX: number, offsetY: number) => void) => void;
 export interface Config {
     forceApply?: boolean;

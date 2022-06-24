@@ -15,16 +15,14 @@ var ALLOWED_EFFECTS = ["none", "copy", "copyLink", "copyMove", "link", "linkMove
 var DROP_EFFECTS = ["none", "copy", "move", "link"];
 
 function detectFeatures() {
-    var features = {
+    var isBlinkEngine = !!(window.chrome) || /chrome/i.test(navigator.userAgent);
+    return {
         dragEvents: ("ondragstart" in document.documentElement),
         draggable: ("draggable" in document.documentElement),
-        userAgentSupportingNativeDnD: undefined
+        userAgentSupportingNativeDnD: !((/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
+            ||
+                (isBlinkEngine && ("ontouchstart" in document.documentElement)))
     };
-    var isBlinkEngine = !!(window.chrome) || /chrome/i.test(navigator.userAgent);
-    features.userAgentSupportingNativeDnD = !((/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
-        ||
-            (isBlinkEngine && ("ontouchstart" in document.documentElement)));
-    return features;
 }
 function supportsPassiveEventListener() {
     var supportsPassiveEventListeners = false;
@@ -83,6 +81,22 @@ function prepareNodeCopyAsDragImage(srcNode, dstNode) {
     if (srcNode.hasChildNodes()) {
         for (var i = 0; i < srcNode.childNodes.length; i++) {
             prepareNodeCopyAsDragImage(srcNode.childNodes[i], dstNode.childNodes[i]);
+        }
+    }
+    removePointerEventsFromShadoDomChildNodes(dstNode);
+}
+function removePointerEventsFromShadoDomChildNodes(node) {
+    if (node instanceof HTMLElement) {
+        node.style.pointerEvents = "none";
+    }
+    if (node.children.length) {
+        for (var i = 0; i < node.children.length; i++) {
+            removePointerEventsFromShadoDomChildNodes(node.children[i]);
+        }
+    }
+    if (node.shadowRoot && node.shadowRoot.children.length) {
+        for (var i = 0; i < node.shadowRoot.children.length; i++) {
+            removePointerEventsFromShadoDomChildNodes(node.shadowRoot.children[i]);
         }
     }
 }
@@ -257,19 +271,23 @@ var DataTransfer = (function () {
 }());
 
 function tryFindDraggableTarget(event) {
-    var el = event.target;
-    do {
-        if (el.draggable === false) {
-            continue;
-        }
-        if (el.draggable === true) {
-            return el;
-        }
-        if (el.getAttribute
-            && el.getAttribute("draggable") === "true") {
-            return el;
-        }
-    } while ((el = el.parentNode) && el !== document.body);
+    var cp = event.composedPath();
+    for (var _i = 0, cp_1 = cp; _i < cp_1.length; _i++) {
+        var o = cp_1[_i];
+        var el = o;
+        do {
+            if (el.draggable === false) {
+                continue;
+            }
+            if (el.draggable === true) {
+                return el;
+            }
+            if (el.getAttribute
+                && el.getAttribute("draggable") === "true") {
+                return el;
+            }
+        } while ((el = el.parentNode) && el !== document.body);
+    }
 }
 function determineDropEffect(effectAllowed, sourceNode) {
     if (!effectAllowed) {
@@ -341,6 +359,19 @@ function determineDragOperation(effectAllowed, dropEffect) {
         }
     }
     return DROP_EFFECTS[0];
+}
+function elementFromPoint(x, y) {
+    var el = document.elementFromPoint(x, y);
+    if (el) {
+        while (el.shadowRoot) {
+            var customEl = el.shadowRoot.elementFromPoint(x, y);
+            if (customEl === null || customEl === el) {
+                break;
+            }
+            el = customEl;
+        }
+        return el;
+    }
 }
 
 var DragOperationController = (function () {
@@ -657,7 +688,7 @@ var config = {
     iterationInterval: 150,
     tryFindDraggableTarget: tryFindDraggableTarget,
     dragImageSetup: createDragImage,
-    elementFromPoint: function (x, y) { return document.elementFromPoint(x, y); }
+    elementFromPoint: elementFromPoint
 };
 var activeDragOperation;
 function onTouchstart(e) {
@@ -753,6 +784,7 @@ function polyfill(override) {
 }
 
 exports.polyfill = polyfill;
+exports.supportsPassiveEventListener = supportsPassiveEventListener;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
