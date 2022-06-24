@@ -1,5 +1,4 @@
 [![npmversion](https://img.shields.io/npm/v/mobile-drag-drop.svg)](https://www.npmjs.com/package/mobile-drag-drop)
-![bowerversion](https://img.shields.io/bower/v/mobile-drag-drop.svg)
 ![license](https://img.shields.io/npm/l/mobile-drag-drop.svg)
 ![issues](https://img.shields.io/github/issues/timruffles/mobile-drag-drop.svg)
 ![size](https://badge-size.herokuapp.com/timruffles/mobile-drag-drop/master/release/index.min.js)
@@ -42,9 +41,6 @@ Check out the demo to see it in action and monitor the console to see the events
 
 `jspm install npm:mobile-drag-drop`
 
-**bower**
-
-`bower install mobile-drag-drop --save`
 
 ### Include
 
@@ -249,8 +245,6 @@ Checkout the [default implementation](https://github.com/timruffles/mobile-drag-
 ## Known issues and limitations
 
 * `iFrames` are currently not supported. Please see [#5](https://github.com/timruffles/mobile-drag-drop/issues/5) for the current state.
-
-* `ShadowDOM/ShadyDOM` are currently not working seamlessly. Please see [#115](https://github.com/timruffles/mobile-drag-drop/issues/115) for the current state.
 
 * `:before/:after` css pseudo styles can't be copied to the drag image. By default classes are removed on the drag image recursively to avoid side-effects. You can pass a custom dragImageSetup function in the config.
 
