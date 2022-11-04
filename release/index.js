@@ -89,7 +89,7 @@ function removePointerEventsFromShadoDomChildNodes(node) {
     if (node instanceof HTMLElement) {
         node.style.pointerEvents = "none";
     }
-    if (node.children.length) {
+    if (node.children && node.children.length) {
         for (var i = 0; i < node.children.length; i++) {
             removePointerEventsFromShadoDomChildNodes(node.children[i]);
         }

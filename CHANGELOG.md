@@ -1,3 +1,12 @@
+## 3.0.0-rc.0 (2022-11-04)
+
+Adds shadow dom support.
+
+* https://github.com/timruffles/mobile-drag-drop/pull/168 
+* https://github.com/timruffles/mobile-drag-drop/pull/174
+
+Thanks to @jogibear9988 and @johanquiroga :+1:
+
 ## 2.3.0-rc.2 (2019-07-21)
 
 Adds custom events to enable visualize `holdToDrag` functionality, #150,
