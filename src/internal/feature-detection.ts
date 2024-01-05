@@ -16,7 +16,7 @@ export function detectFeatures():DetectedFeatures {
             (/iPad|iPhone|iPod|Android/.test(navigator.userAgent))
             || // OR
             //if is blink(chrome/opera) with touch events enabled -> no native dnd
-            (isBlinkEngine && ("ontouchstart" in document.documentElement))
+            (isBlinkEngine && navigator.maxTouchPoints > 0)
         )
     };
 }
