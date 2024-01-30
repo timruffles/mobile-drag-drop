@@ -1,4 +1,4 @@
-import { addDocumentListener, createDragImage, onEvt, Point } from "./internal/dom-utils";
+import { addDocumentListener, createDragImage, onEvt, Point, removeDocumentListener } from "./internal/dom-utils";
 import { DragOperationController, DragOperationState } from "./internal/drag-operation-controller";
 import { elementFromPoint, tryFindDraggableTarget } from "./internal/drag-utils";
 import { detectFeatures } from "./internal/feature-detection";
@@ -230,6 +230,14 @@ export function polyfill( override?:Config ):boolean {
     }
 
     return true;
+}
+
+export function clearPolyfill(): void {
+    if( config.holdToDrag ) {
+        removeDocumentListener("touchstart", onDelayTouchstart);
+    } else {
+        removeDocumentListener("touchstart", onTouchstart);
+    }
 }
 
 //</editor-fold>
